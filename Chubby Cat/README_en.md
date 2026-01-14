@@ -110,6 +110,10 @@ Yes. Chubby Cat communicates directly with your chosen API providers. Your API k
 ### Q: Does it support mobile?
 Currently, Chubby Cat is optimized for Desktop Chrome and Chromium-based browsers (Edge, Brave, etc.) due to its reliance on the `sidePanel` and `debugger` APIs.
 
+## 🙏 Acknowledgments
+
+This project is modified based on [gemini-nexus](https://github.com/yeahhe365/gemini-nexus). Special thanks to the original author for their open-source contributions.
+
 ---
 
 <div align="center">
