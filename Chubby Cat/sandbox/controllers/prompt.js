@@ -4,6 +4,10 @@ import { appendMessage } from '../render/message.js';
 import { sendToBackground, saveSessionsToStorage } from '../../lib/messaging.js';
 import { t } from '../core/i18n.js';
 
+// Safety timeout for regenerate buttons (2 minutes)
+// If backend doesn't respond within this time, buttons will be re-enabled
+const GENERATION_SAFETY_TIMEOUT_MS = 120000;
+
 export class PromptController {
     constructor(sessionManager, uiController, imageManager, appController) {
         this.sessionManager = sessionManager;
@@ -11,6 +15,36 @@ export class PromptController {
         this.imageManager = imageManager;
         this.app = appController;
         this.cancellationTimestamp = 0;
+        this.generationTimeout = null; // Safety timeout for button recovery
+    }
+
+    /**
+     * Start a safety timeout that will re-enable regenerate buttons
+     * if the generation takes too long or backend fails to respond
+     */
+    _startSafetyTimeout() {
+        this._clearSafetyTimeout();
+        this.generationTimeout = setTimeout(() => {
+            // If still generating after timeout, force-recover the UI state
+            if (this.app.isGenerating) {
+                console.warn('[Chubby Cat] Generation safety timeout reached, recovering UI state');
+                this.app.isGenerating = false;
+                this.ui.setLoading(false);
+                if (this.app.messageHandler && this.app.messageHandler.enableAllRegenerateButtons) {
+                    this.app.messageHandler.enableAllRegenerateButtons();
+                }
+            }
+        }, GENERATION_SAFETY_TIMEOUT_MS);
+    }
+
+    /**
+     * Clear the safety timeout (called when generation completes normally)
+     */
+    _clearSafetyTimeout() {
+        if (this.generationTimeout) {
+            clearTimeout(this.generationTimeout);
+            this.generationTimeout = null;
+        }
     }
 
     async send() {
@@ -71,6 +105,9 @@ export class PromptController {
         this.app.isGenerating = true;
         this.ui.setLoading(true);
 
+        // Start safety timeout to recover UI if backend fails to respond
+        this._startSafetyTimeout();
+
         const conn = (this.ui && this.ui.settings && this.ui.settings.connectionData) ? this.ui.settings.connectionData : {};
 
         // Multi-select MCP servers support
@@ -130,6 +167,9 @@ export class PromptController {
 
         this.cancellationTimestamp = Date.now();
 
+        // Clear safety timeout since we're explicitly cancelling
+        this._clearSafetyTimeout();
+
         sendToBackground({ action: "CANCEL_PROMPT" });
         this.app.messageHandler.resetStream();
 
@@ -155,8 +195,11 @@ export class PromptController {
      * 3. Resend the last user message to get a new AI response
      */
     async regenerate() {
+        console.log('[Chubby Cat] regenerate() called');
+
         // Don't allow regeneration if already generating
         if (this.app.isGenerating) {
+            console.log('[Chubby Cat] Already generating, cancelling first');
             this.cancel();
             // Wait a bit for cancellation to take effect
             await new Promise(resolve => setTimeout(resolve, 300));
@@ -166,134 +209,181 @@ export class PromptController {
         const session = this.sessionManager.getCurrentSession();
 
         if (!session || session.messages.length < 2) {
+            console.log('[Chubby Cat] No session or insufficient messages, enabling buttons');
             // Need at least one user message and one AI message
+            // Re-enable buttons in case they were somehow disabled
+            if (this.app.messageHandler && this.app.messageHandler.enableAllRegenerateButtons) {
+                this.app.messageHandler.enableAllRegenerateButtons();
+            }
             return;
         }
 
-        // Find the last AI message and its preceding user message
-        const messages = session.messages;
-        let lastAiIndex = -1;
-        let lastUserMessage = null;
-        let lastUserAttachment = null;
+        // Wrap entire regeneration logic in try-catch to ensure buttons are always re-enabled
+        try {
+            console.log('[Chubby Cat] Starting regeneration process');
 
-        // Find the last AI message
-        for (let i = messages.length - 1; i >= 0; i--) {
-            if (messages[i].role === 'ai') {
-                lastAiIndex = i;
-                break;
+            // Find the last AI message and its preceding user message
+            const messages = session.messages;
+            console.log('[Chubby Cat] Session has', messages.length, 'messages');
+
+            let lastAiIndex = -1;
+            let lastUserMessage = null;
+            let lastUserAttachment = null;
+
+            // Find the last AI message
+            for (let i = messages.length - 1; i >= 0; i--) {
+                if (messages[i].role === 'ai') {
+                    lastAiIndex = i;
+                    break;
+                }
             }
-        }
 
-        if (lastAiIndex === -1) {
-            return; // No AI message to regenerate
-        }
-
-        // Find the user message before the AI message
-        for (let i = lastAiIndex - 1; i >= 0; i--) {
-            if (messages[i].role === 'user') {
-                lastUserMessage = messages[i];
-                lastUserAttachment = messages[i].image || null;
-                break;
+            if (lastAiIndex === -1) {
+                console.warn('[Chubby Cat] No AI message found, cannot regenerate');
+                // Re-enable buttons since we're returning early
+                if (this.app.messageHandler && this.app.messageHandler.enableAllRegenerateButtons) {
+                    this.app.messageHandler.enableAllRegenerateButtons();
+                }
+                return; // No AI message to regenerate
             }
-        }
 
-        if (!lastUserMessage) {
-            return; // No user message found
-        }
+            console.log('[Chubby Cat] Found last AI message at index', lastAiIndex);
 
-        // Remove the last AI message from the UI
-        const chatHistory = this.ui.historyDiv;
-        const aiMessages = chatHistory.querySelectorAll('.msg.ai');
-        if (aiMessages.length > 0) {
-            const lastAiDiv = aiMessages[aiMessages.length - 1];
-            lastAiDiv.remove();
-        }
+            // Find the user message before the AI message
+            for (let i = lastAiIndex - 1; i >= 0; i--) {
+                if (messages[i].role === 'user') {
+                    lastUserMessage = messages[i];
+                    lastUserAttachment = messages[i].image || null;
+                    break;
+                }
+            }
 
-        // Remove the last AI message from session
-        session.messages.splice(lastAiIndex, 1);
-        saveSessionsToStorage(this.sessionManager.sessions);
+            if (!lastUserMessage) {
+                console.warn('[Chubby Cat] No user message found before AI message, cannot regenerate');
+                // Re-enable buttons since we're returning early
+                if (this.app.messageHandler && this.app.messageHandler.enableAllRegenerateButtons) {
+                    this.app.messageHandler.enableAllRegenerateButtons();
+                }
+                return; // No user message found
+            }
 
-        // Update status
-        this.ui.updateStatus(t('regenerating'));
+            console.log('[Chubby Cat] Found user message to resend:', lastUserMessage.text?.substring(0, 50));
 
-        // Disable all regenerate buttons to prevent multiple concurrent regenerations
-        if (this.app.messageHandler && this.app.messageHandler.disableAllRegenerateButtons) {
-            this.app.messageHandler.disableAllRegenerateButtons();
-        }
+            // Remove the last AI message from the UI
+            const chatHistory = this.ui.historyDiv;
+            const aiMessages = chatHistory.querySelectorAll('.msg.ai');
+            if (aiMessages.length > 0) {
+                const lastAiDiv = aiMessages[aiMessages.length - 1];
+                lastAiDiv.remove();
+            }
 
-        // Prepare to resend
-        this.app.isGenerating = true;
-        this.ui.setLoading(true);
+            // Remove the last AI message from session
+            session.messages.splice(lastAiIndex, 1);
+            saveSessionsToStorage(this.sessionManager.sessions);
 
-        const selectedModel = this.app.getSelectedModel();
+            // Update status
+            this.ui.updateStatus(t('regenerating'));
 
-        // Restore context if needed
-        if (session.context) {
+            // Disable all regenerate buttons to prevent multiple concurrent regenerations
+            if (this.app.messageHandler && this.app.messageHandler.disableAllRegenerateButtons) {
+                this.app.messageHandler.disableAllRegenerateButtons();
+            }
+
+            // Prepare to resend
+            this.app.isGenerating = true;
+            this.ui.setLoading(true);
+
+            // Start safety timeout to recover UI if backend fails to respond
+            this._startSafetyTimeout();
+
+            const selectedModel = this.app.getSelectedModel();
+
+            // Restore context if needed
+            if (session.context) {
+                sendToBackground({
+                    action: "SET_CONTEXT",
+                    context: session.context,
+                    model: selectedModel
+                });
+            }
+
+            const conn = (this.ui && this.ui.settings && this.ui.settings.connectionData) ? this.ui.settings.connectionData : {};
+
+            // Multi-select MCP servers support (same logic as send())
+            let activeMcpServers = [];
+            if (conn && Array.isArray(conn.mcpServers) && conn.mcpServers.length > 0) {
+                const activeIds = Array.isArray(conn.mcpActiveServerIds) && conn.mcpActiveServerIds.length > 0
+                    ? new Set(conn.mcpActiveServerIds)
+                    : (conn.mcpActiveServerId ? new Set([conn.mcpActiveServerId]) : new Set());
+
+                activeMcpServers = conn.mcpServers.filter(s =>
+                    s &&
+                    activeIds.has(s.id) &&
+                    s.enabled !== false &&
+                    s.url &&
+                    s.url.trim()
+                );
+            } else if (conn && (conn.mcpServerUrl || conn.mcpTransport)) {
+                activeMcpServers = [{
+                    id: null,
+                    name: '',
+                    transport: conn.mcpTransport || 'sse',
+                    url: conn.mcpServerUrl || '',
+                    enabled: true,
+                    toolMode: 'all',
+                    enabledTools: []
+                }];
+            }
+
+            const enableMcpTools = conn.mcpEnabled === true && activeMcpServers.length > 0;
+
+            // Convert attachment back to file format if exists
+            const files = [];
+            if (lastUserAttachment) {
+                files.push({
+                    base64: lastUserAttachment,
+                    type: 'image/png',
+                    name: 'regenerate_image.png'
+                });
+            }
+
+            // Resend the user message
+            console.log('[Chubby Cat] Sending SEND_PROMPT to background with model:', selectedModel);
             sendToBackground({
-                action: "SET_CONTEXT",
-                context: session.context,
-                model: selectedModel
+                action: "SEND_PROMPT",
+                text: lastUserMessage.text || '',
+                files: files,
+                model: selectedModel,
+                includePageContext: this.app.pageContextActive,
+                includeMultiTabContext: this.app.multiTabContextActive, // Separate flag for multi-tab
+                enableBrowserControl: this.app.browserControlActive,
+                enableMcpTools: enableMcpTools,
+                mcpServers: activeMcpServers,
+                mcpTransport: activeMcpServers.length > 0 ? (activeMcpServers[0].transport || "sse") : "sse",
+                mcpServerUrl: activeMcpServers.length > 0 ? (activeMcpServers[0].url || "") : "",
+                mcpServerId: activeMcpServers.length > 0 ? activeMcpServers[0].id : null,
+                mcpToolMode: activeMcpServers.length > 0 && activeMcpServers[0].toolMode ? activeMcpServers[0].toolMode : 'all',
+                mcpEnabledTools: activeMcpServers.length > 0 && Array.isArray(activeMcpServers[0].enabledTools) ? activeMcpServers[0].enabledTools : [],
+                sessionId: currentId,
+                isRegeneration: true // Flag to indicate this is a regeneration request
             });
+
+        } catch (error) {
+            // If any error occurs during regeneration setup, ensure we reset state
+            console.error('Regenerate error:', error);
+
+            // Clear safety timeout since we're handling the error ourselves
+            this._clearSafetyTimeout();
+
+            this.app.isGenerating = false;
+            this.ui.setLoading(false);
+            this.ui.updateStatus(t('errorScreenshot'));
+            setTimeout(() => this.ui.updateStatus(""), 3000);
+
+            // CRITICAL: Always re-enable regenerate buttons even on error
+            if (this.app.messageHandler && this.app.messageHandler.enableAllRegenerateButtons) {
+                this.app.messageHandler.enableAllRegenerateButtons();
+            }
         }
-
-        const conn = (this.ui && this.ui.settings && this.ui.settings.connectionData) ? this.ui.settings.connectionData : {};
-
-        // Multi-select MCP servers support (same logic as send())
-        let activeMcpServers = [];
-        if (conn && Array.isArray(conn.mcpServers) && conn.mcpServers.length > 0) {
-            const activeIds = Array.isArray(conn.mcpActiveServerIds) && conn.mcpActiveServerIds.length > 0
-                ? new Set(conn.mcpActiveServerIds)
-                : (conn.mcpActiveServerId ? new Set([conn.mcpActiveServerId]) : new Set());
-
-            activeMcpServers = conn.mcpServers.filter(s =>
-                s &&
-                activeIds.has(s.id) &&
-                s.enabled !== false &&
-                s.url &&
-                s.url.trim()
-            );
-        } else if (conn && (conn.mcpServerUrl || conn.mcpTransport)) {
-            activeMcpServers = [{
-                id: null,
-                name: '',
-                transport: conn.mcpTransport || 'sse',
-                url: conn.mcpServerUrl || '',
-                enabled: true,
-                toolMode: 'all',
-                enabledTools: []
-            }];
-        }
-
-        const enableMcpTools = conn.mcpEnabled === true && activeMcpServers.length > 0;
-
-        // Convert attachment back to file format if exists
-        const files = [];
-        if (lastUserAttachment) {
-            files.push({
-                base64: lastUserAttachment,
-                type: 'image/png',
-                name: 'regenerate_image.png'
-            });
-        }
-
-        // Resend the user message
-        sendToBackground({
-            action: "SEND_PROMPT",
-            text: lastUserMessage.text || '',
-            files: files,
-            model: selectedModel,
-            includePageContext: this.app.pageContextActive,
-            includeMultiTabContext: this.app.multiTabContextActive, // Separate flag for multi-tab
-            enableBrowserControl: this.app.browserControlActive,
-            enableMcpTools: enableMcpTools,
-            mcpServers: activeMcpServers,
-            mcpTransport: activeMcpServers.length > 0 ? (activeMcpServers[0].transport || "sse") : "sse",
-            mcpServerUrl: activeMcpServers.length > 0 ? (activeMcpServers[0].url || "") : "",
-            mcpServerId: activeMcpServers.length > 0 ? activeMcpServers[0].id : null,
-            mcpToolMode: activeMcpServers.length > 0 && activeMcpServers[0].toolMode ? activeMcpServers[0].toolMode : 'all',
-            mcpEnabledTools: activeMcpServers.length > 0 && Array.isArray(activeMcpServers[0].enabledTools) ? activeMcpServers[0].enabledTools : [],
-            sessionId: currentId,
-            isRegeneration: true // Flag to indicate this is a regeneration request
-        });
     }
 }

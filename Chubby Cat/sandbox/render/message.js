@@ -150,11 +150,20 @@ export function appendMessage(container, text, role, attachment = null, thoughts
             regenerateBtn.dataset.iconLoading = loadingIcon;
 
             regenerateBtn.addEventListener('click', () => {
+                console.log('[Chubby Cat] Regenerate button clicked', {
+                    disabled: regenerateBtn.disabled,
+                    hasLoadingClass: regenerateBtn.classList.contains('loading')
+                });
+
                 // Don't allow clicking if button is disabled
-                if (regenerateBtn.disabled) return;
+                if (regenerateBtn.disabled) {
+                    console.warn('[Chubby Cat] Button is disabled, ignoring click');
+                    return;
+                }
 
                 // Dispatch custom event for regeneration
                 // The parent controller will handle the actual regeneration logic
+                console.log('[Chubby Cat] Dispatching gemini-regenerate event');
                 document.dispatchEvent(new CustomEvent('gemini-regenerate', {
                     detail: { messageDiv: div, button: regenerateBtn }
                 }));

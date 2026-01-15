@@ -15,6 +15,7 @@ export class SessionMessageHandler {
     handle(request, sender, sendResponse) {
         // --- PROMPT EXECUTION ---
         if (request.action === "SEND_PROMPT") {
+            console.log('[Chubby Cat] Background received SEND_PROMPT', { model: request.model, isRegeneration: request.isRegeneration });
             return this.promptHandler.handle(request, sendResponse);
         }
 

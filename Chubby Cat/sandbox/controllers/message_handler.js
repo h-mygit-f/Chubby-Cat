@@ -104,8 +104,15 @@ export class MessageHandler {
     }
 
     handleGeminiReply(request) {
+        console.log('[Chubby Cat] handleGeminiReply called', { status: request.status, action: request.action });
+
         this.app.isGenerating = false;
         this.ui.setLoading(false);
+
+        // Clear safety timeout since backend responded successfully
+        if (this.app.prompt && this.app.prompt._clearSafetyTimeout) {
+            this.app.prompt._clearSafetyTimeout();
+        }
 
         const session = this.sessionManager.getCurrentSession();
         if (session) {
@@ -164,10 +171,17 @@ export class MessageHandler {
                     setTimeout(() => this.ui.updateStatus(""), 5000);
                 }
             }
+        } else {
+            // No active session - still need to show error and handle UI state
+            if (request.status !== 'success') {
+                const errorText = request.text || t('errorScreenshot');
+                this.ui.updateStatus(errorText);
+                setTimeout(() => this.ui.updateStatus(""), 5000);
+            }
         }
 
         // CRITICAL: Re-enable ALL regenerate buttons in the chat after any completion
-        // This ensures buttons work even after errors
+        // This ensures buttons work even after errors, regardless of session state
         this.enableAllRegenerateButtons();
     }
 
@@ -260,10 +274,16 @@ export class MessageHandler {
      * This is useful to ensure buttons work after errors or state resets
      */
     enableAllRegenerateButtons() {
+        console.log('[Chubby Cat] enableAllRegenerateButtons called');
         const chatHistory = this.ui.historyDiv;
-        if (!chatHistory) return;
+        if (!chatHistory) {
+            console.warn('[Chubby Cat] No chat history div found');
+            return;
+        }
 
         const allRegenerateButtons = chatHistory.querySelectorAll('.regenerate-btn');
+        console.log('[Chubby Cat] Found', allRegenerateButtons.length, 'regenerate buttons to enable');
+
         allRegenerateButtons.forEach(btn => {
             btn.disabled = false;
             btn.classList.remove('loading');

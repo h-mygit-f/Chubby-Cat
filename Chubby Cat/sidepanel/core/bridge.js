@@ -200,6 +200,8 @@ export class MessageBridge {
     }
 
     handleRuntimeMessage(message) {
+        console.log('[Chubby Cat Bridge] Received runtime message:', message.action);
+
         if (message.action === 'SESSIONS_UPDATED') {
             this.state.updateSessions(message.sessions);
             this.frame.postMessage({
@@ -210,6 +212,7 @@ export class MessageBridge {
         }
 
         // Forward all other background messages to sandbox (e.g. GEMINI_STREAM_UPDATE)
+        console.log('[Chubby Cat Bridge] Forwarding to sandbox:', message.action);
         this.frame.postMessage({
             action: 'BACKGROUND_MESSAGE',
             payload: message

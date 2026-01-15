@@ -18,20 +18,20 @@ export class GeminiSessionManager {
     async handleSendPrompt(request, onUpdate) {
         // Cancel previous if exists
         this.cancelCurrentRequest();
-        
+
         this.abortController = new AbortController();
         const signal = this.abortController.signal;
 
         try {
             const settings = await getConnectionSettings();
-            
+
             // Normalize files
             let files = [];
             if (request.files && Array.isArray(request.files)) {
                 files = request.files;
             } else if (request.image) {
                 files = [{
-                    base64: request.image, 
+                    base64: request.image,
                     type: request.imageType,
                     name: request.imageName || "image.png"
                 }];
@@ -48,15 +48,15 @@ export class GeminiSessionManager {
             if (error.name === 'AbortError') return null;
 
             console.error("Gemini Error:", error);
-            
+
             let errorMessage = error.message || "Unknown error";
             const isZh = chrome.i18n.getUILanguage().startsWith('zh');
 
             // Handle common user-facing errors
-            if(errorMessage.includes("未登录") || errorMessage.includes("Not logged in")) {
+            if (errorMessage.includes("未登录") || errorMessage.includes("Not logged in")) {
                 this.auth.forceContextRefresh();
                 await chrome.storage.local.remove(['geminiContext']);
-                
+
                 const currentIndex = this.auth.getCurrentIndex();
                 if (isZh) {
                     errorMessage = `账号 (Index: ${currentIndex}) 未登录或会话已过期。请前往 <a href="https://gemini.google.com/u/${currentIndex}/" target="_blank" style="color: inherit; text-decoration: underline;">gemini.google.com/u/${currentIndex}/</a> 登录。`;
@@ -66,7 +66,8 @@ export class GeminiSessionManager {
             } else if (errorMessage.includes("429") || errorMessage.includes("Too Many Requests")) {
                 errorMessage = isZh ? "请求过于频繁，请稍后再试 (429)" : "Too many requests, please try again later (429)";
             }
-            
+
+            console.log('[Chubby Cat] Creating error GEMINI_REPLY with status error');
             return {
                 action: "GEMINI_REPLY",
                 text: "Error: " + errorMessage,
