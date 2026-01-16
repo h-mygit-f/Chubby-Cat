@@ -1,7 +1,7 @@
 
-// content.js v1.0.0 -> content/index.js
+// content.js v1.1.0 -> content/index.js
 
-console.log("%c Chubby Cat v1.0.0 Ready ", "background: #333; color: #00ff00; font-size: 16px");
+console.log("%c Chubby Cat v1.1.0 Ready ", "background: #333; color: #00ff00; font-size: 16px");
 
 (function () {
     // Dependencies (Loaded via manifest order)

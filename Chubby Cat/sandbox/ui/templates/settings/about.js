@@ -12,7 +12,7 @@ export const AboutSettingsTemplate = `
     <h4 data-i18n="about">About</h4>
     <p class="setting-info">
         <strong>Chubby Cat</strong> 
-        <span id="app-current-version">v1.0.0</span>
+        <span id="app-current-version">v1.1.0</span>
         <span id="app-update-status" style="font-size: 13px; margin-left: 8px; font-weight: normal;"></span>
     </p>
     
