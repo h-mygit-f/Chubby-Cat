@@ -98,7 +98,8 @@
     {
       "resources": [
         "logo.png",
-        "sandbox/index.html"
+        "sandbox/index.html",
+        "vendor/*"
       ],
       "matches": [
         "<all_urls>"
@@ -107,6 +108,6 @@
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'",
-    "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src https: http: data: blob:; media-src https: http: data: blob:;"
+    "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline'; img-src https: http: data: blob:; media-src https: http: data: blob:;"
   }
 }

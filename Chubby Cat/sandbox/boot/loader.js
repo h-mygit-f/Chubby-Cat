@@ -21,26 +21,24 @@ export function loadCSS(href) {
 export async function loadLibs() {
     try {
         // Load Marked (Priority for chat rendering)
-        // We race against a timeout to ensure we don't block forever if CDN is slow
-        const loadMarked = loadScript('https://cdn.jsdelivr.net/npm/marked/marked.min.js');
-        const timeout = new Promise((_, reject) => setTimeout(() => reject('CDN Timeout'), 5000));
-        
-        await Promise.race([loadMarked, timeout]).catch(e => console.warn("Marked load issue:", e));
-        
+        // Using local file to avoid CDN timeout issues
+        await loadScript('../vendor/marked.min.js').catch(e => console.warn("Marked load issue:", e));
+
         // Re-run config now that marked is loaded
         configureMarkdown();
 
-        // Load others in parallel
-        loadCSS('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css');
-        loadCSS('https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css');
+        // Load CSS (local files to avoid CDN issues)
+        loadCSS('../vendor/katex.min.css');
+        loadCSS('../vendor/atom-one-dark.min.css');
 
+        // Load JS libraries in parallel (local files)
         Promise.all([
-            loadScript('https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js'),
-            loadScript('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js'),
-            loadScript('https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.basic.min.js')
+            loadScript('../vendor/highlight.min.js'),
+            loadScript('../vendor/katex.min.js'),
+            loadScript('../vendor/fuse.basic.min.js')
         ]).then(() => {
-             // Auto-render ext for Katex
-             return loadScript('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js');
+            // Auto-render ext for Katex
+            return loadScript('../vendor/auto-render.min.js');
         }).catch(e => console.warn("Optional libs load failed", e));
 
         console.log("Lazy dependencies loading...");

@@ -1,6 +1,6 @@
 
 // content/toolbar/view/dom.js
-(function() {
+(function () {
     const Templates = window.GeminiToolbarTemplates;
 
     class ToolbarDOM {
@@ -18,10 +18,10 @@
             });
             document.documentElement.appendChild(this.host);
             this.shadow = this.host.attachShadow({ mode: 'closed' });
-            
+
             this._render();
             this._loadMathLibs();
-            
+
             return { host: this.host, shadow: this.shadow };
         }
 
@@ -32,15 +32,15 @@
         }
 
         _loadMathLibs() {
-            // 1. Inject KaTeX CSS into Shadow DOM
+            // 1. Inject KaTeX CSS into Shadow DOM (using local files)
             const link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css';
+            link.href = chrome.runtime.getURL('vendor/katex.min.css');
             this.shadow.appendChild(link);
-            
+
             const hljsLink = document.createElement('link');
             hljsLink.rel = 'stylesheet';
-            hljsLink.href = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css';
+            hljsLink.href = chrome.runtime.getURL('vendor/atom-one-dark.min.css');
             this.shadow.appendChild(hljsLink);
         }
     }
