@@ -182,6 +182,17 @@ export const translations = {
         "clearSelection": "Clear",
         "securityWarningTitle": "Security Notice",
         "securityWarningText": "Exported files contain your API keys in plain text. Store them securely and never share them publicly. Only import files from trusted sources.",
+
+        // Quick Phrases
+        "quickPhrases": "Quick Phrases",
+        "quickPhrasesTooltip": "Quick Phrases",
+        "addQuickPhrase": "Add Quick Phrase",
+        "editQuickPhrase": "Edit Quick Phrase",
+        "noQuickPhrases": "No quick phrases yet. Click + to add one.",
+        "quickPhrasePlaceholder": "Enter your quick phrase...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "edit": "Edit",
     },
     zh: {
         "mcpTools": "外部 MCP 工具",
@@ -363,6 +374,17 @@ export const translations = {
         "clearSelection": "清除",
         "securityWarningTitle": "安全提示",
         "securityWarningText": "导出的文件包含明文 API 密钥。请安全存储，切勿公开分享。仅从可信来源导入文件。",
+
+        // Quick Phrases
+        "quickPhrases": "快捷短语",
+        "quickPhrasesTooltip": "快捷短语",
+        "addQuickPhrase": "添加快捷短语",
+        "editQuickPhrase": "编辑快捷短语",
+        "noQuickPhrases": "暂无快捷短语，点击 + 添加。",
+        "quickPhrasePlaceholder": "输入快捷短语...",
+        "save": "保存",
+        "cancel": "取消",
+        "edit": "编辑",
     }
 };
 

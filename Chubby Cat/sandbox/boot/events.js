@@ -4,8 +4,16 @@ import { sendToBackground } from '../../lib/messaging.js';
 import { t } from '../core/i18n.js';
 
 export function bindAppEvents(app, ui, setResizeRef) {
-    // New Chat Buttons
-    document.getElementById('new-chat-header-btn').addEventListener('click', () => app.handleNewChat());
+    // New Chat Button (in input area)
+    const newChatInputBtn = document.getElementById('new-chat-input-btn');
+    if (newChatInputBtn) {
+        newChatInputBtn.addEventListener('click', () => {
+            // Add visual feedback animation
+            newChatInputBtn.classList.add('clicked');
+            setTimeout(() => newChatInputBtn.classList.remove('clicked'), 300);
+            app.handleNewChat();
+        });
+    }
 
     // Tab Switcher Button
     const tabSwitcherBtn = document.getElementById('tab-switcher-btn');

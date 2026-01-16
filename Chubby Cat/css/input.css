@@ -803,3 +803,363 @@ body.layout-wide .active-tab-container {
         padding: 6px 6px 6px 12px;
     }
 }
+
+/* --- Input Action Buttons (New Chat, Quick Phrases) --- */
+.input-action-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    flex-shrink: 0;
+    margin-bottom: 2px;
+}
+
+.input-action-btn:hover {
+    color: var(--text-primary);
+    background: var(--btn-hover);
+}
+
+.input-action-btn:active,
+.input-action-btn.active {
+    background: var(--btn-active-bg);
+    color: var(--primary);
+}
+
+.input-action-btn.clicked {
+    animation: pulseClick 0.3s ease;
+}
+
+@keyframes pulseClick {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(0.9);
+        background: var(--btn-active-bg);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.input-action-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* --- Quick Phrases Wrapper --- */
+.quick-phrases-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* --- Quick Phrases Dropdown Panel --- */
+.quick-phrases-dropdown {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    min-width: 280px;
+    max-width: 360px;
+    background: var(--bg-body);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+    z-index: 200;
+    overflow: hidden;
+}
+
+.quick-phrases-wrapper.open .quick-phrases-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.quick-phrases-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-sidebar);
+}
+
+.quick-phrases-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.quick-phrases-add-btn {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    color: var(--on-primary);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.quick-phrases-add-btn:hover {
+    background: var(--primary-hover);
+    transform: scale(1.05);
+}
+
+.quick-phrases-list {
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+
+.quick-phrases-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.quick-phrases-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.quick-phrases-list::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 2px;
+}
+
+.quick-phrases-empty {
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+/* --- Quick Phrase Item --- */
+.quick-phrase-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 4px;
+    border: 1px solid transparent;
+}
+
+.quick-phrase-item:last-child {
+    margin-bottom: 0;
+}
+
+.quick-phrase-item:hover {
+    background: var(--btn-hover);
+}
+
+.quick-phrase-item:active {
+    transform: scale(0.98);
+}
+
+.quick-phrase-text {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 10px;
+}
+
+.quick-phrase-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.quick-phrase-item:hover .quick-phrase-actions {
+    opacity: 1;
+}
+
+.quick-phrase-action-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-body);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.quick-phrase-action-btn:hover {
+    background: var(--tool-hover);
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+}
+
+.quick-phrase-action-btn.delete:hover {
+    background: #fce8e6;
+    color: #c5221f;
+    border-color: #c5221f;
+}
+
+/* --- Quick Phrase Modal --- */
+.quick-phrase-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-body);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.95);
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    z-index: 210;
+}
+
+.quick-phrase-modal.open {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+}
+
+.quick-phrase-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.quick-phrase-modal-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.quick-phrase-modal-close {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.quick-phrase-modal-close:hover {
+    background: var(--btn-hover);
+    color: var(--text-primary);
+}
+
+.quick-phrase-modal-body {
+    flex: 1;
+    padding: 16px 14px;
+}
+
+.quick-phrase-text-input {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    outline: none;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.quick-phrase-text-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(11, 87, 208, 0.1);
+}
+
+.quick-phrase-text-input::placeholder {
+    color: var(--input-placeholder);
+}
+
+.quick-phrase-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 14px;
+    border-top: 1px solid var(--border-color);
+}
+
+.quick-phrase-cancel-btn,
+.quick-phrase-save-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.quick-phrase-cancel-btn {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.quick-phrase-cancel-btn:hover {
+    background: var(--btn-hover);
+    color: var(--text-primary);
+}
+
+.quick-phrase-save-btn {
+    background: var(--primary);
+    color: var(--on-primary);
+    border: none;
+}
+
+.quick-phrase-save-btn:hover {
+    background: var(--primary-hover);
+}
+
+/* Mobile Responsiveness for Quick Phrases */
+@media (max-width: 600px) {
+    .quick-phrases-dropdown {
+        min-width: 260px;
+        max-width: calc(100vw - 40px);
+        left: 0;
+        transform: translateX(0) translateY(10px);
+    }
+
+    .quick-phrases-wrapper.open .quick-phrases-dropdown {
+        transform: translateX(0) translateY(0);
+    }
+
+    .quick-phrase-actions {
+        opacity: 1;
+    }
+}

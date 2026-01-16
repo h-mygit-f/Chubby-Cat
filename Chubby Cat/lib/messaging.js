@@ -94,3 +94,14 @@ export function saveConnectionSettingsToStorage(data) {
         payload: data
     }, '*');
 }
+
+export function requestQuickPhrasesFromStorage() {
+    window.parent.postMessage({ action: 'GET_QUICK_PHRASES' }, '*');
+}
+
+export function saveQuickPhrasesToStorage(phrases) {
+    window.parent.postMessage({
+        action: 'SAVE_QUICK_PHRASES',
+        payload: phrases
+    }, '*');
+}

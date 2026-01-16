@@ -164,6 +164,14 @@ export class MessageBridge {
             return;
         }
 
+        if (action === 'GET_QUICK_PHRASES') {
+            chrome.storage.local.get(['geminiQuickPhrases'], (res) => {
+                const phrases = Array.isArray(res.geminiQuickPhrases) ? res.geminiQuickPhrases : [];
+                this.frame.postMessage({ action: 'RESTORE_QUICK_PHRASES', payload: phrases });
+            });
+            return;
+        }
+
         // 6. Data Setters (Sync to Storage & Cache)
         if (action === 'SAVE_SESSIONS') this.state.save('geminiSessions', payload);
         if (action === 'SAVE_SHORTCUTS') this.state.save('geminiShortcuts', payload);
@@ -175,6 +183,7 @@ export class MessageBridge {
         if (action === 'SAVE_SIDEBAR_BEHAVIOR') this.state.save('geminiSidebarBehavior', payload);
         if (action === 'SAVE_PROMPT_DRAFT') this.state.save('geminiPromptDraft', payload);
         if (action === 'SAVE_ACCOUNT_INDICES') this.state.save('geminiAccountIndices', payload);
+        if (action === 'SAVE_QUICK_PHRASES') this.state.save('geminiQuickPhrases', payload);
         if (action === 'SAVE_CONNECTION_SETTINGS') {
             this.state.save('geminiProvider', payload.provider);
             // Official

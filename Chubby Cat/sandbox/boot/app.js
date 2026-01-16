@@ -17,7 +17,7 @@ export function initAppMode() {
 
     // 2. Signal Ready Immediately
     window.parent.postMessage({ action: 'UI_READY' }, '*');
-    
+
     // 3. Initialize Message Bridge
     const bridge = new AppMessageBridge();
 
@@ -33,12 +33,14 @@ export function initAppMode() {
             { ImageManager },
             { SessionManager },
             { UIController },
-            { AppController }
+            { AppController },
+            { QuickPhrasesController }
         ] = await Promise.all([
             import('../core/image_manager.js'),
             import('../core/session_manager.js'),
             import('../ui/ui_controller.js'),
-            import('../controllers/app_controller.js')
+            import('../controllers/app_controller.js'),
+            import('../ui/quick_phrases.js')
         ]);
 
         // Init Managers
@@ -71,14 +73,19 @@ export function initAppMode() {
 
         // Initialize Controller
         const app = new AppController(sessionManager, ui, imageManager);
-        
+
         // Connect Bridge to App Instances
         bridge.setUI(ui);
         bridge.setApp(app);
 
         // Bind DOM Events
         bindAppEvents(app, ui, (fn) => bridge.setResizeFn(fn));
-        
+
+        // Initialize Quick Phrases Controller
+        new QuickPhrasesController({
+            inputFn: document.getElementById('prompt')
+        });
+
         // Trigger dependency load in parallel, and re-render if needed when done
         loadLibs().then(() => {
             if (app) app.rerender();
@@ -89,3 +96,4 @@ export function initAppMode() {
 
     })();
 }
+
