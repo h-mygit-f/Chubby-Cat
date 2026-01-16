@@ -1,0 +1,68 @@
+name: Release Extension
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'Chubby Cat/package-lock.json'
+
+      - name: Install Dependencies
+        run: |
+          cd "Chubby Cat"
+          npm ci
+
+      - name: Build Project
+        run: |
+          cd "Chubby Cat"
+          npm run build
+
+      - name: Create Extension Package
+        run: |
+          cd "Chubby Cat"
+          mkdir extension_package
+          
+          # Copy built assets (Sandbox & Sidepanel)
+          cp -r dist/* extension_package/
+          
+          # Copy Core Extension Files
+          cp manifest.json extension_package/
+          cp logo.png extension_package/
+          
+          # Copy Source Logic (Background, Content Scripts, Services, etc.)
+          cp -r background extension_package/
+          cp -r content extension_package/
+          
+          # Copy Optional/Shared resources if they exist
+          if [ -d "services" ]; then cp -r services extension_package/; fi
+          if [ -d "lib" ]; then cp -r lib extension_package/; fi
+          if [ -d "css" ]; then cp -r css extension_package/; fi
+          if [ -d "_locales" ]; then cp -r _locales extension_package/; fi
+
+      - name: Zip Extension
+        run: |
+          cd "Chubby Cat/extension_package"
+          zip -r ../../chubby-cat-extension.zip .
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: chubby-cat-extension.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
