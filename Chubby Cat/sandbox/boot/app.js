@@ -86,6 +86,15 @@ export function initAppMode() {
             inputFn: document.getElementById('prompt')
         });
 
+        // Initialize MCP Servers Controller
+        import('../ui/mcp_servers.js').then(({ McpServersController }) => {
+            const mcpServers = new McpServersController({
+                settingsController: ui.settings
+            });
+            // Store reference for later sync
+            app.mcpServersController = mcpServers;
+        });
+
         // Trigger dependency load in parallel, and re-render if needed when done
         loadLibs().then(() => {
             if (app) app.rerender();

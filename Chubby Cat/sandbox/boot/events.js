@@ -86,6 +86,8 @@ export function bindAppEvents(app, ui, setResizeRef) {
         });
     }
 
+    // MCP Servers Panel is initialized separately in app.js
+
     // Model Selector
     const modelSelect = document.getElementById('model-select');
 

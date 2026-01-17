@@ -116,6 +116,18 @@ export const translations = {
         "regenerate": "Regenerate",
         "regenerating": "Regenerating...",
 
+        // MCP Toggle
+        "mcpToggle": "MCP",
+        "mcpToggleTooltip": "Toggle MCP server tools",
+        "mcpToggleOn": "MCP tools enabled",
+        "mcpToggleOff": "MCP tools disabled",
+        "mcpNoServersConfigured": "No MCP servers configured",
+        "mcpServersTitle": "MCP Servers",
+        "mcpNoServers": "No MCP servers configured. Open settings to add servers.",
+        "mcpOpenSettings": "Open MCP Settings",
+        "mcpServersActive": "{active} of {total} server(s) active",
+        "mcpServersInactive": "{total} server(s) configured, none active",
+
         // Tooltips
         "toggleHistory": "Chat History",
         "newChatTooltip": "New Chat",
@@ -307,6 +319,18 @@ export const translations = {
         "pageReadSuccess": "已读取网页内容 (约 {count} 字)",
         "regenerate": "重新回答",
         "regenerating": "正在重新生成...",
+
+        // MCP Toggle
+        "mcpToggle": "MCP",
+        "mcpToggleTooltip": "切换 MCP 服务器工具",
+        "mcpToggleOn": "MCP 工具已启用",
+        "mcpToggleOff": "MCP 工具已关闭",
+        "mcpNoServersConfigured": "未配置 MCP 服务器",
+        "mcpServersTitle": "MCP 服务器",
+        "mcpNoServers": "未配置 MCP 服务器。请在设置中添加服务器。",
+        "mcpOpenSettings": "打开 MCP 设置",
+        "mcpServersActive": "{active}/{total} 个服务器已激活",
+        "mcpServersInactive": "已配置 {total} 个服务器，无激活",
 
         // Tooltips
         "toggleHistory": "历史记录",

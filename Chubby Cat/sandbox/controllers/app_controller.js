@@ -35,6 +35,11 @@ export class AppController {
 
         // Initialize Active Tab Controller with callbacks
         this._initActiveTabController();
+
+        // Listen for MCP settings changes to sync button state
+        document.addEventListener('mcp-settings-changed', () => {
+            this.syncMcpButtonState();
+        });
     }
 
     setCaptureMode(mode) {
@@ -125,6 +130,16 @@ export class AppController {
             // Disable page context if browser control is on (optional preference, 
             // but usually commands don't need full page context context)
             // For now, keeping them independent.
+        }
+    }
+
+    /**
+     * Sync MCP button/panel state with current settings (called on init/restore)
+     * Delegates to McpServersController if available
+     */
+    syncMcpButtonState() {
+        if (this.mcpServersController && typeof this.mcpServersController.syncFromSettings === 'function') {
+            this.mcpServersController.syncFromSettings();
         }
     }
 
@@ -229,6 +244,8 @@ export class AppController {
             this.ui.settings.updateConnectionSettings(payload);
             // Fix: Pass the full settings payload object, not just the boolean flag
             this.ui.updateModelList(payload);
+            // Sync MCP toggle button state with restored settings
+            this.syncMcpButtonState();
             return;
         }
 

@@ -168,6 +168,11 @@ export class SettingsController {
 
         saveConnectionSettingsToStorage(this.connectionData);
 
+        // Dispatch event for MCP button state sync
+        document.dispatchEvent(new CustomEvent('mcp-settings-changed', {
+            detail: { mcpEnabled: this.connectionData.mcpEnabled }
+        }));
+
         // Notify app of critical setting changes
         if (this.callbacks.onSettingsChanged) {
             this.callbacks.onSettingsChanged(this.connectionData);

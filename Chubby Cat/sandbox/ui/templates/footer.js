@@ -55,6 +55,36 @@ export const FooterTemplate = `
                     </svg>
                     <span data-i18n="pageContext">Page</span>
                 </button>
+                <div class="mcp-servers-wrapper" id="mcp-servers-wrapper">
+                    <button id="mcp-toggle-btn" class="tool-btn" data-i18n-title="mcpToggleTooltip" title="Toggle MCP server tools">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"></path>
+                            <circle cx="7.5" cy="17.5" r="1.5"></circle>
+                            <circle cx="16.5" cy="17.5" r="1.5"></circle>
+                        </svg>
+                        <span data-i18n="mcpToggle">MCP</span>
+                    </button>
+                    
+                    <!-- MCP Servers Dropdown Panel -->
+                    <div class="mcp-servers-dropdown" id="mcp-servers-dropdown">
+                        <div class="mcp-servers-header">
+                            <span class="mcp-servers-title" data-i18n="mcpServersTitle">MCP Servers</span>
+                            <button class="mcp-servers-settings-btn" id="mcp-servers-settings-btn" data-i18n-title="mcpOpenSettings" title="Open MCP Settings">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="mcp-servers-list" id="mcp-servers-list">
+                            <!-- Server items will be dynamically rendered here -->
+                        </div>
+                        <div class="mcp-servers-empty" id="mcp-servers-empty" data-i18n="mcpNoServers">No MCP servers configured. Open settings to add servers.</div>
+                        <div class="mcp-servers-footer">
+                            <div class="mcp-servers-count" id="mcp-servers-count"></div>
+                        </div>
+                    </div>
+                </div>
                 <button id="quote-btn" class="tool-btn context-aware" data-i18n-title="quoteTooltip" title="Quote selected text from page">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/>
