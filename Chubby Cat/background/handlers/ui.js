@@ -146,7 +146,8 @@ export class UIMessageHandler {
                     }).then(() => {
                         console.log('[Chubby Cat] START_SELECTION sent successfully');
                     }).catch((err) => {
-                        console.error('[Chubby Cat] Failed to send START_SELECTION:', err.message);
+                        // This is expected on first load - will retry, so use warn instead of error
+                        console.warn('[Chubby Cat] Content script not ready, attempting retry...', err.message);
                         // Try to inject content script and retry
                         this._injectContentScriptAndRetry(tab.id, capture, request);
                     });
@@ -566,58 +567,83 @@ export class UIMessageHandler {
      */
     async _injectContentScriptAndRetry(tabId, capture, request) {
         try {
-            console.log('[Chubby Cat] Attempting to inject content scripts into tab:', tabId);
+            console.log('[Chubby Cat] Checking if content scripts are already loaded in tab:', tabId);
 
-            // Inject all required content scripts in order
-            const scripts = [
-                'content/overlay.js',
-                'content/toolbar/icons.js',
-                'content/toolbar/styles/core.js',
-                'content/toolbar/styles/widget.js',
-                'content/toolbar/styles/markdown.js',
-                'content/toolbar/styles/panel/layout.js',
-                'content/toolbar/styles/panel/header.js',
-                'content/toolbar/styles/panel/body.js',
-                'content/toolbar/styles/panel/footer.js',
-                'content/toolbar/styles/panel/index.js',
-                'content/toolbar/styles/index.js',
-                'content/toolbar/bridge.js',
-                'content/toolbar/utils/drag.js',
-                'content/toolbar/i18n.js',
-                'content/toolbar/templates.js',
-                'content/toolbar/view/utils.js',
-                'content/toolbar/view/widget.js',
-                'content/toolbar/view/window.js',
-                'content/toolbar/view/dom.js',
-                'content/toolbar/view/index.js',
-                'content/toolbar/events.js',
-                'content/toolbar/ui/grammar.js',
-                'content/toolbar/ui/renderer.js',
-                'content/toolbar/ui/actions_delegate.js',
-                'content/toolbar/ui/code_copy.js',
-                'content/toolbar/ui/manager.js',
-                'content/toolbar/actions.js',
-                'content/toolbar/image.js',
-                'content/toolbar/stream.js',
-                'content/toolbar/utils/input.js',
-                'content/selection.js',
-                'content/toolbar/dispatch.js',
-                'content/toolbar/crop.js',
-                'content/toolbar/controller.js',
-                'content/shortcuts.js',
-                'content/messages.js',
-                'content/index.js'
-            ];
+            // First, check if content scripts are already loaded to avoid duplicate declarations
+            let scriptsAlreadyLoaded = false;
+            try {
+                const checkResult = await chrome.scripting.executeScript({
+                    target: { tabId: tabId },
+                    func: () => {
+                        // Check if our content script globals exist
+                        return !!(window.ChubbyCatOverlay && window.GeminiToolbarActions);
+                    }
+                });
+                scriptsAlreadyLoaded = checkResult && checkResult[0] && checkResult[0].result === true;
+            } catch (checkErr) {
+                console.log('[Chubby Cat] Could not check script status:', checkErr.message);
+                scriptsAlreadyLoaded = false;
+            }
 
-            await chrome.scripting.executeScript({
-                target: { tabId: tabId },
-                files: scripts
-            });
+            if (scriptsAlreadyLoaded) {
+                // Scripts are already loaded, just wait for them to fully initialize and retry
+                console.log('[Chubby Cat] Content scripts already loaded, waiting for initialization...');
+                await new Promise(resolve => setTimeout(resolve, 500));
+            } else {
+                // Scripts not loaded, inject them
+                console.log('[Chubby Cat] Injecting content scripts...');
 
-            console.log('[Chubby Cat] Content scripts injected, retrying message...');
+                // Inject all required content scripts in order
+                const scripts = [
+                    'content/overlay.js',
+                    'content/toolbar/icons.js',
+                    'content/toolbar/styles/core.js',
+                    'content/toolbar/styles/widget.js',
+                    'content/toolbar/styles/markdown.js',
+                    'content/toolbar/styles/panel/layout.js',
+                    'content/toolbar/styles/panel/header.js',
+                    'content/toolbar/styles/panel/body.js',
+                    'content/toolbar/styles/panel/footer.js',
+                    'content/toolbar/styles/panel/index.js',
+                    'content/toolbar/styles/index.js',
+                    'content/toolbar/bridge.js',
+                    'content/toolbar/utils/drag.js',
+                    'content/toolbar/i18n.js',
+                    'content/toolbar/templates.js',
+                    'content/toolbar/view/utils.js',
+                    'content/toolbar/view/widget.js',
+                    'content/toolbar/view/window.js',
+                    'content/toolbar/view/dom.js',
+                    'content/toolbar/view/index.js',
+                    'content/toolbar/events.js',
+                    'content/toolbar/ui/grammar.js',
+                    'content/toolbar/ui/renderer.js',
+                    'content/toolbar/ui/actions_delegate.js',
+                    'content/toolbar/ui/code_copy.js',
+                    'content/toolbar/ui/manager.js',
+                    'content/toolbar/actions.js',
+                    'content/toolbar/image.js',
+                    'content/toolbar/stream.js',
+                    'content/toolbar/utils/input.js',
+                    'content/selection.js',
+                    'content/toolbar/dispatch.js',
+                    'content/toolbar/crop.js',
+                    'content/toolbar/controller.js',
+                    'content/shortcuts.js',
+                    'content/messages.js',
+                    'content/index.js'
+                ];
 
-            // Wait a bit for scripts to initialize
-            await new Promise(resolve => setTimeout(resolve, 200));
+                await chrome.scripting.executeScript({
+                    target: { tabId: tabId },
+                    files: scripts
+                });
+
+                console.log('[Chubby Cat] Content scripts injected, waiting for initialization...');
+
+                // Wait a bit for scripts to initialize
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
 
             // Retry sending the message
             await chrome.tabs.sendMessage(tabId, {
@@ -627,7 +653,7 @@ export class UIMessageHandler {
                 source: request.source
             });
 
-            console.log('[Chubby Cat] START_SELECTION sent successfully after injection');
+            console.log('[Chubby Cat] START_SELECTION sent successfully after retry');
         } catch (err) {
             console.error('[Chubby Cat] Failed to inject content scripts:', err.message);
             // Send error notification to sidepanel
