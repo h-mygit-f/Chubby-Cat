@@ -54,28 +54,40 @@ export function bindAppEvents(app, ui, setResizeRef) {
         });
     }
 
-    document.getElementById('quote-btn').addEventListener('click', () => {
-        sendToBackground({ action: "GET_ACTIVE_SELECTION" });
-        if (ui.inputFn) ui.inputFn.focus();
-    });
+    const quoteBtn = document.getElementById('quote-btn');
+    if (quoteBtn) {
+        quoteBtn.addEventListener('click', () => {
+            sendToBackground({ action: "GET_ACTIVE_SELECTION" });
+            if (ui.inputFn) ui.inputFn.focus();
+        });
+    }
 
-    document.getElementById('ocr-btn').addEventListener('click', () => {
-        app.setCaptureMode('ocr');
-        sendToBackground({ action: "INITIATE_CAPTURE", mode: 'ocr', source: 'sidepanel' });
-        ui.updateStatus(t('selectOcr'));
-    });
+    const ocrBtn = document.getElementById('ocr-btn');
+    if (ocrBtn) {
+        ocrBtn.addEventListener('click', () => {
+            app.setCaptureMode('ocr');
+            sendToBackground({ action: "INITIATE_CAPTURE", mode: 'ocr', source: 'sidepanel' });
+            ui.updateStatus(t('selectOcr'));
+        });
+    }
 
-    document.getElementById('screenshot-translate-btn').addEventListener('click', () => {
-        app.setCaptureMode('screenshot_translate');
-        sendToBackground({ action: "INITIATE_CAPTURE", mode: 'screenshot_translate', source: 'sidepanel' });
-        ui.updateStatus(t('selectTranslate'));
-    });
+    const screenshotTranslateBtn = document.getElementById('screenshot-translate-btn');
+    if (screenshotTranslateBtn) {
+        screenshotTranslateBtn.addEventListener('click', () => {
+            app.setCaptureMode('screenshot_translate');
+            sendToBackground({ action: "INITIATE_CAPTURE", mode: 'screenshot_translate', source: 'sidepanel' });
+            ui.updateStatus(t('selectTranslate'));
+        });
+    }
 
-    document.getElementById('snip-btn').addEventListener('click', () => {
-        app.setCaptureMode('snip');
-        sendToBackground({ action: "INITIATE_CAPTURE", mode: 'snip', source: 'sidepanel' });
-        ui.updateStatus(t('selectSnip'));
-    });
+    const snipBtn = document.getElementById('snip-btn');
+    if (snipBtn) {
+        snipBtn.addEventListener('click', () => {
+            app.setCaptureMode('snip');
+            sendToBackground({ action: "INITIATE_CAPTURE", mode: 'snip', source: 'sidepanel' });
+            ui.updateStatus(t('selectSnip'));
+        });
+    }
 
     // Page Context Toggle
     const contextBtn = document.getElementById('page-context-btn');

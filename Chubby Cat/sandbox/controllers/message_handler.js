@@ -82,6 +82,13 @@ export class MessageHandler {
             this.app.setPageContext(request.enable);
             return;
         }
+
+        // 7. Capture Error
+        if (request.action === "CAPTURE_ERROR") {
+            this.ui.updateStatus(request.error || t('errorScreenshot'));
+            setTimeout(() => this.ui.updateStatus(""), 3000);
+            return;
+        }
     }
 
     handleStreamUpdate(request) {

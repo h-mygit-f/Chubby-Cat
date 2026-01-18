@@ -105,17 +105,53 @@ export class UIMessageHandler {
 
         if (request.action === "INITIATE_CAPTURE") {
             (async () => {
-                const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-                if (tab) {
+                try {
+                    console.log('[Chubby Cat] INITIATE_CAPTURE received:', { mode: request.mode, source: request.source });
+
+                    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+                    console.log('[Chubby Cat] Active tab found:', tab ? { id: tab.id, url: tab.url?.substring(0, 50) } : 'none');
+
+                    if (!tab) {
+                        console.error('[Chubby Cat] No active tab found for capture');
+                        return;
+                    }
+
+                    // Check if the tab URL can receive content scripts
+                    const url = tab.url || '';
+                    if (url.startsWith('chrome://') ||
+                        url.startsWith('chrome-extension://') ||
+                        url.startsWith('edge://') ||
+                        url.startsWith('about:') ||
+                        url.startsWith('devtools://')) {
+                        console.warn('[Chubby Cat] Cannot capture on restricted page:', url.substring(0, 50));
+                        // Send error back to sidepanel
+                        chrome.runtime.sendMessage({
+                            action: "CAPTURE_ERROR",
+                            error: "Cannot capture on this page type"
+                        }).catch(() => { });
+                        return;
+                    }
+
                     // Pre-capture for the overlay background
                     // Pass windowId explicitly to capture the correct window
                     const capture = await this.imageHandler.captureScreenshot(tab.windowId);
+                    console.log('[Chubby Cat] Screenshot captured:', capture.base64 ? 'success' : 'failed');
+
+                    // Send message to content script
                     chrome.tabs.sendMessage(tab.id, {
                         action: "START_SELECTION",
                         image: capture.base64,
-                        mode: request.mode, // Forward the mode (ocr, snip, translate)
-                        source: request.source // Forward the source (sidepanel or local)
-                    }).catch(() => { });
+                        mode: request.mode,
+                        source: request.source
+                    }).then(() => {
+                        console.log('[Chubby Cat] START_SELECTION sent successfully');
+                    }).catch((err) => {
+                        console.error('[Chubby Cat] Failed to send START_SELECTION:', err.message);
+                        // Try to inject content script and retry
+                        this._injectContentScriptAndRetry(tab.id, capture, request);
+                    });
+                } catch (err) {
+                    console.error('[Chubby Cat] INITIATE_CAPTURE error:', err);
                 }
             })();
             return false;
@@ -519,6 +555,86 @@ export class UIMessageHandler {
         } else {
             // --- TOGGLE ON ---
             await this._handleOpenSidePanel({ ...request, mode: 'browser_control' }, sender);
+        }
+    }
+
+    /**
+     * Inject content scripts dynamically and retry the capture operation
+     * @param {number} tabId - The tab to inject scripts into
+     * @param {object} capture - The captured screenshot data
+     * @param {object} request - Original request with mode and source
+     */
+    async _injectContentScriptAndRetry(tabId, capture, request) {
+        try {
+            console.log('[Chubby Cat] Attempting to inject content scripts into tab:', tabId);
+
+            // Inject all required content scripts in order
+            const scripts = [
+                'content/overlay.js',
+                'content/toolbar/icons.js',
+                'content/toolbar/styles/core.js',
+                'content/toolbar/styles/widget.js',
+                'content/toolbar/styles/markdown.js',
+                'content/toolbar/styles/panel/layout.js',
+                'content/toolbar/styles/panel/header.js',
+                'content/toolbar/styles/panel/body.js',
+                'content/toolbar/styles/panel/footer.js',
+                'content/toolbar/styles/panel/index.js',
+                'content/toolbar/styles/index.js',
+                'content/toolbar/bridge.js',
+                'content/toolbar/utils/drag.js',
+                'content/toolbar/i18n.js',
+                'content/toolbar/templates.js',
+                'content/toolbar/view/utils.js',
+                'content/toolbar/view/widget.js',
+                'content/toolbar/view/window.js',
+                'content/toolbar/view/dom.js',
+                'content/toolbar/view/index.js',
+                'content/toolbar/events.js',
+                'content/toolbar/ui/grammar.js',
+                'content/toolbar/ui/renderer.js',
+                'content/toolbar/ui/actions_delegate.js',
+                'content/toolbar/ui/code_copy.js',
+                'content/toolbar/ui/manager.js',
+                'content/toolbar/actions.js',
+                'content/toolbar/image.js',
+                'content/toolbar/stream.js',
+                'content/toolbar/utils/input.js',
+                'content/selection.js',
+                'content/toolbar/dispatch.js',
+                'content/toolbar/crop.js',
+                'content/toolbar/controller.js',
+                'content/shortcuts.js',
+                'content/messages.js',
+                'content/index.js'
+            ];
+
+            await chrome.scripting.executeScript({
+                target: { tabId: tabId },
+                files: scripts
+            });
+
+            console.log('[Chubby Cat] Content scripts injected, retrying message...');
+
+            // Wait a bit for scripts to initialize
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            // Retry sending the message
+            await chrome.tabs.sendMessage(tabId, {
+                action: "START_SELECTION",
+                image: capture.base64,
+                mode: request.mode,
+                source: request.source
+            });
+
+            console.log('[Chubby Cat] START_SELECTION sent successfully after injection');
+        } catch (err) {
+            console.error('[Chubby Cat] Failed to inject content scripts:', err.message);
+            // Send error notification to sidepanel
+            chrome.runtime.sendMessage({
+                action: "CAPTURE_ERROR",
+                error: "Failed to start capture: " + err.message
+            }).catch(() => { });
         }
     }
 }

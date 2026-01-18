@@ -2,7 +2,7 @@
 // background/managers/image_manager.js
 
 export class ImageManager {
-    
+
     // Fetch image from a URL or Data URI
     async fetchImage(url) {
         try {
@@ -20,7 +20,7 @@ export class ImageManager {
 
             const response = await fetch(url);
             if (!response.ok) throw new Error("Fetch failed: " + response.statusText);
-            
+
             const blob = await response.blob();
             // Convert blob to base64
             const base64 = await new Promise((resolve, reject) => {
@@ -51,7 +51,8 @@ export class ImageManager {
             // Use explicit windowId if provided to ensure correct window is captured
             chrome.tabs.captureVisibleTab(windowId, { format: 'png' }, (dataUrl) => {
                 if (chrome.runtime.lastError || !dataUrl) {
-                    console.error("Capture failed:", chrome.runtime.lastError);
+                    const errorMessage = chrome.runtime.lastError?.message || 'Unknown capture error';
+                    console.error("Capture failed:", errorMessage);
                     resolve(null);
                 } else {
                     resolve(dataUrl);
@@ -63,14 +64,14 @@ export class ImageManager {
     // Capture the visible tab and return base64
     async captureScreenshot(windowId) {
         const dataUrl = await this._captureTab(windowId);
-        
+
         if (!dataUrl) {
             return {
                 action: "FETCH_IMAGE_RESULT",
                 error: "Capture failed"
             };
         }
-        
+
         return {
             action: "FETCH_IMAGE_RESULT",
             base64: dataUrl,
@@ -82,11 +83,11 @@ export class ImageManager {
     // Used when content script selects an area
     async captureArea(area, windowId) {
         const dataUrl = await this._captureTab(windowId);
-        
+
         if (!dataUrl) {
             return null;
         }
-        
+
         // Return data to UI for cropping
         return {
             action: "CROP_SCREENSHOT",
