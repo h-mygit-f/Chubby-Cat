@@ -8,7 +8,7 @@ export const ConnectionSettingsTemplate = `
         <select id="provider-select" class="shortcut-input" style="width: 100%; text-align: left; padding: 8px 12px;">
             <option value="web" data-i18n="providerWeb">Gemini Web Client (Free)</option>
             <option value="official" data-i18n="providerOfficial">Google Gemini API</option>
-            <option value="openai" data-i18n="providerOpenAI">OpenAI Compatible API</option>
+            <option value="openai" data-i18n="providerOpenAI">OpenAI/Claude Compatible API</option>
         </select>
     </div>
     
@@ -36,6 +36,14 @@ export const ConnectionSettingsTemplate = `
 
         <!-- OpenAI Fields -->
         <div id="openai-fields" style="display: none; flex-direction: column; gap: 12px;">
+            <div>
+                <label style="font-weight: 500; display: block; margin-bottom: 2px;">Provider Type</label>
+                <select id="openai-provider-type" class="shortcut-input" style="width: 100%; text-align: left; padding: 6px 12px;">
+                    <option value="openai">OpenAI Compatible</option>
+                    <option value="claude">Claude (Anthropic)</option>
+                </select>
+            </div>
+
             <!-- Config Management Section -->
             <div>
                 <label data-i18n="openaiConfigSection" style="font-weight: 500; display: block; margin-bottom: 6px;">API Configuration</label>
@@ -45,9 +53,9 @@ export const ConnectionSettingsTemplate = `
                     <button id="openai-remove-config" class="tool-btn" style="padding: 6px 10px;" type="button" data-i18n="openaiRemoveConfig">Remove</button>
                 </div>
             </div>
-            
+
             <div id="openai-config-status" style="font-size: 12px; color: #4CAF50; opacity: 0.9; display: none;"></div>
-            
+
             <div>
                 <label data-i18n="openaiConfigName" style="font-weight: 500; display: block; margin-bottom: 2px;">Configuration Name</label>
                 <input type="text" id="openai-config-name" class="shortcut-input" style="width: 100%; text-align: left; box-sizing: border-box;" data-i18n-placeholder="openaiConfigNamePlaceholder" placeholder="e.g. Production API">
@@ -67,6 +75,24 @@ export const ConnectionSettingsTemplate = `
             <div>
                 <label data-i18n="openaiTimeout" style="font-weight: 500; display: block; margin-bottom: 2px;">Timeout (ms)</label>
                 <input type="number" id="openai-timeout" class="shortcut-input" style="width: 100%; text-align: left; box-sizing: border-box;" placeholder="60000" value="60000">
+            </div>
+            <!-- Claude-specific options -->
+            <div id="claude-options" style="display: none; flex-direction: column; gap: 12px; padding: 10px; background: rgba(0,0,0,0.02); border-radius: 6px; margin-top: 4px;">
+                <div style="font-size: 12px; font-weight: 500; opacity: 0.85;">Claude Options</div>
+                <div>
+                    <label style="font-weight: 500; display: block; margin-bottom: 2px;">Max Tokens</label>
+                    <input type="number" id="claude-max-tokens" class="shortcut-input" style="width: 100%; text-align: left; box-sizing: border-box;" placeholder="8192" value="8192">
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="claude-thinking-enabled" />
+                        <span>Enable Extended Thinking</span>
+                    </label>
+                </div>
+                <div id="claude-thinking-budget-container" style="display: none;">
+                    <label style="font-weight: 500; display: block; margin-bottom: 2px;">Thinking Budget (tokens)</label>
+                    <input type="number" id="claude-thinking-budget" class="shortcut-input" style="width: 100%; text-align: left; box-sizing: border-box;" placeholder="10000" value="10000">
+                </div>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">

@@ -75,9 +75,14 @@ export class RequestDispatcher {
 
             if (config) {
                 config = {
+                    providerType: config.providerType || 'openai',
                     baseUrl: config.baseUrl || '',
                     apiKey: config.apiKey || '',
-                    model: config.model || ''
+                    model: config.model || '',
+                    // Claude-specific options
+                    maxTokens: config.maxTokens || 8192,
+                    thinkingEnabled: config.thinkingEnabled === true,
+                    thinkingBudget: config.thinkingBudget || 10000
                 };
             }
         }
@@ -93,6 +98,7 @@ export class RequestDispatcher {
             }
 
             config = {
+                providerType: 'openai', // Legacy mode always uses OpenAI
                 baseUrl: settings.openaiBaseUrl,
                 apiKey: settings.openaiApiKey,
                 model: targetModel

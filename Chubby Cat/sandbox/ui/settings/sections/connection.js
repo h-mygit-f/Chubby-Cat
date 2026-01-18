@@ -60,12 +60,20 @@ export class ConnectionSection {
             openaiAddConfig: get('openai-add-config'),
             openaiRemoveConfig: get('openai-remove-config'),
             openaiConfigName: get('openai-config-name'),
+            openaiProviderType: get('openai-provider-type'),
             openaiBaseUrl: get('openai-base-url'),
             openaiApiKey: get('openai-api-key'),
             openaiModel: get('openai-model'),
             openaiTimeout: get('openai-timeout'),
             openaiSetDefault: get('openai-set-default'),
             openaiConfigStatus: get('openai-config-status'),
+
+            // Claude-specific options
+            claudeOptions: get('claude-options'),
+            claudeMaxTokens: get('claude-max-tokens'),
+            claudeThinkingEnabled: get('claude-thinking-enabled'),
+            claudeThinkingBudgetContainer: get('claude-thinking-budget-container'),
+            claudeThinkingBudget: get('claude-thinking-budget'),
 
             // MCP Fields - multi-select support
             mcpEnabled: get('mcp-enabled'),
@@ -267,11 +275,15 @@ export class ConnectionSection {
             openaiAddConfig,
             openaiRemoveConfig,
             openaiConfigName,
+            openaiProviderType,
             openaiBaseUrl,
             openaiApiKey,
             openaiModel,
             openaiTimeout,
-            openaiSetDefault
+            openaiSetDefault,
+            claudeMaxTokens,
+            claudeThinkingEnabled,
+            claudeThinkingBudget
         } = this.elements;
 
         if (openaiConfigSelect) {
@@ -329,10 +341,26 @@ export class ConnectionSection {
         };
 
         if (openaiConfigName) openaiConfigName.addEventListener('input', onOpenaiEdit);
+        if (openaiProviderType) {
+            openaiProviderType.addEventListener('change', () => {
+                this._saveCurrentOpenaiConfigEdits();
+                this._updateClaudeOptionsVisibility();
+                this._updateBaseUrlPlaceholder();
+                this._renderOpenaiConfigOptions();
+            });
+        }
         if (openaiBaseUrl) openaiBaseUrl.addEventListener('input', onOpenaiEdit);
         if (openaiApiKey) openaiApiKey.addEventListener('input', onOpenaiEdit);
         if (openaiModel) openaiModel.addEventListener('input', onOpenaiEdit);
         if (openaiTimeout) openaiTimeout.addEventListener('input', onOpenaiEdit);
+        if (claudeMaxTokens) claudeMaxTokens.addEventListener('input', onOpenaiEdit);
+        if (claudeThinkingEnabled) {
+            claudeThinkingEnabled.addEventListener('change', () => {
+                this._saveCurrentOpenaiConfigEdits();
+                this._updateClaudeThinkingBudgetVisibility();
+            });
+        }
+        if (claudeThinkingBudget) claudeThinkingBudget.addEventListener('input', onOpenaiEdit);
 
         if (openaiSetDefault) {
             openaiSetDefault.addEventListener('change', () => {
@@ -375,13 +403,18 @@ export class ConnectionSection {
             this.openaiConfigs = openaiConfigs.map(c => ({
                 id: c.id || this._makeOpenaiConfigId(),
                 name: c.name || '',
+                providerType: c.providerType || 'openai', // Default to 'openai' for backward compatibility
                 baseUrl: c.baseUrl || '',
                 apiKey: c.apiKey || '',
                 model: c.model || '',
                 timeout: c.timeout || 60000,
                 isDefault: c.isDefault === true,
                 textSelectionEnabled: c.textSelectionEnabled !== false,
-                imageToolsEnabled: c.imageToolsEnabled !== false
+                imageToolsEnabled: c.imageToolsEnabled !== false,
+                // Claude-specific options
+                maxTokens: c.maxTokens || 8192,
+                thinkingEnabled: c.thinkingEnabled === true,
+                thinkingBudget: c.thinkingBudget || 10000
             }));
             this.openaiActiveConfigId = openaiActiveId && this.openaiConfigs.some(c => c.id === openaiActiveId)
                 ? openaiActiveId
@@ -538,13 +571,18 @@ export class ConnectionSection {
         return {
             id: this._makeOpenaiConfigId(),
             name: 'New Configuration',
+            providerType: 'openai', // 'openai' | 'claude'
             baseUrl: '',
             apiKey: '',
             model: '',
             timeout: 60000,
             isDefault: false,
             textSelectionEnabled: true,
-            imageToolsEnabled: true
+            imageToolsEnabled: true,
+            // Claude-specific options
+            maxTokens: 8192,
+            thinkingEnabled: false,
+            thinkingBudget: 10000
         };
     }
 
@@ -558,21 +596,30 @@ export class ConnectionSection {
     _saveCurrentOpenaiConfigEdits() {
         const {
             openaiConfigName,
+            openaiProviderType,
             openaiBaseUrl,
             openaiApiKey,
             openaiModel,
             openaiTimeout,
-            openaiSetDefault
+            openaiSetDefault,
+            claudeMaxTokens,
+            claudeThinkingEnabled,
+            claudeThinkingBudget
         } = this.elements;
 
         const config = this._getActiveOpenaiConfig();
         if (!config) return;
 
         if (openaiConfigName) config.name = openaiConfigName.value || '';
+        if (openaiProviderType) config.providerType = openaiProviderType.value || 'openai';
         if (openaiBaseUrl) config.baseUrl = (openaiBaseUrl.value || '').trim();
         if (openaiApiKey) config.apiKey = (openaiApiKey.value || '').trim();
         if (openaiModel) config.model = (openaiModel.value || '').trim();
         if (openaiTimeout) config.timeout = parseInt(openaiTimeout.value, 10) || 60000;
+        // Claude-specific options
+        if (claudeMaxTokens) config.maxTokens = parseInt(claudeMaxTokens.value, 10) || 8192;
+        if (claudeThinkingEnabled) config.thinkingEnabled = claudeThinkingEnabled.checked === true;
+        if (claudeThinkingBudget) config.thinkingBudget = parseInt(claudeThinkingBudget.value, 10) || 10000;
         if (openaiSetDefault) {
             if (openaiSetDefault.checked) {
                 // Clear isDefault from all other configs
@@ -586,11 +633,15 @@ export class ConnectionSection {
         const {
             openaiConfigSelect,
             openaiConfigName,
+            openaiProviderType,
             openaiBaseUrl,
             openaiApiKey,
             openaiModel,
             openaiTimeout,
-            openaiSetDefault
+            openaiSetDefault,
+            claudeMaxTokens,
+            claudeThinkingEnabled,
+            claudeThinkingBudget
         } = this.elements;
 
         const config = this._getActiveOpenaiConfig();
@@ -598,11 +649,21 @@ export class ConnectionSection {
 
         if (openaiConfigSelect) openaiConfigSelect.value = config.id;
         if (openaiConfigName) openaiConfigName.value = config.name || '';
+        if (openaiProviderType) openaiProviderType.value = config.providerType || 'openai';
         if (openaiBaseUrl) openaiBaseUrl.value = config.baseUrl || '';
         if (openaiApiKey) openaiApiKey.value = config.apiKey || '';
         if (openaiModel) openaiModel.value = config.model || '';
         if (openaiTimeout) openaiTimeout.value = config.timeout || 60000;
+        // Claude-specific options
+        if (claudeMaxTokens) claudeMaxTokens.value = config.maxTokens || 8192;
+        if (claudeThinkingEnabled) claudeThinkingEnabled.checked = config.thinkingEnabled === true;
+        if (claudeThinkingBudget) claudeThinkingBudget.value = config.thinkingBudget || 10000;
         if (openaiSetDefault) openaiSetDefault.checked = config.isDefault === true;
+
+        // Update visibility based on provider type
+        this._updateClaudeOptionsVisibility();
+        this._updateClaudeThinkingBudgetVisibility();
+        this._updateBaseUrlPlaceholder();
     }
 
     _renderOpenaiConfigOptions() {
@@ -624,6 +685,32 @@ export class ConnectionSection {
         }
 
         if (active) openaiConfigSelect.value = active.id;
+    }
+
+    _updateClaudeOptionsVisibility() {
+        const { openaiProviderType, claudeOptions } = this.elements;
+        if (!claudeOptions) return;
+
+        const isClaude = openaiProviderType && openaiProviderType.value === 'claude';
+        claudeOptions.style.display = isClaude ? 'flex' : 'none';
+    }
+
+    _updateClaudeThinkingBudgetVisibility() {
+        const { claudeThinkingEnabled, claudeThinkingBudgetContainer } = this.elements;
+        if (!claudeThinkingBudgetContainer) return;
+
+        const isEnabled = claudeThinkingEnabled && claudeThinkingEnabled.checked;
+        claudeThinkingBudgetContainer.style.display = isEnabled ? 'block' : 'none';
+    }
+
+    _updateBaseUrlPlaceholder() {
+        const { openaiProviderType, openaiBaseUrl } = this.elements;
+        if (!openaiBaseUrl) return;
+
+        const isClaude = openaiProviderType && openaiProviderType.value === 'claude';
+        openaiBaseUrl.placeholder = isClaude
+            ? 'https://api.anthropic.com'
+            : 'https://api.openai.com/v1';
     }
 
     _showOpenaiStatus(text, isError = false) {
