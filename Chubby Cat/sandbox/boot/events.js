@@ -1,7 +1,8 @@
 
 // sandbox/boot/events.js
-import { sendToBackground } from '../../lib/messaging.js';
+import { sendToBackground, requestSaveChat } from '../../lib/messaging.js';
 import { t } from '../core/i18n.js';
+import { sessionToMarkdown, generateFilename } from '../../lib/markdown_export.js';
 
 export function bindAppEvents(app, ui, setResizeRef) {
     // New Chat Button (in input area)
@@ -305,4 +306,112 @@ export function bindAppEvents(app, ui, setResizeRef) {
             app.prompt.regenerate();
         }
     });
+
+    // Save Chat Button
+    const saveChatBtn = document.getElementById('save-chat-btn');
+    if (saveChatBtn) {
+        // Track save state per session
+        let savedFilenames = {}; // { sessionId: filename }
+
+        const updateSaveButtonState = () => {
+            const session = app.sessionManager?.getCurrentSession();
+            if (!session) {
+                saveChatBtn.classList.remove('has-content', 'saved');
+                saveChatBtn.classList.add('disabled');
+                return;
+            }
+
+            const hasContent = session.messages && session.messages.length > 0;
+            const hasSavedFilename = !!savedFilenames[session.id];
+
+            saveChatBtn.classList.remove('disabled');
+            saveChatBtn.classList.toggle('has-content', hasContent && !hasSavedFilename);
+            saveChatBtn.classList.toggle('saved', hasSavedFilename);
+        };
+
+        // Update button state when session changes
+        const originalSetCurrentId = app.sessionManager?.setCurrentId?.bind(app.sessionManager);
+        if (app.sessionManager && originalSetCurrentId) {
+            app.sessionManager.setCurrentId = (id) => {
+                originalSetCurrentId(id);
+                updateSaveButtonState();
+            };
+        }
+
+        // Update button state when messages are added
+        const originalAddMessage = app.sessionManager?.addMessage?.bind(app.sessionManager);
+        if (app.sessionManager && originalAddMessage) {
+            app.sessionManager.addMessage = (...args) => {
+                const result = originalAddMessage(...args);
+                // Mark as unsaved when content changes
+                const session = app.sessionManager.getCurrentSession();
+                if (session && savedFilenames[session.id]) {
+                    // Content changed after save - show "has-content" indicator
+                    saveChatBtn.classList.add('has-content');
+                    saveChatBtn.classList.remove('saved');
+                }
+                return result;
+            };
+        }
+
+        saveChatBtn.addEventListener('click', () => {
+            const session = app.sessionManager?.getCurrentSession();
+            if (!session || !session.messages || session.messages.length === 0) {
+                ui.updateStatus(t('nothingToSave') || 'Nothing to save');
+                setTimeout(() => ui.updateStatus(''), 2000);
+                return;
+            }
+
+            // Convert to Markdown
+            const markdown = sessionToMarkdown(session);
+            if (!markdown) {
+                ui.updateStatus(t('nothingToSave') || 'Nothing to save');
+                setTimeout(() => ui.updateStatus(''), 2000);
+                return;
+            }
+
+            // Determine filename (reuse existing or generate new)
+            let filename = savedFilenames[session.id];
+            const isUpdate = !!filename;
+            if (!filename) {
+                filename = generateFilename(session.timestamp);
+                savedFilenames[session.id] = filename;
+            }
+
+            // Show saving state
+            saveChatBtn.classList.add('saving');
+            ui.updateStatus(t('saving') || 'Saving...');
+
+            // Request save via message bridge
+            requestSaveChat({
+                content: markdown,
+                filename: filename,
+                isUpdate: isUpdate,
+                sessionId: session.id
+            });
+        });
+
+        // Listen for save result
+        window.addEventListener('message', (event) => {
+            if (event.data?.action === 'SAVE_CHAT_RESULT') {
+                saveChatBtn.classList.remove('saving');
+
+                if (event.data.success) {
+                    saveChatBtn.classList.remove('has-content');
+                    saveChatBtn.classList.add('saved');
+                    const msg = event.data.isUpdate
+                        ? (t('chatUpdated') || 'Chat updated')
+                        : (t('chatSaved') || 'Chat saved');
+                    ui.updateStatus(`✓ ${msg}: ${event.data.filename}`);
+                } else {
+                    ui.updateStatus(`✗ ${event.data.error || 'Save failed'}`);
+                }
+
+                setTimeout(() => ui.updateStatus(''), 3000);
+            }
+        });
+
+        // Initial state update
+        setTimeout(updateSaveButtonState, 100);
+    }
 }

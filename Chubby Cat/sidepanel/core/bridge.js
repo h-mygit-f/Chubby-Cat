@@ -62,6 +62,12 @@ export class MessageBridge {
             return;
         }
 
+        // 4.5 Save Chat as Markdown (via chrome.downloads)
+        if (action === 'SAVE_CHAT_MARKDOWN') {
+            this.saveChatMarkdown(payload);
+            return;
+        }
+
         // 5. Data Getters (Immediate Response)
         if (action === 'GET_THEME') {
             this.frame.postMessage({ action: 'RESTORE_THEME', payload: this.state.getCached('geminiTheme') });
@@ -225,6 +231,82 @@ export class MessageBridge {
         this.frame.postMessage({
             action: 'BACKGROUND_MESSAGE',
             payload: message
+        });
+    }
+
+    /**
+     * Save chat content as Markdown file using chrome.downloads API
+     */
+    async saveChatMarkdown(payload) {
+        const { content, filename, isUpdate, sessionId } = payload;
+
+        try {
+            // Create blob and data URL
+            const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+            const dataUrl = await this.blobToDataUrl(blob);
+
+            // Use chrome.downloads to save the file
+            chrome.downloads.download({
+                url: dataUrl,
+                filename: `Chubby Cat/${filename}`,
+                saveAs: false,
+                conflictAction: isUpdate ? 'overwrite' : 'uniquify'
+            }, (downloadId) => {
+                if (chrome.runtime.lastError) {
+                    this.frame.postMessage({
+                        action: 'SAVE_CHAT_RESULT',
+                        success: false,
+                        error: chrome.runtime.lastError.message,
+                        sessionId
+                    });
+                    return;
+                }
+
+                // Listen for download completion
+                const onChanged = (delta) => {
+                    if (delta.id !== downloadId) return;
+
+                    if (delta.state?.current === 'complete') {
+                        chrome.downloads.onChanged.removeListener(onChanged);
+                        this.frame.postMessage({
+                            action: 'SAVE_CHAT_RESULT',
+                            success: true,
+                            filename,
+                            isUpdate,
+                            sessionId
+                        });
+                    } else if (delta.state?.current === 'interrupted' || delta.error) {
+                        chrome.downloads.onChanged.removeListener(onChanged);
+                        this.frame.postMessage({
+                            action: 'SAVE_CHAT_RESULT',
+                            success: false,
+                            error: delta.error?.current || 'Download interrupted',
+                            sessionId
+                        });
+                    }
+                };
+
+                chrome.downloads.onChanged.addListener(onChanged);
+            });
+        } catch (err) {
+            this.frame.postMessage({
+                action: 'SAVE_CHAT_RESULT',
+                success: false,
+                error: err.message || 'Unknown error',
+                sessionId
+            });
+        }
+    }
+
+    /**
+     * Convert blob to data URL
+     */
+    blobToDataUrl(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
         });
     }
 }

@@ -354,3 +354,48 @@ body.layout-wide #history-toggle {
     width: 16px;
     height: 16px;
 }
+
+/* Save Button Styles */
+.save-btn {
+    position: relative;
+}
+
+.save-btn-indicator {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.save-btn.has-content .save-btn-indicator {
+    background: var(--primary, #ef4444);
+    opacity: 1;
+}
+
+.save-btn.saved .save-btn-indicator {
+    background: #22c55e;
+    opacity: 1;
+}
+
+.save-btn.saving {
+    pointer-events: none;
+}
+
+.save-btn.saving svg {
+    animation: save-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes save-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.save-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}

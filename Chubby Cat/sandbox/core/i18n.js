@@ -205,6 +205,13 @@ export const translations = {
         "save": "Save",
         "cancel": "Cancel",
         "edit": "Edit",
+
+        // Save Chat
+        "saveChatTooltip": "Save Chat as Markdown",
+        "nothingToSave": "Nothing to save",
+        "saving": "Saving...",
+        "chatSaved": "Chat saved",
+        "chatUpdated": "Chat updated",
     },
     zh: {
         "mcpTools": "外部 MCP 工具",
@@ -409,6 +416,13 @@ export const translations = {
         "save": "保存",
         "cancel": "取消",
         "edit": "编辑",
+
+        // Save Chat
+        "saveChatTooltip": "保存对话为 Markdown",
+        "nothingToSave": "没有内容可保存",
+        "saving": "保存中...",
+        "chatSaved": "对话已保存",
+        "chatUpdated": "对话已更新",
     }
 };
 

@@ -105,3 +105,10 @@ export function saveQuickPhrasesToStorage(phrases) {
         payload: phrases
     }, '*');
 }
+
+export function requestSaveChat(payload) {
+    window.parent.postMessage({
+        action: 'SAVE_CHAT_MARKDOWN',
+        payload: payload
+    }, '*');
+}
