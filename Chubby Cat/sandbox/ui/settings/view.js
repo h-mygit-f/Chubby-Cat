@@ -6,6 +6,7 @@ import { AppearanceSection } from './sections/appearance.js';
 import { ShortcutsSection } from './sections/shortcuts.js';
 import { DataManagementSection } from './sections/data_management.js';
 import { AboutSection } from './sections/about.js';
+import { DocumentTranslationSection } from './sections/document_translation.js';
 
 export class SettingsView {
     constructor(callbacks) {
@@ -32,6 +33,10 @@ export class SettingsView {
             onImageToolsChange: (val) => this.fire('onImageToolsChange', val),
             onSidebarBehaviorChange: (val) => this.fire('onSidebarBehaviorChange', val),
             onSummaryPromptChange: (val) => this.fire('onSummaryPromptChange', val)
+        });
+
+        this.documentTranslation = new DocumentTranslationSection({
+            onDocProcessingToggle: (val) => this.fire('onDocProcessingToggle', val)
         });
 
         this.appearance = new AppearanceSection({
@@ -189,10 +194,11 @@ export class SettingsView {
         const shortcutsData = this.shortcuts.getData();
         const connectionData = this.connection.getData();
         const generalData = this.general.getData();
+        const documentTranslationData = this.documentTranslation.getData();
 
         const data = {
             shortcuts: shortcutsData,
-            connection: connectionData,
+            connection: { ...connectionData, ...documentTranslationData },
             textSelection: generalData.textSelection,
             imageTools: generalData.imageTools,
             accountIndices: generalData.accountIndices
@@ -260,7 +266,8 @@ export class SettingsView {
         return {
             shortcuts: this.shortcuts.getData(),
             connection: this.connection.getData(),
-            general: this.general.getData()
+            general: this.general.getData(),
+            documentTranslation: this.documentTranslation.getData()
         };
     }
 
@@ -327,6 +334,7 @@ export class SettingsView {
     // Delegation to Connection
     setConnectionSettings(data) {
         this.connection.setData(data);
+        this.documentTranslation.setData(data);
     }
 
     // Delegation to About
@@ -361,6 +369,9 @@ export class SettingsView {
             if (toggles) {
                 this.general.setToggles(toggles.textSelectionEnabled, toggles.imageToolsEnabled);
             }
+        }
+        if (this.documentTranslation) {
+            this.documentTranslation.setProvider(provider);
         }
         this.fire('onProviderChange', provider);
     }

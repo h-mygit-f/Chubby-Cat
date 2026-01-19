@@ -6,6 +6,7 @@ import { AppearanceSettingsTemplate } from './settings/appearance.js';
 import { ShortcutsSettingsTemplate } from './settings/shortcuts.js';
 import { DataManagementSettingsTemplate } from './settings/data_management.js';
 import { AboutSettingsTemplate } from './settings/about.js';
+import { DocumentTranslationSettingsTemplate } from './settings/document_translation.js';
 
 export const SettingsTemplate = `
     <!-- SETTINGS -->
@@ -41,6 +42,15 @@ export const SettingsTemplate = `
                             <path d="M2 12l10 5 10-5"></path>
                         </svg>
                         <span>模型配置</span>
+                    </div>
+                    <div class="settings-nav-item" data-panel="document">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="8" y1="13" x2="16" y2="13"></line>
+                            <line x1="8" y1="17" x2="16" y2="17"></line>
+                        </svg>
+                        <span>文档翻译</span>
                     </div>
                     <div class="settings-nav-item" data-panel="mcp">
                         <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -92,6 +102,17 @@ export const SettingsTemplate = `
                         </div>
                         <div class="settings-panel-content">
                             ${ModelSettingsTemplate}
+                        </div>
+                    </div>
+
+                    <!-- Document Translation Panel -->
+                    <div class="settings-panel" data-panel="document">
+                        <div class="settings-panel-header">
+                            <h4 data-i18n="docTranslationTitle">Document Translation</h4>
+                            <p class="settings-panel-desc" data-i18n="docTranslationDesc">OCR settings and document preprocessing for custom API models</p>
+                        </div>
+                        <div class="settings-panel-content">
+                            ${DocumentTranslationSettingsTemplate}
                         </div>
                     </div>
 

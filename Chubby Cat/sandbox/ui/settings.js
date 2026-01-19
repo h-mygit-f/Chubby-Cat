@@ -27,6 +27,12 @@ export class SettingsController {
             openaiBaseUrl: "",
             openaiApiKey: "",
             openaiModel: "",
+            // Document Processing (OCR)
+            docProcessingEnabled: false,
+            docProcessingProvider: 'mistral',
+            docProcessingBaseUrl: 'https://api.mistral.ai/v1/ocr',
+            docProcessingApiKey: '',
+            docProcessingModel: 'mistral-ocr-latest',
             // OpenAI Multi-Config
             openaiConfigs: [],
             openaiActiveConfigId: null,
@@ -158,6 +164,12 @@ export class SettingsController {
             openaiBaseUrl: data.connection.openaiBaseUrl,
             openaiApiKey: data.connection.openaiApiKey,
             openaiModel: data.connection.openaiModel,
+            // Document Processing (OCR)
+            docProcessingEnabled: data.connection.docProcessingEnabled === true,
+            docProcessingProvider: data.connection.docProcessingProvider || 'mistral',
+            docProcessingBaseUrl: data.connection.docProcessingBaseUrl || 'https://api.mistral.ai/v1/ocr',
+            docProcessingApiKey: data.connection.docProcessingApiKey || '',
+            docProcessingModel: data.connection.docProcessingModel || 'mistral-ocr-latest',
             // OpenAI Multi-Config
             openaiConfigs: Array.isArray(data.connection.openaiConfigs) ? data.connection.openaiConfigs : [],
             openaiActiveConfigId: data.connection.openaiActiveConfigId || null,

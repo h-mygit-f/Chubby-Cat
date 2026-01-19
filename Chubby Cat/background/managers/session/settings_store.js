@@ -13,7 +13,12 @@ export async function getConnectionSettings() {
         'geminiOpenaiApiKey',
         'geminiOpenaiModel',
         'geminiOpenaiConfigs',
-        'geminiOpenaiActiveConfigId'
+        'geminiOpenaiActiveConfigId',
+        'geminiDocProcessingEnabled',
+        'geminiDocProcessingProvider',
+        'geminiDocProcessingBaseUrl',
+        'geminiDocProcessingApiKey',
+        'geminiDocProcessingModel'
     ]);
 
     // Legacy Migration Logic
@@ -61,6 +66,12 @@ export async function getConnectionSettings() {
         openaiModel: stored.geminiOpenaiModel,
         // OpenAI (multi-config support)
         openaiConfigs: Array.isArray(stored.geminiOpenaiConfigs) ? stored.geminiOpenaiConfigs : [],
-        openaiActiveConfigId: stored.geminiOpenaiActiveConfigId || null
+        openaiActiveConfigId: stored.geminiOpenaiActiveConfigId || null,
+        // Document Processing (OCR)
+        docProcessingEnabled: stored.geminiDocProcessingEnabled === true,
+        docProcessingProvider: stored.geminiDocProcessingProvider || 'mistral',
+        docProcessingBaseUrl: stored.geminiDocProcessingBaseUrl || 'https://api.mistral.ai/v1/ocr',
+        docProcessingApiKey: stored.geminiDocProcessingApiKey || '',
+        docProcessingModel: stored.geminiDocProcessingModel || 'mistral-ocr-latest'
     };
 }

@@ -32,6 +32,11 @@ export class StateManager {
             'geminiOpenaiModel',
             'geminiOpenaiConfigs',
             'geminiOpenaiActiveConfigId',
+            'geminiDocProcessingEnabled',
+            'geminiDocProcessingProvider',
+            'geminiDocProcessingBaseUrl',
+            'geminiDocProcessingApiKey',
+            'geminiDocProcessingModel',
             'geminiMcpEnabled',
             'geminiMcpTransport',
             'geminiMcpServerUrl',
@@ -88,6 +93,12 @@ export class StateManager {
                 // OpenAI Multi-Config
                 openaiConfigs: Array.isArray(this.data.geminiOpenaiConfigs) ? this.data.geminiOpenaiConfigs : null,
                 openaiActiveConfigId: this.data.geminiOpenaiActiveConfigId || null,
+                // Document Processing (OCR)
+                docProcessingEnabled: this.data.geminiDocProcessingEnabled === true,
+                docProcessingProvider: this.data.geminiDocProcessingProvider || 'mistral',
+                docProcessingBaseUrl: this.data.geminiDocProcessingBaseUrl || 'https://api.mistral.ai/v1/ocr',
+                docProcessingApiKey: this.data.geminiDocProcessingApiKey || '',
+                docProcessingModel: this.data.geminiDocProcessingModel || 'mistral-ocr-latest',
                 // MCP - Multi-select support
                 mcpEnabled: this.data.geminiMcpEnabled === true,
                 mcpTransport: this.data.geminiMcpTransport || "sse",

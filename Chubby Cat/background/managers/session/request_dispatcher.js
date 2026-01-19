@@ -3,6 +3,7 @@
 import { sendOfficialMessage } from '../../../services/providers/official.js';
 import { sendWebMessage } from '../../../services/providers/web.js';
 import { sendOpenAIMessage } from '../../../services/providers/openai_compatible.js';
+import { extractMistralOcrText } from '../../../services/providers/mistral_ocr.js';
 import { getHistory } from './history_store.js';
 
 export class RequestDispatcher {
@@ -105,14 +106,18 @@ export class RequestDispatcher {
             };
         }
 
+        const preprocessing = await this._maybeApplyDocumentProcessing(request, settings, files, onUpdate, signal);
+        const requestText = preprocessing.text;
+        const processedFiles = preprocessing.files;
+
         let history = await getHistory(request.sessionId);
 
         const response = await sendOpenAIMessage(
-            request.text,
+            requestText,
             request.systemInstruction,
             history,
             config,
-            files,
+            processedFiles,
             signal,
             onUpdate
         );
@@ -204,5 +209,62 @@ export class RequestDispatcher {
                 throw err;
             }
         }
+    }
+
+    async _maybeApplyDocumentProcessing(request, settings, files, onUpdate, signal) {
+        const enabled = settings.docProcessingEnabled === true;
+        if (!enabled) return { text: request.text, files };
+
+        if (!files || files.length === 0) return { text: request.text, files };
+
+        const ocrTargets = files.filter((file) => {
+            if (!file) return false;
+            const type = (file.type || '').toLowerCase();
+            if (type.startsWith('image/')) return true;
+            if (type === 'application/pdf') return true;
+            const name = (file.name || '').toLowerCase();
+            return name.endsWith('.pdf');
+        });
+
+        if (ocrTargets.length === 0) return { text: request.text, files };
+
+        const baseUrl = settings.docProcessingBaseUrl || '';
+        const apiKey = settings.docProcessingApiKey || '';
+        const model = settings.docProcessingModel || '';
+
+        if (!baseUrl || !model) {
+            throw new Error('Document processing model settings are incomplete. Please check the Document Translation panel.');
+        }
+        if (!apiKey) {
+            throw new Error('Document processing API key is missing. Please configure it in settings.');
+        }
+
+        const isZh = chrome.i18n.getUILanguage().startsWith('zh');
+        const statusPrefix = isZh ? '正在解析文档...' : 'Processing document...';
+
+        const results = [];
+        for (const file of ocrTargets) {
+            if (onUpdate) {
+                const name = file.name ? ` ${file.name}` : '';
+                onUpdate(`${statusPrefix}${name}`, '');
+            }
+            const text = await extractMistralOcrText(file, { baseUrl, apiKey, model }, signal);
+            results.push({
+                name: file.name || (isZh ? '附件' : 'Attachment'),
+                text
+            });
+        }
+
+        const blocks = results.map((entry, idx) => {
+            const label = `${idx + 1}. ${entry.name}`;
+            return `${label}\n${entry.text}`;
+        });
+
+        const header = isZh ? '【文档解析结果】' : '[Document OCR Results]';
+        const ocrText = `${header}\n${blocks.join('\n\n')}`;
+        const nextText = request.text ? `${request.text}\n\n${ocrText}` : ocrText;
+
+        const remainingFiles = files.filter((file) => !ocrTargets.includes(file));
+        return { text: nextText, files: remainingFiles };
     }
 }

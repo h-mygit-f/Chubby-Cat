@@ -111,6 +111,11 @@ export class MessageBridge {
                 'geminiOpenaiModel',
                 'geminiOpenaiConfigs',
                 'geminiOpenaiActiveConfigId',
+                'geminiDocProcessingEnabled',
+                'geminiDocProcessingProvider',
+                'geminiDocProcessingBaseUrl',
+                'geminiDocProcessingApiKey',
+                'geminiDocProcessingModel',
                 'geminiMcpEnabled',
                 'geminiMcpTransport',
                 'geminiMcpServerUrl',
@@ -154,6 +159,12 @@ export class MessageBridge {
                         openaiBaseUrl: activeConfig ? activeConfig.baseUrl : (res.geminiOpenaiBaseUrl || ""),
                         openaiApiKey: activeConfig ? activeConfig.apiKey : (res.geminiOpenaiApiKey || ""),
                         openaiModel: activeConfig ? activeConfig.model : (res.geminiOpenaiModel || ""),
+                        // Document Processing (OCR)
+                        docProcessingEnabled: res.geminiDocProcessingEnabled === true,
+                        docProcessingProvider: res.geminiDocProcessingProvider || 'mistral',
+                        docProcessingBaseUrl: res.geminiDocProcessingBaseUrl || 'https://api.mistral.ai/v1/ocr',
+                        docProcessingApiKey: res.geminiDocProcessingApiKey || '',
+                        docProcessingModel: res.geminiDocProcessingModel || 'mistral-ocr-latest',
                         // Multi-config support
                         openaiConfigs: openaiConfigs,
                         openaiActiveConfigId: openaiActiveConfigId,
@@ -213,6 +224,12 @@ export class MessageBridge {
             this.state.save('geminiOpenaiBaseUrl', payload.openaiBaseUrl);
             this.state.save('geminiOpenaiApiKey', payload.openaiApiKey);
             this.state.save('geminiOpenaiModel', payload.openaiModel);
+            // Document Processing (OCR)
+            this.state.save('geminiDocProcessingEnabled', payload.docProcessingEnabled === true);
+            this.state.save('geminiDocProcessingProvider', payload.docProcessingProvider || 'mistral');
+            this.state.save('geminiDocProcessingBaseUrl', payload.docProcessingBaseUrl || 'https://api.mistral.ai/v1/ocr');
+            this.state.save('geminiDocProcessingApiKey', payload.docProcessingApiKey || '');
+            this.state.save('geminiDocProcessingModel', payload.docProcessingModel || 'mistral-ocr-latest');
             // MCP - Multi-select support
             this.state.save('geminiMcpEnabled', payload.mcpEnabled === true);
             this.state.save('geminiMcpTransport', payload.mcpTransport || "sse");
