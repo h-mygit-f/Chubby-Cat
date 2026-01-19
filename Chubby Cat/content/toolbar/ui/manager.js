@@ -227,6 +227,14 @@
                     { val: 'gemini-3-flash-preview', txt: 'Gemini 3 Flash' },
                     { val: 'gemini-3-pro-preview', txt: 'Gemini 3 Pro' }
                 ];
+            } else if (provider === 'grok') {
+                opts = [
+                    { val: 'grok-4', txt: 'Grok 4' },
+                    { val: 'grok-4.1-thinking', txt: 'Grok 4.1 Thinking' },
+                    { val: 'grok-4-fast', txt: 'Grok 4 Fast' },
+                    { val: 'grok-3-fast', txt: 'Grok 3 Fast' },
+                    { val: 'grok-imagine-0.9', txt: 'Grok Imagine' }
+                ];
             } else if (provider === 'openai') {
                 const rawModels = settings.openaiModel || "";
                 const models = rawModels.split(',').map(m => m.trim()).filter(m => m);

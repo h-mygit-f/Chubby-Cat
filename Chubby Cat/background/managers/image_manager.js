@@ -18,7 +18,17 @@ export class ImageManager {
                 }
             }
 
-            const response = await fetch(url);
+            let needsCredentials = false;
+            try {
+                const host = new URL(url).hostname;
+                needsCredentials = host.endsWith('grok.com');
+            } catch (e) {
+                needsCredentials = false;
+            }
+
+            const response = await fetch(url, {
+                credentials: needsCredentials ? 'include' : 'omit'
+            });
             if (!response.ok) throw new Error("Fetch failed: " + response.statusText);
 
             const blob = await response.blob();

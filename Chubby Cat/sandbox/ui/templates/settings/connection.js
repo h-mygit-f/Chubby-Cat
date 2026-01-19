@@ -7,6 +7,7 @@ export const ConnectionSettingsTemplate = `
         <label data-i18n="connectionProvider" style="font-weight: 500; display: block; margin-bottom: 6px;">Model Provider</label>
         <select id="provider-select" class="shortcut-input" style="width: 100%; text-align: left; padding: 8px 12px;">
             <option value="web" data-i18n="providerWeb">Gemini Web Client (Free)</option>
+            <option value="grok" data-i18n="providerGrok">Grok Web Client (Free)</option>
             <option value="official" data-i18n="providerOfficial">Google Gemini API</option>
             <option value="openai" data-i18n="providerOpenAI">OpenAI/Claude Compatible API</option>
         </select>

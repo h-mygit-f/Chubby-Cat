@@ -559,7 +559,7 @@ export class ConnectionSection {
         const { apiKeyContainer, officialFields, openaiFields } = this.elements;
         if (!apiKeyContainer) return;
 
-        if (provider === 'web') {
+        if (provider === 'web' || provider === 'grok') {
             apiKeyContainer.style.display = 'none';
         } else {
             apiKeyContainer.style.display = 'flex';

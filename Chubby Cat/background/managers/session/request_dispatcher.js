@@ -3,6 +3,7 @@
 import { sendOfficialMessage } from '../../../services/providers/official.js';
 import { sendWebMessage } from '../../../services/providers/web.js';
 import { sendOpenAIMessage } from '../../../services/providers/openai_compatible.js';
+import { sendGrokMessage } from '../../../services/providers/grok.js';
 import { extractMistralOcrText } from '../../../services/providers/mistral_ocr.js';
 import { getHistory } from './history_store.js';
 
@@ -16,6 +17,8 @@ export class RequestDispatcher {
             return await this._handleOfficialRequest(request, settings, files, onUpdate, signal);
         } else if (settings.provider === 'openai') {
             return await this._handleOpenAIRequest(request, settings, files, onUpdate, signal);
+        } else if (settings.provider === 'grok') {
+            return await this._handleGrokRequest(request, files, onUpdate, signal);
         } else {
             return await this._handleWebRequest(request, files, onUpdate, signal);
         }
@@ -118,6 +121,29 @@ export class RequestDispatcher {
             history,
             config,
             processedFiles,
+            signal,
+            onUpdate
+        );
+
+        return {
+            action: "GEMINI_REPLY",
+            text: response.text,
+            thoughts: response.thoughts,
+            images: response.images,
+            status: "success",
+            context: null
+        };
+    }
+
+    async _handleGrokRequest(request, files, onUpdate, signal) {
+        const history = await getHistory(request.sessionId);
+
+        const response = await sendGrokMessage(
+            request.text,
+            request.systemInstruction,
+            history,
+            request.model,
+            files,
             signal,
             onUpdate
         );

@@ -21,9 +21,10 @@ export class GeminiSessionManager {
 
         this.abortController = new AbortController();
         const signal = this.abortController.signal;
+        let settings = null;
 
         try {
-            const settings = await getConnectionSettings();
+            settings = await getConnectionSettings();
 
             // Normalize files
             let files = [];
@@ -51,17 +52,26 @@ export class GeminiSessionManager {
 
             let errorMessage = error.message || "Unknown error";
             const isZh = chrome.i18n.getUILanguage().startsWith('zh');
+            const provider = settings?.provider || 'web';
 
             // Handle common user-facing errors
-            if (errorMessage.includes("未登录") || errorMessage.includes("Not logged in")) {
-                this.auth.forceContextRefresh();
-                await chrome.storage.local.remove(['geminiContext']);
+            if (errorMessage.includes("未登录") || errorMessage.includes("Not logged in") || errorMessage.includes("401") || errorMessage.includes("403") || errorMessage.includes("Unauthorized")) {
+                if (provider === 'web') {
+                    this.auth.forceContextRefresh();
+                    await chrome.storage.local.remove(['geminiContext']);
 
-                const currentIndex = this.auth.getCurrentIndex();
-                if (isZh) {
-                    errorMessage = `账号 (Index: ${currentIndex}) 未登录或会话已过期。请前往 <a href="https://gemini.google.com/u/${currentIndex}/" target="_blank" style="color: inherit; text-decoration: underline;">gemini.google.com/u/${currentIndex}/</a> 登录。`;
-                } else {
-                    errorMessage = `Account (Index: ${currentIndex}) not logged in. Please log in at <a href="https://gemini.google.com/u/${currentIndex}/" target="_blank" style="color: inherit; text-decoration: underline;">gemini.google.com/u/${currentIndex}/</a>.`;
+                    const currentIndex = this.auth.getCurrentIndex();
+                    if (isZh) {
+                        errorMessage = `账号 (Index: ${currentIndex}) 未登录或会话已过期。请前往 <a href="https://gemini.google.com/u/${currentIndex}/" target="_blank" style="color: inherit; text-decoration: underline;">gemini.google.com/u/${currentIndex}/</a> 登录。`;
+                    } else {
+                        errorMessage = `Account (Index: ${currentIndex}) not logged in. Please log in at <a href="https://gemini.google.com/u/${currentIndex}/" target="_blank" style="color: inherit; text-decoration: underline;">gemini.google.com/u/${currentIndex}/</a>.`;
+                    }
+                } else if (provider === 'grok') {
+                    if (isZh) {
+                        errorMessage = `Grok 未登录或会话已过期。请前往 <a href="https://grok.com/" target="_blank" style="color: inherit; text-decoration: underline;">grok.com</a> 登录。`;
+                    } else {
+                        errorMessage = `Grok is not logged in or the session expired. Please log in at <a href="https://grok.com/" target="_blank" style="color: inherit; text-decoration: underline;">grok.com</a>.`;
+                    }
                 }
             } else if (errorMessage.includes("429") || errorMessage.includes("Too Many Requests")) {
                 errorMessage = isZh ? "请求过于频繁，请稍后再试 (429)" : "Too many requests, please try again later (429)";

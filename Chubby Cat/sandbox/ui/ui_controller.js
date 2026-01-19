@@ -83,7 +83,16 @@ export class UIController {
             { val: 'gemini-3-pro', txt: '3 Pro', provider: 'web' }
         ];
 
-        // 2. Official API Models (if API key is configured)
+        // 2. Grok Web Models
+        const grokModels = [
+            { val: 'grok-4', txt: 'Grok 4', provider: 'grok' },
+            { val: 'grok-4.1-thinking', txt: 'Grok 4.1 Thinking', provider: 'grok' },
+            { val: 'grok-4-fast', txt: 'Grok 4 Fast', provider: 'grok' },
+            { val: 'grok-3-fast', txt: 'Grok 3 Fast', provider: 'grok' },
+            { val: 'grok-imagine-0.9', txt: 'Grok Imagine', provider: 'grok' }
+        ];
+
+        // 3. Official API Models (if API key is configured)
         const officialModels = [];
         if (settings.apiKey) {
             officialModels.push(
@@ -92,7 +101,7 @@ export class UIController {
             );
         }
 
-        // 3. OpenAI Compatible Configs
+        // 4. OpenAI Compatible Configs
         const openaiModels = [];
         const configs = Array.isArray(settings.openaiConfigs) ? settings.openaiConfigs : [];
         if (configs.length > 0) {
@@ -126,6 +135,20 @@ export class UIController {
             this.modelSelect.appendChild(webGroup);
         }
 
+        // Add Grok models
+        if (grokModels.length > 0) {
+            const grokGroup = document.createElement('optgroup');
+            grokGroup.label = 'Grok (Free)';
+            grokModels.forEach(o => {
+                const opt = document.createElement('option');
+                opt.value = o.val;
+                opt.textContent = o.txt;
+                opt.dataset.provider = 'grok';
+                grokGroup.appendChild(opt);
+            });
+            this.modelSelect.appendChild(grokGroup);
+        }
+
         // Add Official API models (if configured)
         if (officialModels.length > 0) {
             const officialGroup = document.createElement('optgroup');
@@ -157,7 +180,7 @@ export class UIController {
         }
 
         // --- Render Custom Dropdown Menu ---
-        this._renderDropdownMenu(webModels, officialModels, openaiModels, current);
+        this._renderDropdownMenu(webModels, grokModels, officialModels, openaiModels, current);
 
         // --- Restore Selection ---
         // Try to restore previous selection, considering cross-provider scenarios
@@ -188,6 +211,8 @@ export class UIController {
                 } else {
                     defaultValue = openaiModels[0].val;
                 }
+            } else if (currentProvider === 'grok' && grokModels.length > 0) {
+                defaultValue = grokModels[0].val;
             } else if (currentProvider === 'official' && officialModels.length > 0) {
                 defaultValue = officialModels[0].val;
             } else if (webModels.length > 0) {
@@ -205,7 +230,7 @@ export class UIController {
     /**
      * Render custom dropdown menu with groups and heart icons
      */
-    _renderDropdownMenu(webModels, officialModels, openaiModels, selectedValue) {
+    _renderDropdownMenu(webModels, grokModels, officialModels, openaiModels, selectedValue) {
         if (!this.modelDropdownMenu) return;
 
         const heartSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
@@ -230,6 +255,12 @@ export class UIController {
         if (webModels.length > 0) {
             html += `<div class="model-dropdown-group">Web (Free)</div>`;
             webModels.forEach(m => { html += renderOption(m); });
+        }
+
+        // Grok models
+        if (grokModels.length > 0) {
+            html += `<div class="model-dropdown-group">Grok (Free)</div>`;
+            grokModels.forEach(m => { html += renderOption(m); });
         }
 
         // Official API models
@@ -291,7 +322,7 @@ export class UIController {
 
     /**
      * Handle provider switch when selecting a model from a different provider group
-     * @param {string} newProvider - The new provider ('web', 'official', 'openai')
+     * @param {string} newProvider - The new provider ('web', 'grok', 'official', 'openai')
      * @param {Object} options - Additional options like configId for OpenAI
      */
     handleProviderSwitch(newProvider, options = {}) {
