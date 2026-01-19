@@ -309,10 +309,48 @@ export class AppController {
                 return;
             }
 
+            // Trigger page summary (from sidebar icon click)
+            if (payload.action === 'TRIGGER_PAGE_SUMMARY') {
+                this._handleTriggerPageSummary(payload);
+                return;
+            }
+
             await this.messageHandler.handle(payload);
         }
 
         // Pass other messages to message bridge handler if not handled here
         // (AppMessageBridge handles standard restores, this controller handles extended logic)
+    }
+
+    /**
+     * Handle trigger page summary action from sidebar icon
+     * @param {Object} payload - { prompt: string, hasPageContext: boolean }
+     */
+    _handleTriggerPageSummary(payload) {
+        const { prompt, hasPageContext } = payload;
+
+        // Skip if already generating
+        if (this.isGenerating) {
+            return;
+        }
+
+        // Enable page context if available
+        if (hasPageContext && !this.pageContextActive) {
+            this.pageContextActive = true;
+            this.ui.chat.togglePageContext(true);
+        }
+
+        // Set the prompt text
+        if (this.ui.inputFn) {
+            this.ui.inputFn.value = prompt || '请总结这个网页的主要内容';
+        }
+
+        // Show status
+        this.ui.updateStatus(t('readingPage'));
+
+        // Wait a short delay for UI to settle, then send
+        setTimeout(() => {
+            this.handleSendMessage();
+        }, 100);
     }
 }

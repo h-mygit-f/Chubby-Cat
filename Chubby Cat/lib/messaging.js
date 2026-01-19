@@ -106,6 +106,17 @@ export function saveQuickPhrasesToStorage(phrases) {
     }, '*');
 }
 
+export function requestSummaryPromptFromStorage() {
+    window.parent.postMessage({ action: 'GET_SUMMARY_PROMPT' }, '*');
+}
+
+export function saveSummaryPromptToStorage(prompt) {
+    window.parent.postMessage({
+        action: 'SAVE_SUMMARY_PROMPT',
+        payload: prompt
+    }, '*');
+}
+
 export function requestSaveChat(payload) {
     window.parent.postMessage({
         action: 'SAVE_CHAT_MARKDOWN',

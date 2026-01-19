@@ -178,6 +178,14 @@ export class MessageBridge {
             return;
         }
 
+        if (action === 'GET_SUMMARY_PROMPT') {
+            chrome.storage.local.get(['geminiSummaryPrompt'], (res) => {
+                const prompt = res.geminiSummaryPrompt || '请总结这个网页的主要内容';
+                this.frame.postMessage({ action: 'RESTORE_SUMMARY_PROMPT', payload: prompt });
+            });
+            return;
+        }
+
         // 6. Data Setters (Sync to Storage & Cache)
         if (action === 'SAVE_SESSIONS') this.state.save('geminiSessions', payload);
         if (action === 'SAVE_SHORTCUTS') this.state.save('geminiShortcuts', payload);
@@ -190,6 +198,7 @@ export class MessageBridge {
         if (action === 'SAVE_PROMPT_DRAFT') this.state.save('geminiPromptDraft', payload);
         if (action === 'SAVE_ACCOUNT_INDICES') this.state.save('geminiAccountIndices', payload);
         if (action === 'SAVE_QUICK_PHRASES') this.state.save('geminiQuickPhrases', payload);
+        if (action === 'SAVE_SUMMARY_PROMPT') this.state.save('geminiSummaryPrompt', payload);
         if (action === 'SAVE_CONNECTION_SETTINGS') {
             this.state.save('geminiProvider', payload.provider);
             // Official

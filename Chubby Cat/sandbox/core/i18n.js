@@ -212,6 +212,10 @@ export const translations = {
         "saving": "Saving...",
         "chatSaved": "Chat saved",
         "chatUpdated": "Chat updated",
+
+        // Summary Prompt
+        "summaryPromptTitle": "Page Summary Prompt",
+        "summaryPromptDesc": "Customize the prompt used when clicking the sidebar icon to summarize pages.",
     },
     zh: {
         "mcpTools": "外部 MCP 工具",
@@ -423,6 +427,10 @@ export const translations = {
         "saving": "保存中...",
         "chatSaved": "对话已保存",
         "chatUpdated": "对话已更新",
+
+        // Summary Prompt
+        "summaryPromptTitle": "网页总结 Prompt",
+        "summaryPromptDesc": "自定义点击侧边图标时使用的网页总结提示词。",
     }
 };
 

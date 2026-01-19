@@ -96,6 +96,37 @@ export class UIMessageHandler {
             return true;
         }
 
+        if (request.action === "OPEN_SIDE_PANEL_WITH_SUMMARY") {
+            // CRITICAL: sidePanel.open() must be called SYNCHRONOUSLY in response to user gesture
+            // Do NOT await or use async before this call
+            if (!sender.tab) {
+                console.warn('[Chubby Cat] No sender.tab for summary');
+                sendResponse({ status: "error" });
+                return true;
+            }
+
+            const tab = sender.tab;
+
+            // Open side panel IMMEDIATELY - this is the synchronous call
+            chrome.sidePanel.open({ tabId: tab.id, windowId: tab.windowId })
+                .then(() => {
+                    // After panel is opened, perform async operations
+                    this._handlePostOpenSummary(tab);
+                })
+                .catch(err => {
+                    console.error("Could not open side panel:", err);
+                    chrome.tabs.sendMessage(tab.id, {
+                        action: 'SIDEBAR_ICON_LOADING',
+                        loading: false
+                    }).catch(() => { });
+                })
+                .finally(() => {
+                    sendResponse({ status: "opened" });
+                });
+
+            return true;
+        }
+
         if (request.action === "TOGGLE_SIDE_PANEL_CONTROL") {
             this._handleToggleSidePanelControl(request, sender).finally(() => {
                 sendResponse({ status: "processed" });
@@ -520,6 +551,63 @@ export class UIMessageHandler {
                     }).catch(() => { });
                 }
             }, 500);
+        }
+    }
+
+    /**
+     * Open side panel and automatically trigger page summary
+     * This is triggered by the floating sidebar icon
+     * IMPORTANT: sidePanel.open() must be called IMMEDIATELY in response to user gesture
+     * Any async operation before sidePanel.open() will break the user gesture context
+     */
+    async _handlePostOpenSummary(tab) {
+        try {
+            // Get page content for context
+            const pageContent = await getActiveTabContent(tab.id);
+            const hasContent = pageContent && pageContent.length > 0;
+
+            // Get custom summary prompt from storage
+            const storage = await chrome.storage.local.get(['geminiSummaryPrompt']);
+            const summaryPrompt = storage.geminiSummaryPrompt || '请总结这个网页的主要内容';
+
+            // Store pending summary action
+            await chrome.storage.local.set({
+                pendingSummaryAction: {
+                    prompt: summaryPrompt,
+                    hasPageContext: hasContent,
+                    tabId: tab.id,
+                    timestamp: Date.now()
+                }
+            });
+
+            // Notify content script that loading is complete
+            chrome.tabs.sendMessage(tab.id, {
+                action: 'SIDEBAR_ICON_LOADING',
+                loading: false
+            }).catch(() => { });
+
+            // Send message to trigger summary after panel is ready
+            setTimeout(() => {
+                chrome.runtime.sendMessage({
+                    action: "TRIGGER_PAGE_SUMMARY",
+                    prompt: summaryPrompt,
+                    hasPageContext: hasContent
+                }).catch(() => { });
+
+                // Clear pending action after a delay
+                setTimeout(() => {
+                    chrome.storage.local.remove(['pendingSummaryAction']);
+                }, 3000);
+            }, 500);
+
+        } catch (err) {
+            console.error('[Chubby Cat] Error in _handlePostOpenSummary:', err);
+
+            // Notify content script to stop loading on error
+            chrome.tabs.sendMessage(tab.id, {
+                action: 'SIDEBAR_ICON_LOADING',
+                loading: false
+            }).catch(() => { });
         }
     }
 

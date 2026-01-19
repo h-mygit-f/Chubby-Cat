@@ -1,6 +1,6 @@
 
 // sandbox/ui/settings.js
-import { saveShortcutsToStorage, saveThemeToStorage, requestThemeFromStorage, saveLanguageToStorage, requestLanguageFromStorage, saveTextSelectionToStorage, requestTextSelectionFromStorage, saveSidebarBehaviorToStorage, saveImageToolsToStorage, requestImageToolsFromStorage, saveAccountIndicesToStorage, requestAccountIndicesFromStorage, saveConnectionSettingsToStorage, requestConnectionSettingsFromStorage, sendToBackground } from '../../lib/messaging.js';
+import { saveShortcutsToStorage, saveThemeToStorage, requestThemeFromStorage, saveLanguageToStorage, requestLanguageFromStorage, saveTextSelectionToStorage, requestTextSelectionFromStorage, saveSidebarBehaviorToStorage, saveImageToolsToStorage, requestImageToolsFromStorage, saveAccountIndicesToStorage, requestAccountIndicesFromStorage, saveConnectionSettingsToStorage, requestConnectionSettingsFromStorage, saveSummaryPromptToStorage, requestSummaryPromptFromStorage, sendToBackground } from '../../lib/messaging.js';
 import { setLanguagePreference, getLanguagePreference } from '../core/i18n.js';
 import { SettingsView } from './settings/view.js';
 import { DEFAULT_SHORTCUTS } from '../../lib/constants.js';
@@ -67,6 +67,7 @@ export class SettingsController {
                 saveImageToolsToStorage(this.imageToolsEnabled);
             },
             onSidebarBehaviorChange: (val) => saveSidebarBehaviorToStorage(val),
+            onSummaryPromptChange: (val) => saveSummaryPromptToStorage(val),
             onDownloadLogs: () => this.downloadLogs(),
             onExport: () => this.handleExport(),
             onImport: (payload) => this.handleImport(payload)
@@ -113,6 +114,7 @@ export class SettingsController {
         requestImageToolsFromStorage();
         requestAccountIndicesFromStorage();
         requestConnectionSettingsFromStorage();
+        requestSummaryPromptFromStorage();
 
         this.fetchGithubData();
     }
@@ -303,6 +305,10 @@ export class SettingsController {
     updateAccountIndices(indicesString) {
         this.accountIndices = indicesString || "0";
         this.view.setAccountIndices(this.accountIndices);
+    }
+
+    updateSummaryPrompt(prompt) {
+        this.view.setSummaryPrompt(prompt || '');
     }
 
     async fetchGithubData() {

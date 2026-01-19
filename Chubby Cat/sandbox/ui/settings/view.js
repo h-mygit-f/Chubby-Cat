@@ -24,7 +24,8 @@ export class SettingsView {
         this.general = new GeneralSection({
             onTextSelectionChange: (val) => this.fire('onTextSelectionChange', val),
             onImageToolsChange: (val) => this.fire('onImageToolsChange', val),
-            onSidebarBehaviorChange: (val) => this.fire('onSidebarBehaviorChange', val)
+            onSidebarBehaviorChange: (val) => this.fire('onSidebarBehaviorChange', val),
+            onSummaryPromptChange: (val) => this.fire('onSummaryPromptChange', val)
         });
 
         this.appearance = new AppearanceSection({
@@ -233,6 +234,10 @@ export class SettingsView {
 
     setAccountIndices(val) {
         this.general.setAccountIndices(val);
+    }
+
+    setSummaryPrompt(val) {
+        this.general.setSummaryPrompt(val);
     }
 
     // Delegation to Connection

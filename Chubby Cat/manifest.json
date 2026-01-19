@@ -54,6 +54,8 @@
       ],
       "js": [
         "content/overlay.js",
+        "content/sidebar_icon_styles.js",
+        "content/sidebar_icon.js",
         "content/toolbar/icons.js",
         "content/toolbar/styles/core.js",
         "content/toolbar/styles/widget.js",

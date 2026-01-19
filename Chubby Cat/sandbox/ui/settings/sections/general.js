@@ -15,12 +15,13 @@ export class GeneralSection {
             textSelectionToggle: get('text-selection-toggle'),
             imageToolsToggle: get('image-tools-toggle'),
             accountIndicesInput: get('account-indices-input'),
+            summaryPromptInput: get('summary-prompt-input'),
             sidebarRadios: document.querySelectorAll('input[name="sidebar-behavior"]')
         };
     }
 
     bindEvents() {
-        const { textSelectionToggle, imageToolsToggle, sidebarRadios } = this.elements;
+        const { textSelectionToggle, imageToolsToggle, sidebarRadios, summaryPromptInput } = this.elements;
 
         if (textSelectionToggle) {
             textSelectionToggle.addEventListener('change', (e) => this.fire('onTextSelectionChange', e.target.checked));
@@ -35,6 +36,21 @@ export class GeneralSection {
                 });
             });
         }
+        if (summaryPromptInput) {
+            // Debounce save on input
+            let saveTimeout = null;
+            summaryPromptInput.addEventListener('input', (e) => {
+                if (saveTimeout) clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    this.fire('onSummaryPromptChange', e.target.value.trim());
+                }, 500);
+            });
+            // Also save on blur
+            summaryPromptInput.addEventListener('blur', (e) => {
+                if (saveTimeout) clearTimeout(saveTimeout);
+                this.fire('onSummaryPromptChange', e.target.value.trim());
+            });
+        }
     }
 
     setToggles(textSelection, imageTools) {
@@ -44,6 +60,12 @@ export class GeneralSection {
 
     setAccountIndices(val) {
         if (this.elements.accountIndicesInput) this.elements.accountIndicesInput.value = val || "0";
+    }
+
+    setSummaryPrompt(val) {
+        if (this.elements.summaryPromptInput) {
+            this.elements.summaryPromptInput.value = val || '';
+        }
     }
 
     setSidebarBehavior(behavior) {
@@ -56,11 +78,12 @@ export class GeneralSection {
     }
 
     getData() {
-        const { textSelectionToggle, imageToolsToggle, accountIndicesInput } = this.elements;
+        const { textSelectionToggle, imageToolsToggle, accountIndicesInput, summaryPromptInput } = this.elements;
         return {
             textSelection: textSelectionToggle ? textSelectionToggle.checked : true,
             imageTools: imageToolsToggle ? imageToolsToggle.checked : true,
-            accountIndices: accountIndicesInput ? accountIndicesInput.value : "0"
+            accountIndices: accountIndicesInput ? accountIndicesInput.value : "0",
+            summaryPrompt: summaryPromptInput ? summaryPromptInput.value : ""
         };
     }
 

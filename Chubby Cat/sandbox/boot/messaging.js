@@ -91,6 +91,10 @@ export class AppMessageBridge {
             this.ui.settings.updateAccountIndices(payload);
             return;
         }
+        if (action === 'RESTORE_SUMMARY_PROMPT') {
+            this.ui.settings.updateSummaryPrompt(payload);
+            return;
+        }
         if (action === 'RESTORE_PROMPT_DRAFT') {
             // Restore saved input draft content
             if (this.ui.chat && this.ui.chat.restorePromptDraft) {
