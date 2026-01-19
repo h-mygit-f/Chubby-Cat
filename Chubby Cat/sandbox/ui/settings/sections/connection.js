@@ -1237,12 +1237,15 @@ export class ConnectionSection {
 
         const cached = this._getCachedTools(server) || [];
         const toolMode = server.toolMode === 'selected' ? 'selected' : 'all';
+        const isAllMode = toolMode === 'all';
 
         // Summary
         const enabledSet = new Set(Array.isArray(server.enabledTools) ? server.enabledTools : []);
+        const allToolNames = cached.map(t => t.name).filter(Boolean);
+        const effectiveEnabledSet = isAllMode ? new Set(allToolNames) : enabledSet;
         const total = cached.length;
-        const enabledCount = toolMode === 'all' ? total : enabledSet.size;
-        const modeLabel = toolMode === 'all' ? 'all' : 'selected';
+        const enabledCount = isAllMode ? total : enabledSet.size;
+        const modeLabel = isAllMode ? 'all' : 'selected';
 
         if (!server.url || !server.url.trim()) {
             mcpToolsSummary.textContent = 'Set Server URL to manage tools.';
@@ -1259,13 +1262,12 @@ export class ConnectionSection {
         // Tool list
         mcpToolList.innerHTML = '';
 
-        if (toolMode === 'all') {
+        if (isAllMode) {
             const div = document.createElement('div');
             div.style.opacity = '0.85';
             div.style.fontSize = '12px';
-            div.textContent = 'Switch to "Selected tools only" to choose which tools the model can use.';
+            div.textContent = 'All tools are enabled. Switch to "Selected tools only" to choose which tools the model can use.';
             mcpToolList.appendChild(div);
-            return;
         }
 
         if (cached.length === 0) {
@@ -1321,7 +1323,8 @@ export class ConnectionSection {
 
             const cb = document.createElement('input');
             cb.type = 'checkbox';
-            cb.checked = enabledSet.has(toolName);
+            cb.checked = effectiveEnabledSet.has(toolName);
+            cb.disabled = isAllMode;
             cb.addEventListener('change', () => {
                 if (cb.checked) enabledSet.add(toolName);
                 else enabledSet.delete(toolName);
@@ -1364,7 +1367,7 @@ export class ConnectionSection {
 
             // Group header counts
             const toolNames = tools.map(t => t.name).filter(Boolean);
-            const enabledCountInGroup = toolNames.filter(n => enabledSet.has(n)).length;
+            const enabledCountInGroup = toolNames.filter(n => effectiveEnabledSet.has(n)).length;
             const totalInGroup = toolNames.length;
 
             const details = document.createElement('details');
@@ -1396,6 +1399,7 @@ export class ConnectionSection {
             groupCb.type = 'checkbox';
             groupCb.checked = totalInGroup > 0 && enabledCountInGroup === totalInGroup;
             groupCb.indeterminate = enabledCountInGroup > 0 && enabledCountInGroup < totalInGroup;
+            groupCb.disabled = isAllMode;
             groupCb.addEventListener('click', (e) => {
                 // Prevent toggling <details> when clicking checkbox
                 e.stopPropagation();
