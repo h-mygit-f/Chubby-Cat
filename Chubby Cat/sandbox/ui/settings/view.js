@@ -15,6 +15,12 @@ export class SettingsView {
         // Dirty state tracking
         this._initialSnapshot = null;
 
+        // Fullscreen state
+        this._isFullscreen = false;
+
+        // Active panel
+        this._activePanel = 'model';
+
         // Initialize Sections
         this.connection = new ConnectionSection({
             onProviderChange: (provider) => this.handleProviderChange(provider),
@@ -54,23 +60,44 @@ export class SettingsView {
         this.elements = {
             modal: get('settings-modal'),
             btnClose: get('close-settings'),
+            btnFullscreen: get('toggle-fullscreen'),
+            fullscreenIcon: get('fullscreen-icon'),
+            minimizeIcon: get('minimize-icon'),
             btnSave: get('save-shortcuts'),
             btnReset: get('reset-shortcuts'),
             // Confirm dialog
             confirmModal: get('unsaved-confirm-modal'),
             confirmSave: get('confirm-save'),
-            confirmDiscard: get('confirm-discard')
+            confirmDiscard: get('confirm-discard'),
+            // Navigation
+            navItems: document.querySelectorAll('.settings-nav-item'),
+            panels: document.querySelectorAll('.settings-panel')
         };
     }
 
     bindEvents() {
-        const { modal, btnClose, btnSave, btnReset, confirmModal, confirmSave, confirmDiscard } = this.elements;
+        const { modal, btnClose, btnFullscreen, btnSave, btnReset, confirmModal, confirmSave, confirmDiscard, navItems } = this.elements;
 
         // Modal actions
         if (btnClose) btnClose.addEventListener('click', () => this.tryClose());
         if (modal) {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) this.tryClose();
+            });
+        }
+
+        // Fullscreen toggle
+        if (btnFullscreen) {
+            btnFullscreen.addEventListener('click', () => this.toggleFullscreen());
+        }
+
+        // Navigation panel switching
+        if (navItems) {
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const panel = item.getAttribute('data-panel');
+                    if (panel) this.switchPanel(panel);
+                });
             });
         }
 
@@ -103,6 +130,59 @@ export class SettingsView {
                 }
             }
         });
+    }
+
+    // --- Panel Navigation ---
+
+    switchPanel(panelName) {
+        const { navItems, panels } = this.elements;
+
+        // Update nav items
+        navItems.forEach(item => {
+            if (item.getAttribute('data-panel') === panelName) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+
+        // Update panels
+        panels.forEach(panel => {
+            if (panel.getAttribute('data-panel') === panelName) {
+                panel.classList.add('active');
+            } else {
+                panel.classList.remove('active');
+            }
+        });
+
+        this._activePanel = panelName;
+    }
+
+    // --- Fullscreen Toggle ---
+
+    toggleFullscreen() {
+        const { modal, fullscreenIcon, minimizeIcon } = this.elements;
+
+        this._isFullscreen = !this._isFullscreen;
+
+        if (modal) {
+            if (this._isFullscreen) {
+                modal.classList.add('fullscreen');
+            } else {
+                modal.classList.remove('fullscreen');
+            }
+        }
+
+        // Toggle icons
+        if (fullscreenIcon && minimizeIcon) {
+            if (this._isFullscreen) {
+                fullscreenIcon.style.display = 'none';
+                minimizeIcon.style.display = 'block';
+            } else {
+                fullscreenIcon.style.display = 'block';
+                minimizeIcon.style.display = 'none';
+            }
+        }
     }
 
     handleSave() {
@@ -142,6 +222,10 @@ export class SettingsView {
     close() {
         if (this.elements.modal) {
             this.elements.modal.classList.remove('visible');
+            // Reset fullscreen on close
+            if (this._isFullscreen) {
+                this.toggleFullscreen();
+            }
         }
         this._initialSnapshot = null;
     }
@@ -297,4 +381,3 @@ export class SettingsView {
         if (this.callbacks[event]) this.callbacks[event](data);
     }
 }
-
