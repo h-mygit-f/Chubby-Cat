@@ -5,10 +5,45 @@ import { copyToClipboard } from './clipboard.js';
 import { createGeneratedImage } from './generated_image.js';
 import { t } from '../core/i18n.js';
 
+function getDataUrlMimeType(value) {
+    if (!value || typeof value !== 'string') return '';
+    const match = value.match(/^data:([^;]+);/i);
+    return match ? match[1].toLowerCase() : '';
+}
+
+function normalizeAttachment(item) {
+    if (!item) return { src: '', mimeType: '', name: '' };
+    if (typeof item === 'string') {
+        return { src: item, mimeType: getDataUrlMimeType(item), name: '' };
+    }
+    if (typeof item === 'object') {
+        const src = item.base64 || item.url || item.src || '';
+        const typeCandidate = item.type || item.mimeType || getDataUrlMimeType(src);
+        const mimeType = typeof typeCandidate === 'string' ? typeCandidate.toLowerCase() : '';
+        const name = item.name || item.filename || '';
+        return { src, mimeType, name };
+    }
+    return { src: '', mimeType: '', name: '' };
+}
+
+function isPdfAttachment(src, mimeType) {
+    if (mimeType) return mimeType === 'application/pdf';
+    if (!src) return false;
+    if (src.startsWith('data:application/pdf')) return true;
+    return /\.pdf($|[?#])/i.test(src);
+}
+
+function isImageAttachment(src, mimeType) {
+    if (mimeType) return mimeType.startsWith('image/');
+    if (!src) return false;
+    if (src.startsWith('data:image/')) return true;
+    return /^https?:\/\//i.test(src) || src.startsWith('blob:');
+}
+
 // Appends a message to the chat history and returns an update controller
 // attachment can be:
-// - string: single user image (URL/Base64)
-// - array of strings: multiple user images
+// - string: single user attachment (URL/Base64)
+// - array of strings/objects: multiple user attachments
 // - array of objects {url, alt}: AI generated images
 export function appendMessage(container, text, role, attachment = null, thoughts = null) {
     const div = document.createElement('div');
@@ -20,24 +55,58 @@ export function appendMessage(container, text, role, attachment = null, thoughts
 
     // 1. User Uploaded Images
     if (role === 'user' && attachment) {
-        const imagesContainer = document.createElement('div');
-        imagesContainer.className = 'user-images-grid';
+        const attachmentsContainer = document.createElement('div');
+        attachmentsContainer.className = 'user-images-grid';
         // Style inline for grid layout if multiple
-        imagesContainer.style.display = 'flex';
-        imagesContainer.style.flexWrap = 'wrap';
-        imagesContainer.style.gap = '8px';
-        imagesContainer.style.marginBottom = '8px';
+        attachmentsContainer.style.display = 'flex';
+        attachmentsContainer.style.flexWrap = 'wrap';
+        attachmentsContainer.style.gap = '8px';
+        attachmentsContainer.style.marginBottom = '8px';
 
-        const imageSources = Array.isArray(attachment) ? attachment : [attachment];
+        const attachments = Array.isArray(attachment) ? attachment : [attachment];
+        const isMulti = attachments.length > 1;
 
-        imageSources.forEach(src => {
-            if (typeof src === 'string') {
+        attachments.forEach(item => {
+            const { src, mimeType, name } = normalizeAttachment(item);
+            if (!src) return;
+
+            if (isPdfAttachment(src, mimeType)) {
+                const card = document.createElement('div');
+                card.className = `chat-file-card${isMulti ? ' chat-file-card--thumb' : ''}`;
+                card.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>';
+
+                const label = document.createElement('span');
+                label.textContent = name || 'PDF';
+                card.appendChild(label);
+
+                const actions = document.createElement('div');
+                actions.className = 'chat-file-actions';
+
+                const openLink = document.createElement('a');
+                openLink.href = src;
+                openLink.target = '_blank';
+                openLink.rel = 'noopener';
+                openLink.textContent = 'Open';
+                actions.appendChild(openLink);
+
+                const downloadLink = document.createElement('a');
+                downloadLink.href = src;
+                downloadLink.download = name || 'document.pdf';
+                downloadLink.textContent = 'Download';
+                actions.appendChild(downloadLink);
+
+                card.appendChild(actions);
+                attachmentsContainer.appendChild(card);
+                return;
+            }
+
+            if (isImageAttachment(src, mimeType)) {
                 const img = document.createElement('img');
                 img.src = src;
                 img.className = 'chat-image';
 
                 // Allow full display by containing image within a reasonable box, or just auto
-                if (imageSources.length > 1) {
+                if (isMulti) {
                     img.style.maxWidth = '150px';
                     img.style.maxHeight = '200px';
                     img.style.width = 'auto';
@@ -50,12 +119,29 @@ export function appendMessage(container, text, role, attachment = null, thoughts
                 img.addEventListener('click', () => {
                     document.dispatchEvent(new CustomEvent('gemini-view-image', { detail: src }));
                 });
-                imagesContainer.appendChild(img);
+                attachmentsContainer.appendChild(img);
+                return;
             }
+
+            const card = document.createElement('div');
+            card.className = `chat-file-card${isMulti ? ' chat-file-card--thumb' : ''}`;
+            card.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>';
+
+            const label = document.createElement('span');
+            if (name) {
+                label.textContent = name;
+            } else if (mimeType) {
+                label.textContent = mimeType;
+            } else {
+                label.textContent = 'File';
+            }
+
+            card.appendChild(label);
+            attachmentsContainer.appendChild(card);
         });
 
-        if (imagesContainer.hasChildNodes()) {
-            div.appendChild(imagesContainer);
+        if (attachmentsContainer.hasChildNodes()) {
+            div.appendChild(attachmentsContainer);
         }
     }
 

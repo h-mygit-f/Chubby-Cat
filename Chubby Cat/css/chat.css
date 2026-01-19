@@ -259,6 +259,55 @@ body.layout-wide .msg.ai {
     transform: scale(1.01);
 }
 
+/* File Attachments */
+.msg .chat-file-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 12px;
+    max-width: 320px;
+}
+
+.msg .chat-file-card.chat-file-card--thumb {
+    padding: 8px 10px;
+    max-width: 200px;
+}
+
+.msg .chat-file-card svg {
+    width: 18px;
+    height: 18px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.msg .chat-file-card span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.msg .chat-file-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.msg .chat-file-actions a {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.msg .chat-file-actions a:hover {
+    text-decoration: underline;
+}
+
 /* Generated Images Grid */
 .generated-images-grid {
     display: grid;
