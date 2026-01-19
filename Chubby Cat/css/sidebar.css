@@ -258,7 +258,7 @@ body.layout-wide .sidebar-overlay {
     position: fixed;
     top: 0;
     right: 0;
-    width: 40px;
+    width: 56px;
     height: 100%;
     background: var(--bg-sidebar);
     z-index: var(--z-right-sidebar);
@@ -266,13 +266,18 @@ body.layout-wide .sidebar-overlay {
     display: flex;
     flex-direction: column;
     transition: background-color 0.2s, width 0.2s;
+    overflow: visible;
 }
 
 /* Content Area (Expandable for future use) */
 .right-sidebar-content {
     flex: 1;
-    overflow-y: auto;
-    padding: 12px 8px;
+    overflow: visible;
+    padding: 12px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Footer with Settings Button */
@@ -328,6 +333,170 @@ body.layout-wide .sidebar-overlay {
 
 .right-sidebar .settings-btn:hover::after {
     opacity: 1;
+}
+
+/* =========================================
+   RIGHT SIDEBAR TOOL BUTTONS
+   ========================================= */
+
+.right-sidebar-tool-btn {
+    width: 100%;
+    height: auto;
+    padding: 8px 4px;
+    margin-bottom: 4px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+/* Last button has no bottom margin */
+.right-sidebar-tool-btn:last-child {
+    margin-bottom: 0;
+}
+
+.right-sidebar-tool-btn svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+/* Tool label text */
+.right-sidebar-tool-btn .tool-label {
+    font-size: 9px;
+    font-weight: 500;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+    color: inherit;
+}
+
+.right-sidebar-tool-btn:hover {
+    background: var(--btn-hover);
+    color: var(--text-primary);
+}
+
+/* Browser Control Button - Blue/Cyan theme */
+#browser-control-btn {
+    color: #0ea5e9;
+}
+
+#browser-control-btn:hover {
+    background: rgba(14, 165, 233, 0.15);
+    color: #0284c7;
+}
+
+#browser-control-btn.active {
+    background: rgba(14, 165, 233, 0.2);
+    color: #0284c7;
+    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.3);
+}
+
+[data-theme="dark"] #browser-control-btn {
+    color: #38bdf8;
+}
+
+[data-theme="dark"] #browser-control-btn:hover {
+    background: rgba(56, 189, 248, 0.2);
+    color: #7dd3fc;
+}
+
+[data-theme="dark"] #browser-control-btn.active {
+    background: rgba(56, 189, 248, 0.25);
+    color: #7dd3fc;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.4);
+}
+
+/* OCR Button - Amber/Orange theme */
+#ocr-btn {
+    color: #f59e0b;
+}
+
+#ocr-btn:hover {
+    background: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+}
+
+[data-theme="dark"] #ocr-btn {
+    color: #fbbf24;
+}
+
+[data-theme="dark"] #ocr-btn:hover {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fcd34d;
+}
+
+/* Screenshot Translate Button - Purple theme */
+#screenshot-translate-btn {
+    color: #a855f7;
+}
+
+#screenshot-translate-btn:hover {
+    background: rgba(168, 85, 247, 0.15);
+    color: #9333ea;
+}
+
+[data-theme="dark"] #screenshot-translate-btn {
+    color: #c084fc;
+}
+
+[data-theme="dark"] #screenshot-translate-btn:hover {
+    background: rgba(192, 132, 252, 0.2);
+    color: #d8b4fe;
+}
+
+/* Snip/Screenshot Button - Green theme */
+#snip-btn {
+    color: #22c55e;
+}
+
+#snip-btn:hover {
+    background: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+}
+
+[data-theme="dark"] #snip-btn {
+    color: #4ade80;
+}
+
+[data-theme="dark"] #snip-btn:hover {
+    background: rgba(74, 222, 128, 0.2);
+    color: #86efac;
+}
+
+/* Tooltip for tool buttons */
+.right-sidebar-tool-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    right: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.15s, visibility 0.15s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 99999;
+}
+
+.right-sidebar-tool-btn:hover::after {
+    opacity: 1;
+    visibility: visible;
 }
 
 /* Mobile: Hide right sidebar only on very small screens */

@@ -36,10 +36,6 @@ export const FooterTemplate = `
         </div>
         
         <div class="tools-container">
-            <button id="tools-scroll-left" class="scroll-nav-btn left" aria-label="Scroll Left">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-            </button>
-            
             <div class="tools-row" id="tools-row">
                 <button id="page-context-btn" class="tool-btn context-aware" data-i18n-title="pageContextTooltip" title="Toggle chat with page content">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -85,41 +81,7 @@ export const FooterTemplate = `
                     </svg>
                     <span data-i18n="quote">Quote</span>
                 </button>
-                <button id="browser-control-btn" class="tool-btn" data-i18n-title="browserControlTooltip" title="Allow model to control browser">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path>
-                        <path d="m13 13 6 6"></path>
-                    </svg>
-                    <span data-i18n="browserControl">Control</span>
-                </button>
-                <button id="ocr-btn" class="tool-btn context-aware" data-i18n-title="ocrTooltip" title="Capture area and extract text">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4 7V4h3"></path>
-                        <path d="M20 7V4h-3"></path>
-                        <path d="M4 17v3h3"></path>
-                        <path d="M20 17v3h-3"></path>
-                        <line x1="9" y1="12" x2="15" y2="12"></line>
-                    </svg>
-                    <span data-i18n="ocr">OCR</span>
-                </button>
-                <button id="screenshot-translate-btn" class="tool-btn context-aware" data-i18n-title="screenshotTranslateTooltip" title="Capture area and translate text">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m5 8 6 6"></path><path d="m4 14 6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="m22 22-5-10-5 10"></path><path d="M14 18h6"></path>
-                    </svg>
-                    <span data-i18n="screenshotTranslate">Translate</span>
-                </button>
-                <button id="snip-btn" class="tool-btn context-aware" data-i18n-title="snipTooltip" title="Capture area to input">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M6 2v14a2 2 0 0 0 2 2h14"></path>
-                        <path d="M18 22V8a2 2 0 0 0-2-2H2"></path>
-                    </svg>
-                    <span data-i18n="snip">Snip</span>
-                </button>
             </div>
-
-            <button id="tools-scroll-right" class="scroll-nav-btn right" aria-label="Scroll Right">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-            </button>
         </div>
 
         <div class="input-wrapper">
