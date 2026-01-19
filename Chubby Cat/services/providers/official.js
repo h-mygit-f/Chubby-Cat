@@ -10,6 +10,9 @@ export async function sendOfficialMessage(prompt, systemInstruction, history, ap
 
     // Dynamic Model Selection: Map UI values to API IDs
     let targetModel = modelName;
+    if (targetModel && targetModel.startsWith('models/')) {
+        targetModel = targetModel.slice('models/'.length);
+    }
 
     // Default mapping if not specific
     if (!targetModel) targetModel = "gemini-3-flash-preview";

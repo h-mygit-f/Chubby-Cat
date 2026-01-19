@@ -92,9 +92,19 @@ export class UIController {
             { val: 'grok-imagine-0.9', txt: 'Grok Imagine', provider: 'grok' }
         ];
 
-        // 3. Official API Models (if API key is configured)
+        // 3. Official API Models (from configured list or fallback defaults)
         const officialModels = [];
-        if (settings.apiKey) {
+        const rawOfficialModels = (settings.officialModel || '')
+            .split(',')
+            .map(m => m.trim())
+            .filter(m => m);
+
+        if (rawOfficialModels.length > 0) {
+            const uniqueOfficialModels = Array.from(new Set(rawOfficialModels));
+            uniqueOfficialModels.forEach(id => {
+                officialModels.push({ val: id, txt: id, provider: 'official' });
+            });
+        } else if (settings.apiKey) {
             officialModels.push(
                 { val: 'gemini-3-flash-preview', txt: 'Gemini 3 Flash', provider: 'official' },
                 { val: 'gemini-3-pro-preview', txt: 'Gemini 3 Pro', provider: 'official' }

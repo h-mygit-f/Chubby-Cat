@@ -223,10 +223,16 @@
             let opts = [];
             
             if (provider === 'official') {
-                opts = [
-                    { val: 'gemini-3-flash-preview', txt: 'Gemini 3 Flash' },
-                    { val: 'gemini-3-pro-preview', txt: 'Gemini 3 Pro' }
-                ];
+                const rawModels = (settings.officialModel || "");
+                const models = rawModels.split(',').map(m => m.trim()).filter(m => m);
+                if (models.length > 0) {
+                    opts = models.map(m => ({ val: m, txt: m }));
+                } else {
+                    opts = [
+                        { val: 'gemini-3-flash-preview', txt: 'Gemini 3 Flash' },
+                        { val: 'gemini-3-pro-preview', txt: 'Gemini 3 Pro' }
+                    ];
+                }
             } else if (provider === 'grok') {
                 opts = [
                     { val: 'grok-4', txt: 'Grok 4' },

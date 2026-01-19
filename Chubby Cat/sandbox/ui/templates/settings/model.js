@@ -9,7 +9,7 @@ export const ModelSettingsTemplate = `
         <select id="provider-select" class="shortcut-input" style="width: 100%; text-align: left; padding: 8px 12px;">
             <option value="web" data-i18n="providerWeb">Gemini Web Client (Free)</option>
             <option value="grok" data-i18n="providerGrok">Grok Web Client (Free)</option>
-            <option value="official" data-i18n="providerOfficial">Google Gemini API</option>
+            <option value="official" data-i18n="providerOfficial">Gemini API</option>
             <option value="openai" data-i18n="providerOpenAI">OpenAI/Claude Compatible API</option>
         </select>
     </div>
@@ -24,6 +24,17 @@ export const ModelSettingsTemplate = `
             <div>
                 <label data-i18n="apiKey" style="font-weight: 500; display: block; margin-bottom: 2px;">API Key</label>
                 <input type="password" id="api-key-input" class="shortcut-input" style="width: 100%; text-align: left; box-sizing: border-box;" data-i18n-placeholder="apiKeyPlaceholder" placeholder="Paste your Gemini API Key">
+            </div>
+            <div>
+                <label style="font-weight: 500; display: block; margin-bottom: 2px;">Model IDs (Comma separated)</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="text" id="official-model" class="shortcut-input" style="flex: 1; text-align: left; box-sizing: border-box;" placeholder="e.g. gemini-2.5-pro, gemini-1.5-flash">
+                    <button id="official-fetch-models" class="tool-btn" style="padding: 6px 10px; white-space: nowrap;" type="button">获取</button>
+                </div>
+                <div id="official-fetch-status" style="font-size: 12px; margin-top: 4px; display: none;"></div>
+                <select id="official-model-dropdown" class="shortcut-input" style="width: 100%; margin-top: 6px; padding: 6px 12px; display: none;">
+                    <option value="" disabled selected>-- 选择模型 --</option>
+                </select>
             </div>
             <div>
                 <label style="font-weight: 500; display: block; margin-bottom: 2px;">Thinking Level (Gemini 3)</label>

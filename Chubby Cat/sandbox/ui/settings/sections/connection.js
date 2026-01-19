@@ -53,6 +53,10 @@ export class ConnectionSection {
             officialBaseUrl: get('official-base-url'),
             apiKeyInput: get('api-key-input'),
             thinkingLevelSelect: get('thinking-level-select'),
+            officialModel: get('official-model'),
+            officialFetchModels: get('official-fetch-models'),
+            officialFetchStatus: get('official-fetch-status'),
+            officialModelDropdown: get('official-model-dropdown'),
 
             // OpenAI Fields
             openaiFields: get('openai-fields'),
@@ -272,6 +276,20 @@ export class ConnectionSection {
             });
         }
 
+        // --- Official API Model Fetch ---
+        const { officialFetchModels, officialModelDropdown } = this.elements;
+        if (officialFetchModels) {
+            officialFetchModels.addEventListener('click', () => {
+                this._fetchOfficialModels();
+            });
+        }
+
+        if (officialModelDropdown) {
+            officialModelDropdown.addEventListener('change', () => {
+                this._onOfficialModelDropdownSelect();
+            });
+        }
+
         // --- OpenAI Multi-Config Events ---
         const {
             openaiConfigSelect,
@@ -398,7 +416,7 @@ export class ConnectionSection {
 
     setData(data) {
         const {
-            providerSelect, officialBaseUrl, apiKeyInput, thinkingLevelSelect,
+            providerSelect, officialBaseUrl, apiKeyInput, thinkingLevelSelect, officialModel,
             mcpEnabled
         } = this.elements;
 
@@ -412,6 +430,7 @@ export class ConnectionSection {
         if (officialBaseUrl) officialBaseUrl.value = data.officialBaseUrl || "";
         if (apiKeyInput) apiKeyInput.value = data.apiKey || "";
         if (thinkingLevelSelect) thinkingLevelSelect.value = data.thinkingLevel || "low";
+        if (officialModel) officialModel.value = data.officialModel || "";
 
         // OpenAI Multi-Config
         const openaiConfigs = Array.isArray(data.openaiConfigs) ? data.openaiConfigs : null;
@@ -512,7 +531,7 @@ export class ConnectionSection {
 
     getData() {
         const {
-            providerSelect, officialBaseUrl, apiKeyInput, thinkingLevelSelect,
+            providerSelect, officialBaseUrl, apiKeyInput, thinkingLevelSelect, officialModel,
             mcpEnabled
         } = this.elements;
 
@@ -532,6 +551,7 @@ export class ConnectionSection {
             officialBaseUrl: officialBaseUrl ? officialBaseUrl.value.trim() : "",
             apiKey: apiKeyInput ? apiKeyInput.value.trim() : "",
             thinkingLevel: thinkingLevelSelect ? thinkingLevelSelect.value : "low",
+            officialModel: officialModel ? officialModel.value.trim() : "",
 
             // OpenAI - Multi-config
             openaiConfigs: openaiConfigs,
@@ -753,6 +773,123 @@ export class ConnectionSection {
                 }
             }, 2000);
         }
+    }
+
+    _showOfficialFetchStatus(text, isError = false) {
+        const { officialFetchStatus } = this.elements;
+        if (!officialFetchStatus) return;
+
+        if (!text) {
+            officialFetchStatus.style.display = 'none';
+            officialFetchStatus.textContent = '';
+            return;
+        }
+
+        officialFetchStatus.style.display = 'block';
+        officialFetchStatus.textContent = text;
+        officialFetchStatus.style.color = isError ? '#b00020' : '#4CAF50';
+    }
+
+    _normalizeOfficialModelId(name) {
+        if (!name) return '';
+        return name.replace(/^models\//, '');
+    }
+
+    async _fetchOfficialModels() {
+        const { officialBaseUrl, apiKeyInput, officialModelDropdown, officialFetchModels } = this.elements;
+
+        const baseUrl = officialBaseUrl ? officialBaseUrl.value.trim().replace(/\/$/, '') : '';
+        const rawKey = apiKeyInput ? apiKeyInput.value.trim() : '';
+        const apiKey = rawKey.split(',').map(k => k.trim()).filter(k => k)[0] || '';
+
+        if (!baseUrl) {
+            this._showOfficialFetchStatus('Base URL is required', true);
+            return;
+        }
+
+        if (!apiKey) {
+            this._showOfficialFetchStatus('API key is required', true);
+            return;
+        }
+
+        if (officialFetchModels) officialFetchModels.disabled = true;
+        this._showOfficialFetchStatus('Fetching models...');
+
+        if (officialModelDropdown) officialModelDropdown.style.display = 'none';
+
+        try {
+            const url = `${baseUrl}/v1beta/models?key=${encodeURIComponent(apiKey)}`;
+            const response = await fetch(url, { method: 'GET' });
+
+            if (!response.ok) {
+                let errorText = await response.text();
+                try {
+                    const errJson = JSON.parse(errorText);
+                    if (errJson.error?.message) errorText = errJson.error.message;
+                } catch (e) { }
+                throw new Error(`${response.status}: ${errorText}`);
+            }
+
+            const data = await response.json();
+            const rawModels = Array.isArray(data.models)
+                ? data.models
+                : (Array.isArray(data.data) ? data.data : []);
+
+            const modelIds = rawModels
+                .map(m => this._normalizeOfficialModelId(m.name || m.id || ''))
+                .filter(Boolean);
+
+            const uniqueModels = Array.from(new Set(modelIds)).sort();
+
+            if (uniqueModels.length === 0) {
+                this._showOfficialFetchStatus('No models found', true);
+                return;
+            }
+
+            this._populateOfficialModelDropdown(uniqueModels);
+            this._showOfficialFetchStatus(`Found ${uniqueModels.length} model(s)`);
+
+            setTimeout(() => this._showOfficialFetchStatus(''), 3000);
+        } catch (err) {
+            this._showOfficialFetchStatus(err.message || 'Failed to fetch models', true);
+        } finally {
+            if (officialFetchModels) officialFetchModels.disabled = false;
+        }
+    }
+
+    _populateOfficialModelDropdown(modelIds) {
+        const { officialModelDropdown } = this.elements;
+        if (!officialModelDropdown) return;
+
+        officialModelDropdown.innerHTML = '<option value="" disabled selected>-- 选择模型 --</option>';
+        for (const id of modelIds) {
+            const opt = document.createElement('option');
+            opt.value = id;
+            opt.textContent = id;
+            officialModelDropdown.appendChild(opt);
+        }
+
+        officialModelDropdown.style.display = 'block';
+    }
+
+    _onOfficialModelDropdownSelect() {
+        const { officialModelDropdown, officialModel } = this.elements;
+        if (!officialModelDropdown || !officialModel) return;
+
+        const selectedModel = officialModelDropdown.value;
+        if (!selectedModel) return;
+
+        const currentValue = officialModel.value.trim();
+        if (currentValue) {
+            const existing = currentValue.split(',').map(s => s.trim());
+            if (!existing.includes(selectedModel)) {
+                officialModel.value = currentValue + ', ' + selectedModel;
+            }
+        } else {
+            officialModel.value = selectedModel;
+        }
+
+        officialModelDropdown.selectedIndex = 0;
     }
 
     _showFetchStatus(text, isError = false) {

@@ -106,6 +106,7 @@ export class MessageBridge {
                 'geminiOfficialBaseUrl',
                 'geminiApiKey',
                 'geminiThinkingLevel',
+                'geminiOfficialModel',
                 'geminiOpenaiBaseUrl',
                 'geminiOpenaiApiKey',
                 'geminiOpenaiModel',
@@ -155,6 +156,7 @@ export class MessageBridge {
                         officialBaseUrl: res.geminiOfficialBaseUrl || '',
                         apiKey: res.geminiApiKey || "",
                         thinkingLevel: res.geminiThinkingLevel || "low",
+                        officialModel: res.geminiOfficialModel || "",
                         // Legacy single fields (populated from active config)
                         openaiBaseUrl: activeConfig ? activeConfig.baseUrl : (res.geminiOpenaiBaseUrl || ""),
                         openaiApiKey: activeConfig ? activeConfig.apiKey : (res.geminiOpenaiApiKey || ""),
@@ -217,6 +219,7 @@ export class MessageBridge {
             this.state.save('geminiOfficialBaseUrl', payload.officialBaseUrl || '');
             this.state.save('geminiApiKey', payload.apiKey);
             this.state.save('geminiThinkingLevel', payload.thinkingLevel);
+            this.state.save('geminiOfficialModel', payload.officialModel || '');
             // OpenAI - Multi-config
             this.state.save('geminiOpenaiConfigs', Array.isArray(payload.openaiConfigs) ? payload.openaiConfigs : []);
             this.state.save('geminiOpenaiActiveConfigId', payload.openaiActiveConfigId || null);
