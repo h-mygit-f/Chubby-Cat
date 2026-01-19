@@ -9,6 +9,15 @@
     const DEBOUNCE_MS = 300;
     const DRAG_THRESHOLD = 5; // pixels to move before considered a drag
 
+    // Check if extension context is still valid
+    function isContextValid() {
+        try {
+            return !!chrome.runtime?.id;
+        } catch {
+            return false;
+        }
+    }
+
     class SidebarIcon {
         constructor() {
             this.iconElement = null;
@@ -43,6 +52,9 @@
 
             // Listen for messages from background
             chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+                if (!isContextValid()) {
+                    return false;
+                }
                 if (request.action === 'SIDEBAR_ICON_LOADING') {
                     this._setLoading(request.loading);
                 }
@@ -65,6 +77,11 @@
         }
 
         _createIcon() {
+            // Check context before using chrome APIs
+            if (!isContextValid()) {
+                return;
+            }
+
             // Avoid duplicate
             if (document.getElementById(ICON_ID)) {
                 this.iconElement = document.getElementById(ICON_ID);
@@ -207,7 +224,7 @@
         }
 
         _savePosition() {
-            if (!this.iconElement) return;
+            if (!this.iconElement || !isContextValid()) return;
 
             const top = this._getCurrentTop();
             const positionPercent = (top / window.innerHeight) * 100;
@@ -219,6 +236,8 @@
         }
 
         _restorePosition() {
+            if (!isContextValid()) return;
+
             chrome.storage.local.get([STORAGE_KEY], (result) => {
                 if (result[STORAGE_KEY] !== undefined && this.iconElement) {
                     const positionPercent = result[STORAGE_KEY];
@@ -253,6 +272,14 @@
 
             this._setLoading(true);
 
+            // Check if extension context is still valid
+            if (!isContextValid()) {
+                console.warn('[Chubby Cat] Extension context invalidated, please refresh the page');
+                this._setLoading(false);
+                this.destroy();
+                return;
+            }
+
             // Send message to background to open sidepanel with summary
             chrome.runtime.sendMessage({
                 action: 'OPEN_SIDE_PANEL_WITH_SUMMARY'
@@ -263,6 +290,12 @@
                     this._setLoading(false);
                 }, 5000);
             }).catch((err) => {
+                // Handle extension context invalidated error
+                if (err.message?.includes('Extension context invalidated')) {
+                    console.warn('[Chubby Cat] Extension reloaded, cleaning up');
+                    this.destroy();
+                    return;
+                }
                 console.warn('[Chubby Cat] Failed to send message:', err);
                 this._setLoading(false);
             });
