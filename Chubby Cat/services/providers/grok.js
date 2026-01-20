@@ -7,9 +7,6 @@ const GROK_UPLOAD_ENDPOINT = `${GROK_BASE_URL}/rest/app-chat/upload-file`;
 const FILTERED_TAGS = ['xaiartifact', 'xai:tool_usage_card', 'grok:render'];
 
 const MODEL_CONFIG = {
-    'grok-3-fast': {
-        grokModel: ['grok-3', 'MODEL_MODE_FAST']
-    },
     'grok-4-fast': {
         grokModel: ['grok-4-mini-thinking-tahoe', 'MODEL_MODE_GROK_4_MINI_THINKING']
     },
@@ -18,10 +15,6 @@ const MODEL_CONFIG = {
     },
     'grok-4.1-thinking': {
         grokModel: ['grok-4-1-thinking-1129', 'MODEL_MODE_AUTO']
-    },
-    'grok-imagine-0.9': {
-        grokModel: ['grok-3', 'MODEL_MODE_FAST'],
-        isVideoModel: true
     }
 };
 
