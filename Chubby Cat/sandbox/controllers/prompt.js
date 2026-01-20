@@ -7,6 +7,7 @@ import { t } from '../core/i18n.js';
 // Safety timeout for regenerate buttons (2 minutes)
 // If backend doesn't respond within this time, buttons will be re-enabled
 const GENERATION_SAFETY_TIMEOUT_MS = 120000;
+const TOOL_OUTPUT_MARKER = '**Tool Output:**';
 
 export class PromptController {
     constructor(sessionManager, uiController, imageManager, appController) {
@@ -44,6 +45,45 @@ export class PromptController {
         if (this.generationTimeout) {
             clearTimeout(this.generationTimeout);
             this.generationTimeout = null;
+        }
+    }
+
+    _isToolOutputText(text) {
+        if (!text || typeof text !== 'string') return false;
+        return text.includes(TOOL_OUTPUT_MARKER);
+    }
+
+    _findLastUserMessageIndex(messages, beforeIndex) {
+        const start = typeof beforeIndex === 'number' ? beforeIndex - 1 : messages.length - 1;
+        for (let i = start; i >= 0; i--) {
+            if (messages[i].role === 'user' && !this._isToolOutputText(messages[i].text || '')) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    _removeUiMessagesAfterLastUser() {
+        const chatHistory = this.ui.historyDiv;
+        if (!chatHistory) return;
+
+        const userMessages = Array.from(chatHistory.querySelectorAll('.msg.user'));
+        let lastRealUser = null;
+        for (let i = userMessages.length - 1; i >= 0; i--) {
+            const node = userMessages[i];
+            if (!this._isToolOutputText(node.textContent || '')) {
+                lastRealUser = node;
+                break;
+            }
+        }
+
+        if (!lastRealUser) return;
+
+        let node = lastRealUser.nextElementSibling;
+        while (node) {
+            const next = node.nextElementSibling;
+            node.remove();
+            node = next;
         }
     }
 
@@ -191,7 +231,7 @@ export class PromptController {
      * Regenerate the last AI response
      * This will:
      * 1. Cancel any ongoing generation
-     * 2. Remove the last AI message from the session
+     * 2. Remove the current AI response chain from the session
      * 3. Resend the last user message to get a new AI response
      */
     async regenerate() {
@@ -229,6 +269,7 @@ export class PromptController {
             let lastAiIndex = -1;
             let lastUserMessage = null;
             let lastUserAttachment = null;
+            let lastUserIndex = -1;
 
             // Find the last AI message
             for (let i = messages.length - 1; i >= 0; i--) {
@@ -249,16 +290,8 @@ export class PromptController {
 
             console.log('[Chubby Cat] Found last AI message at index', lastAiIndex);
 
-            // Find the user message before the AI message
-            for (let i = lastAiIndex - 1; i >= 0; i--) {
-                if (messages[i].role === 'user') {
-                    lastUserMessage = messages[i];
-                    lastUserAttachment = messages[i].image || null;
-                    break;
-                }
-            }
-
-            if (!lastUserMessage) {
+            lastUserIndex = this._findLastUserMessageIndex(messages, lastAiIndex);
+            if (lastUserIndex === -1) {
                 console.warn('[Chubby Cat] No user message found before AI message, cannot regenerate');
                 // Re-enable buttons since we're returning early
                 if (this.app.messageHandler && this.app.messageHandler.enableAllRegenerateButtons) {
@@ -267,19 +300,22 @@ export class PromptController {
                 return; // No user message found
             }
 
+            lastUserMessage = messages[lastUserIndex];
+            lastUserAttachment = lastUserMessage.image || null;
+
             console.log('[Chubby Cat] Found user message to resend:', lastUserMessage.text?.substring(0, 50));
 
-            // Remove the last AI message from the UI
-            const chatHistory = this.ui.historyDiv;
-            const aiMessages = chatHistory.querySelectorAll('.msg.ai');
-            if (aiMessages.length > 0) {
-                const lastAiDiv = aiMessages[aiMessages.length - 1];
-                lastAiDiv.remove();
+            // Remove the current AI response chain from the UI (tool calls + responses)
+            this._removeUiMessagesAfterLastUser();
+            if (this.app.messageHandler && this.app.messageHandler.resetStream) {
+                this.app.messageHandler.resetStream();
             }
 
-            // Remove the last AI message from session
-            session.messages.splice(lastAiIndex, 1);
-            saveSessionsToStorage(this.sessionManager.sessions);
+            // Remove the current AI response chain from session
+            if (messages.length > lastUserIndex + 1) {
+                session.messages.splice(lastUserIndex + 1);
+                saveSessionsToStorage(this.sessionManager.sessions);
+            }
 
             // Update status
             this.ui.updateStatus(t('regenerating'));
