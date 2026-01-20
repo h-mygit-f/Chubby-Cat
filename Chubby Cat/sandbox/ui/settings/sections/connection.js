@@ -17,6 +17,10 @@ export class ConnectionSection {
         this.openaiConfigs = [];
         this.openaiActiveConfigId = null;
         this.openaiModelEditingId = null;
+        // Official API model list state
+        this.officialModels = [];
+        this.officialActiveModelId = null;
+        this.officialModelEditingId = null;
         this.queryElements();
         this.bindEvents();
     }
@@ -55,7 +59,11 @@ export class ConnectionSection {
             officialBaseUrl: get('official-base-url'),
             apiKeyInput: get('api-key-input'),
             thinkingLevelSelect: get('thinking-level-select'),
-            officialModel: get('official-model'),
+            officialModelInput: get('official-model-input'),
+            officialAddModel: get('official-add-model'),
+            officialCancelModelEdit: get('official-cancel-model-edit'),
+            officialModelList: get('official-model-list'),
+            officialModelStatus: get('official-model-status'),
             officialFetchModels: get('official-fetch-models'),
             officialFetchStatus: get('official-fetch-status'),
             officialModelDropdown: get('official-model-dropdown'),
@@ -282,8 +290,56 @@ export class ConnectionSection {
             });
         }
 
-        // --- Official API Model Fetch ---
-        const { officialFetchModels, officialModelDropdown } = this.elements;
+        // --- Official API Model Management ---
+        const {
+            officialFetchModels,
+            officialModelDropdown,
+            officialModelInput,
+            officialAddModel,
+            officialCancelModelEdit,
+            officialModelList
+        } = this.elements;
+
+        if (officialAddModel) {
+            officialAddModel.addEventListener('click', () => {
+                this._applyOfficialModelInput();
+            });
+        }
+
+        if (officialCancelModelEdit) {
+            officialCancelModelEdit.addEventListener('click', () => {
+                this._cancelOfficialModelEdit();
+            });
+        }
+
+        if (officialModelInput) {
+            officialModelInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this._applyOfficialModelInput();
+                } else if (e.key === 'Escape') {
+                    this._cancelOfficialModelEdit();
+                }
+            });
+        }
+
+        if (officialModelList) {
+            officialModelList.addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-action]');
+                if (!btn) return;
+                const action = btn.dataset.action;
+                const modelId = btn.dataset.modelId || '';
+                if (!action || !modelId) return;
+                if (action === 'use') {
+                    this._setActiveOfficialModel(modelId);
+                } else if (action === 'edit') {
+                    this._startOfficialModelEdit(modelId);
+                } else if (action === 'remove') {
+                    this._removeOfficialModel(modelId);
+                }
+            });
+        }
+
         if (officialFetchModels) {
             officialFetchModels.addEventListener('click', () => {
                 this._fetchOfficialModels();
@@ -467,7 +523,7 @@ export class ConnectionSection {
 
     setData(data) {
         const {
-            providerSelect, officialBaseUrl, apiKeyInput, thinkingLevelSelect, officialModel,
+            providerSelect, officialBaseUrl, apiKeyInput, thinkingLevelSelect,
             mcpEnabled
         } = this.elements;
 
@@ -481,7 +537,7 @@ export class ConnectionSection {
         if (officialBaseUrl) officialBaseUrl.value = data.officialBaseUrl || "";
         if (apiKeyInput) apiKeyInput.value = data.apiKey || "";
         if (thinkingLevelSelect) thinkingLevelSelect.value = data.thinkingLevel || "low";
-        if (officialModel) officialModel.value = data.officialModel || "";
+        this._setOfficialModelsFromData(data);
 
         // OpenAI Multi-Config
         const openaiConfigs = Array.isArray(data.openaiConfigs) ? data.openaiConfigs : null;
@@ -570,12 +626,13 @@ export class ConnectionSection {
 
     getData() {
         const {
-            providerSelect, officialBaseUrl, apiKeyInput, thinkingLevelSelect, officialModel,
+            providerSelect, officialBaseUrl, apiKeyInput, thinkingLevelSelect,
             mcpEnabled
         } = this.elements;
 
         this._saveCurrentServerEdits();
         this._saveCurrentOpenaiConfigEdits();
+        this._syncOfficialModels();
 
         const servers = Array.isArray(this.mcpServers) ? this.mcpServers : [];
         // Get all active servers for multi-select
@@ -584,13 +641,18 @@ export class ConnectionSection {
         const openaiConfigs = Array.isArray(this.openaiConfigs) ? this.openaiConfigs : [];
         const activeOpenai = this._getActiveOpenaiConfig();
 
+        const officialModels = Array.isArray(this.officialModels) ? this.officialModels : [];
+        const officialActiveModelId = this.officialActiveModelId || (officialModels[0] || '');
+
         return {
             provider: providerSelect ? providerSelect.value : 'web',
             // Official
             officialBaseUrl: officialBaseUrl ? officialBaseUrl.value.trim() : "",
             apiKey: apiKeyInput ? apiKeyInput.value.trim() : "",
             thinkingLevel: thinkingLevelSelect ? thinkingLevelSelect.value : "low",
-            officialModel: officialModel ? officialModel.value.trim() : "",
+            officialModels: officialModels,
+            officialActiveModelId: officialActiveModelId,
+            officialModel: officialModels.length > 0 ? officialModels.join(', ') : "",
 
             // OpenAI - Multi-config
             openaiConfigs: openaiConfigs,
@@ -683,6 +745,48 @@ export class ConnectionSection {
             seen.add(m);
             return true;
         });
+    }
+
+    _normalizeOfficialModelList(rawModels, legacyModels) {
+        const list = this._normalizeModelList(rawModels);
+        const legacy = this._normalizeModelList(legacyModels);
+        return this._normalizeModelList([...list, ...legacy]);
+    }
+
+    _syncOfficialModels() {
+        const models = this._normalizeModelList(this.officialModels || []);
+        let active = (this.officialActiveModelId || '').trim();
+        if (active && !models.includes(active)) {
+            models.unshift(active);
+        }
+        if (!active) {
+            active = models[0] || '';
+        }
+        this.officialModels = models;
+        this.officialActiveModelId = active;
+    }
+
+    _setOfficialModelsFromData(data) {
+        const { officialModelInput, officialAddModel, officialCancelModelEdit } = this.elements;
+        const models = this._normalizeOfficialModelList(
+            data.officialModels || [],
+            data.officialModel || ''
+        );
+        this.officialModels = models;
+        let active = (data.officialActiveModelId || '').trim();
+        if (active && !models.includes(active)) {
+            models.unshift(active);
+        }
+        if (!active) {
+            active = models[0] || '';
+        }
+        this.officialActiveModelId = active;
+        this.officialModelEditingId = null;
+        if (officialModelInput) officialModelInput.value = '';
+        if (officialAddModel) officialAddModel.textContent = t('officialAddModel');
+        if (officialCancelModelEdit) officialCancelModelEdit.style.display = 'none';
+        this._renderOfficialModelList();
+        this._showOfficialModelStatus('');
     }
 
     _normalizeOpenaiConfig(raw) {
@@ -1115,6 +1219,201 @@ export class ConnectionSection {
         this._renderOpenaiConfigOptions();
     }
 
+    // --- Official API Model Helpers ---
+
+    _showOfficialModelStatus(text, isError = false) {
+        const { officialModelStatus } = this.elements;
+        if (!officialModelStatus) return;
+
+        if (!text) {
+            officialModelStatus.style.display = 'none';
+            officialModelStatus.textContent = '';
+            return;
+        }
+
+        officialModelStatus.style.display = 'block';
+        officialModelStatus.textContent = text;
+        officialModelStatus.style.color = isError ? '#b00020' : '#4CAF50';
+
+        if (!isError) {
+            setTimeout(() => {
+                if (officialModelStatus.textContent === text) {
+                    officialModelStatus.style.display = 'none';
+                }
+            }, 2000);
+        }
+    }
+
+    _renderOfficialModelList() {
+        const { officialModelList, officialAddModel, officialCancelModelEdit } = this.elements;
+        if (!officialModelList) return;
+
+        this._syncOfficialModels();
+
+        if (officialAddModel && !this.officialModelEditingId) {
+            officialAddModel.textContent = t('officialAddModel');
+        }
+        if (officialCancelModelEdit && !this.officialModelEditingId) {
+            officialCancelModelEdit.style.display = 'none';
+        }
+
+        const models = Array.isArray(this.officialModels) ? this.officialModels : [];
+        if (models.length === 0) {
+            officialModelList.innerHTML = `<div style="font-size: 12px; color: var(--text-tertiary);" data-i18n="officialModelEmpty">${t('officialModelEmpty')}</div>`;
+            return;
+        }
+
+        const rows = models.map(modelId => {
+            const safeId = this._escapeHtml(modelId);
+            const isActive = modelId === this.officialActiveModelId;
+            const activeBadge = isActive
+                ? `<span style="font-size: 10px; color: #4CAF50; font-weight: 600;">${t('officialModelActive')}</span>`
+                : '';
+            const useLabel = isActive ? t('officialModelActive') : t('officialModelUse');
+            const useDisabled = isActive ? 'disabled' : '';
+            const useStyle = isActive ? 'opacity: 0.6; cursor: default;' : '';
+            return `
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 8px; background: rgba(0,0,0,0.02);">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 12px; font-weight: 500;">${safeId}</span>
+                        ${activeBadge}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <button class="tool-btn" style="padding: 4px 8px; font-size: 10px; ${useStyle}" ${useDisabled} data-action="use" data-model-id="${safeId}">${useLabel}</button>
+                        <button class="tool-btn" style="padding: 4px 8px; font-size: 10px;" data-action="edit" data-model-id="${safeId}">${t('officialModelEdit')}</button>
+                        <button class="tool-btn" style="padding: 4px 8px; font-size: 10px;" data-action="remove" data-model-id="${safeId}">${t('officialModelRemove')}</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        officialModelList.innerHTML = rows;
+    }
+
+    _startOfficialModelEdit(modelId) {
+        const { officialModelInput, officialAddModel, officialCancelModelEdit } = this.elements;
+        if (!officialModelInput) return;
+        this.officialModelEditingId = modelId;
+        officialModelInput.value = modelId;
+        officialModelInput.focus();
+        if (officialAddModel) officialAddModel.textContent = t('officialModelUpdate');
+        if (officialCancelModelEdit) officialCancelModelEdit.style.display = 'inline-flex';
+    }
+
+    _cancelOfficialModelEdit() {
+        const { officialModelInput, officialAddModel, officialCancelModelEdit } = this.elements;
+        this.officialModelEditingId = null;
+        if (officialModelInput) officialModelInput.value = '';
+        if (officialAddModel) officialAddModel.textContent = t('officialAddModel');
+        if (officialCancelModelEdit) officialCancelModelEdit.style.display = 'none';
+        this._showOfficialModelStatus('');
+    }
+
+    _applyOfficialModelInput() {
+        const { officialModelInput } = this.elements;
+        if (!officialModelInput) return;
+
+        const raw = officialModelInput.value.trim();
+        if (!raw) {
+            this._showOfficialModelStatus(t('officialModelRequired'), true);
+            return;
+        }
+
+        if (this.officialModelEditingId) {
+            const nextId = this._normalizeModelList(raw)[0] || '';
+            if (!nextId) {
+                this._showOfficialModelStatus(t('officialModelRequired'), true);
+                return;
+            }
+            const models = Array.isArray(this.officialModels) ? this.officialModels : [];
+            const currentIndex = models.indexOf(this.officialModelEditingId);
+            if (currentIndex === -1) {
+                this._cancelOfficialModelEdit();
+                return;
+            }
+            if (models.includes(nextId) && nextId !== this.officialModelEditingId) {
+                this._showOfficialModelStatus(t('officialModelDuplicate'), true);
+                return;
+            }
+            models[currentIndex] = nextId;
+            this.officialModels = models;
+            if (this.officialActiveModelId === this.officialModelEditingId) {
+                this.officialActiveModelId = nextId;
+            }
+            this.officialModelEditingId = null;
+            officialModelInput.value = '';
+            this._syncOfficialModels();
+            this._renderOfficialModelList();
+            this._showOfficialModelStatus('');
+            return;
+        }
+
+        const toAdd = this._normalizeModelList(raw);
+        const result = this._addOfficialModels(toAdd);
+        if (!result.added && result.duplicates > 0) {
+            this._showOfficialModelStatus(t('officialModelDuplicate'), true);
+            return;
+        }
+        officialModelInput.value = '';
+        if (result.duplicates > 0) {
+            this._showOfficialModelStatus(`${t('officialModelDuplicate')} (${result.duplicates})`, true);
+        } else {
+            this._showOfficialModelStatus('');
+        }
+    }
+
+    _addOfficialModels(modelIds) {
+        const models = Array.isArray(this.officialModels) ? this.officialModels : [];
+        let added = 0;
+        let duplicates = 0;
+
+        modelIds.forEach(id => {
+            if (!id) return;
+            if (models.includes(id)) {
+                duplicates += 1;
+                return;
+            }
+            models.push(id);
+            added += 1;
+            if (!this.officialActiveModelId) {
+                this.officialActiveModelId = id;
+            }
+        });
+
+        this.officialModels = models;
+        this._syncOfficialModels();
+        if (added > 0) {
+            this._renderOfficialModelList();
+        }
+
+        return { added, duplicates };
+    }
+
+    _removeOfficialModel(modelId) {
+        const models = Array.isArray(this.officialModels) ? this.officialModels : [];
+        if (models.length === 0) return;
+
+        const nextModels = models.filter(id => id !== modelId);
+        this.officialModels = nextModels;
+
+        if (this.officialActiveModelId === modelId) {
+            this.officialActiveModelId = nextModels[0] || '';
+        }
+
+        if (this.officialModelEditingId === modelId) {
+            this._cancelOfficialModelEdit();
+        }
+
+        this._syncOfficialModels();
+        this._renderOfficialModelList();
+    }
+
+    _setActiveOfficialModel(modelId) {
+        this.officialActiveModelId = modelId;
+        this._syncOfficialModels();
+        this._renderOfficialModelList();
+    }
+
     _showOfficialFetchStatus(text, isError = false) {
         const { officialFetchStatus } = this.elements;
         if (!officialFetchStatus) return;
@@ -1213,20 +1512,17 @@ export class ConnectionSection {
     }
 
     _onOfficialModelDropdownSelect() {
-        const { officialModelDropdown, officialModel } = this.elements;
-        if (!officialModelDropdown || !officialModel) return;
+        const { officialModelDropdown } = this.elements;
+        if (!officialModelDropdown) return;
 
         const selectedModel = officialModelDropdown.value;
         if (!selectedModel) return;
 
-        const currentValue = officialModel.value.trim();
-        if (currentValue) {
-            const existing = currentValue.split(',').map(s => s.trim());
-            if (!existing.includes(selectedModel)) {
-                officialModel.value = currentValue + ', ' + selectedModel;
-            }
+        const result = this._addOfficialModels([selectedModel]);
+        if (!result.added && result.duplicates > 0) {
+            this._showOfficialModelStatus(t('officialModelDuplicate'), true);
         } else {
-            officialModel.value = selectedModel;
+            this._showOfficialModelStatus('');
         }
 
         officialModelDropdown.selectedIndex = 0;

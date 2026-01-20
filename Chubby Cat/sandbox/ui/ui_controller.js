@@ -94,14 +94,11 @@ export class UIController {
 
         // 3. Official API Models (from configured list or fallback defaults)
         const officialModels = [];
-        const rawOfficialModels = (settings.officialModel || '')
-            .split(',')
-            .map(m => m.trim())
-            .filter(m => m);
+        const officialMeta = this._normalizeOfficialModels(settings);
+        const rawOfficialModels = officialMeta.list;
 
         if (rawOfficialModels.length > 0) {
-            const uniqueOfficialModels = Array.from(new Set(rawOfficialModels));
-            uniqueOfficialModels.forEach(id => {
+            rawOfficialModels.forEach(id => {
                 officialModels.push({ val: id, txt: id, provider: 'official' });
             });
         } else if (settings.apiKey) {
@@ -256,7 +253,11 @@ export class UIController {
             } else if (currentProvider === 'grok' && grokModels.length > 0) {
                 defaultValue = grokModels[0].val;
             } else if (currentProvider === 'official' && officialModels.length > 0) {
-                defaultValue = officialModels[0].val;
+                const preferred = officialMeta.active
+                    && officialModels.some(m => m.val === officialMeta.active)
+                    ? officialMeta.active
+                    : officialModels[0].val;
+                defaultValue = preferred;
             } else if (webModels.length > 0) {
                 defaultValue = webModels[0].val;
             }
@@ -352,6 +353,36 @@ export class UIController {
         return `${configId}::${modelId}`;
     }
 
+    _normalizeOfficialModels(settings) {
+        const models = [];
+        const pushModel = (val) => {
+            if (!val) return;
+            const trimmed = String(val).trim();
+            if (!trimmed || models.includes(trimmed)) return;
+            models.push(trimmed);
+        };
+
+        if (settings && Array.isArray(settings.officialModels)) {
+            settings.officialModels.forEach(m => {
+                if (typeof m === 'string') return pushModel(m);
+                if (m && typeof m === 'object') return pushModel(m.id || m.name || m.value || '');
+            });
+        }
+
+        if (settings && typeof settings.officialModel === 'string') {
+            settings.officialModel.split(',').map(m => m.trim()).forEach(pushModel);
+        }
+
+        const active = settings && settings.officialActiveModelId
+            ? String(settings.officialActiveModelId).trim()
+            : '';
+        if (active && !models.includes(active)) {
+            models.unshift(active);
+        }
+
+        return { list: models, active };
+    }
+
     _normalizeOpenaiModels(config) {
         if (!config) return [];
         const models = [];
@@ -399,6 +430,20 @@ export class UIController {
         this._currentSettings.openaiApiKey = target.apiKey || '';
         this._currentSettings.openaiModel = target.model || '';
 
+        return true;
+    }
+
+    _applyOfficialSelection(modelId) {
+        if (!this._currentSettings) return false;
+        const meta = this._normalizeOfficialModels(this._currentSettings);
+        const models = Array.isArray(meta.list) ? [...meta.list] : [];
+        if (modelId && !models.includes(modelId)) {
+            models.push(modelId);
+        }
+        const nextActive = modelId || meta.active || models[0] || '';
+        this._currentSettings.officialModels = models;
+        this._currentSettings.officialActiveModelId = nextActive;
+        this._currentSettings.officialModel = models.length > 0 ? models.join(', ') : '';
         return true;
     }
 
@@ -473,6 +518,21 @@ export class UIController {
         // Update settings controller state
         this.settings.updateConnectionSettings(this._currentSettings);
 
+        this._syncDropdownSelection();
+    }
+
+    /**
+     * Handle Official API model switch from dropdown
+     */
+    handleOfficialModelSwitch(modelId = '') {
+        if (!this._currentSettings) return;
+        const applied = this._applyOfficialSelection(modelId);
+        if (!applied) return;
+
+        this._currentSettings.provider = 'official';
+
+        saveConnectionSettingsToStorage(this._currentSettings);
+        this.settings.updateConnectionSettings(this._currentSettings);
         this._syncDropdownSelection();
     }
 

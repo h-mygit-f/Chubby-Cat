@@ -73,7 +73,9 @@
                         'geminiOpenaiModel',
                         'geminiOpenaiConfigs',
                         'geminiOpenaiActiveConfigId',
-                        'geminiOfficialModel'
+                        'geminiOfficialModel',
+                        'geminiOfficialModels',
+                        'geminiOfficialActiveModelId'
                     ];
                     if (keys.some(k => changes[k])) {
                         this.syncSettings();
@@ -94,7 +96,9 @@
                 'geminiOpenaiModel',
                 'geminiOpenaiConfigs',
                 'geminiOpenaiActiveConfigId',
-                'geminiOfficialModel'
+                'geminiOfficialModel',
+                'geminiOfficialModels',
+                'geminiOfficialActiveModelId'
             ]);
             
             const settings = {
@@ -103,7 +107,9 @@
                 openaiModel: result.geminiOpenaiModel,
                 openaiConfigs: Array.isArray(result.geminiOpenaiConfigs) ? result.geminiOpenaiConfigs : [],
                 openaiActiveConfigId: result.geminiOpenaiActiveConfigId || null,
-                officialModel: result.geminiOfficialModel
+                officialModel: result.geminiOfficialModel,
+                officialModels: Array.isArray(result.geminiOfficialModels) ? result.geminiOfficialModels : [],
+                officialActiveModelId: result.geminiOfficialActiveModelId || ''
             };
             
             // Update UI options and selection

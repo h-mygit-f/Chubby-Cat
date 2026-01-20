@@ -192,6 +192,10 @@ export function bindAppEvents(app, ui, setResizeRef) {
                     }
                 }
 
+                if (provider === 'official' && ui.handleOfficialModelSwitch) {
+                    ui.handleOfficialModelSwitch(value);
+                }
+
                 // Notify app of model change
                 app.handleModelChange(value);
             });
@@ -250,6 +254,10 @@ export function bindAppEvents(app, ui, setResizeRef) {
                 if (ui.handleOpenaiConfigSwitch) {
                     ui.handleOpenaiConfigSwitch(configId, modelId);
                 }
+            }
+
+            if (selectedProvider === 'official' && ui.handleOfficialModelSwitch) {
+                ui.handleOfficialModelSwitch(e.target.value);
             }
 
             // Always notify app of model change for session tracking

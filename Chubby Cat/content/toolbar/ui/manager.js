@@ -223,10 +223,30 @@
             let opts = [];
             
             if (provider === 'official') {
-                const rawModels = (settings.officialModel || "");
-                const models = rawModels.split(',').map(m => m.trim()).filter(m => m);
-                if (models.length > 0) {
-                    opts = models.map(m => ({ val: m, txt: m }));
+                const officialModels = [];
+                const pushModel = (val) => {
+                    const trimmed = (val || '').trim();
+                    if (!trimmed || officialModels.includes(trimmed)) return;
+                    officialModels.push(trimmed);
+                };
+
+                if (Array.isArray(settings.officialModels)) {
+                    settings.officialModels.forEach(m => {
+                        if (typeof m === 'string') return pushModel(m);
+                        if (m && typeof m === 'object') return pushModel(m.id || m.name || m.value || '');
+                    });
+                }
+                if (typeof settings.officialModel === 'string') {
+                    settings.officialModel.split(',').map(m => m.trim()).forEach(pushModel);
+                }
+
+                const activeOfficial = (settings.officialActiveModelId || '').trim();
+                if (activeOfficial && !officialModels.includes(activeOfficial)) {
+                    officialModels.unshift(activeOfficial);
+                }
+
+                if (officialModels.length > 0) {
+                    opts = officialModels.map(m => ({ val: m, txt: m }));
                 } else {
                     opts = [
                         { val: 'gemini-3-flash-preview', txt: 'Gemini 3 Flash' },
@@ -307,6 +327,13 @@
             if (selectedValue && selectedValue.startsWith('cfg_') && !opts.some(o => o.val === selectedValue)) {
                 const match = opts.find(o => o.val.startsWith(`${selectedValue}::`));
                 if (match) selectedValue = match.val;
+            }
+
+            if (provider === 'official' && selectedValue && !opts.some(o => o.val === selectedValue)) {
+                const fallback = (settings.officialActiveModelId || '').trim();
+                if (fallback && opts.some(o => o.val === fallback)) {
+                    selectedValue = fallback;
+                }
             }
 
             this.view.updateModelOptions(opts, selectedValue);

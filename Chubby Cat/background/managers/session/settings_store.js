@@ -9,6 +9,8 @@ export async function getConnectionSettings() {
         'geminiApiKey',
         'geminiThinkingLevel',
         'geminiOfficialModel',
+        'geminiOfficialModels',
+        'geminiOfficialActiveModelId',
         'geminiApiKeyPointer',
         'geminiOpenaiBaseUrl',
         'geminiOpenaiApiKey',
@@ -55,13 +57,50 @@ export async function getConnectionSettings() {
         activeApiKey = activeApiKey.trim();
     }
 
+    const normalizeOfficialModels = (rawModels, legacyModels) => {
+        const list = [];
+        const pushModel = (val) => {
+            const trimmed = (val || '').trim();
+            if (!trimmed || list.includes(trimmed)) return;
+            list.push(trimmed);
+        };
+
+        if (Array.isArray(rawModels)) {
+            rawModels.forEach(m => {
+                if (typeof m === 'string') return pushModel(m);
+                if (m && typeof m === 'object') return pushModel(m.id || m.name || m.value || '');
+            });
+        }
+
+        if (typeof legacyModels === 'string') {
+            legacyModels.split(',').map(m => m.trim()).forEach(pushModel);
+        }
+
+        return list;
+    };
+
+    const officialModels = normalizeOfficialModels(
+        stored.geminiOfficialModels,
+        stored.geminiOfficialModel || ''
+    );
+
+    let officialActiveModelId = (stored.geminiOfficialActiveModelId || '').trim();
+    if (officialActiveModelId && !officialModels.includes(officialActiveModelId)) {
+        officialModels.unshift(officialActiveModelId);
+    }
+    if (!officialActiveModelId) {
+        officialActiveModelId = officialModels[0] || '';
+    }
+
     return {
         provider: provider,
         // Official
         officialBaseUrl: stored.geminiOfficialBaseUrl || '',
         apiKey: activeApiKey,
         thinkingLevel: stored.geminiThinkingLevel || "low",
-        officialModel: stored.geminiOfficialModel || '',
+        officialModels: officialModels,
+        officialActiveModelId: officialActiveModelId,
+        officialModel: officialModels.length > 0 ? officialModels.join(', ') : (stored.geminiOfficialModel || ''),
         // OpenAI (legacy single fields)
         openaiBaseUrl: stored.geminiOpenaiBaseUrl,
         openaiApiKey: stored.geminiOpenaiApiKey,

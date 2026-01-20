@@ -107,6 +107,8 @@ export class MessageBridge {
                 'geminiApiKey',
                 'geminiThinkingLevel',
                 'geminiOfficialModel',
+                'geminiOfficialModels',
+                'geminiOfficialActiveModelId',
                 'geminiOpenaiBaseUrl',
                 'geminiOpenaiApiKey',
                 'geminiOpenaiModel',
@@ -124,6 +126,40 @@ export class MessageBridge {
                 'geminiMcpActiveServerId',
                 'geminiMcpActiveServerIds'
             ], (res) => {
+                const normalizeOfficialModels = (rawModels, legacyModels) => {
+                    const list = [];
+                    const pushModel = (val) => {
+                        const trimmed = (val || '').trim();
+                        if (!trimmed || list.includes(trimmed)) return;
+                        list.push(trimmed);
+                    };
+
+                    if (Array.isArray(rawModels)) {
+                        rawModels.forEach(m => {
+                            if (typeof m === 'string') return pushModel(m);
+                            if (m && typeof m === 'object') return pushModel(m.id || m.name || m.value || '');
+                        });
+                    }
+
+                    if (typeof legacyModels === 'string') {
+                        legacyModels.split(',').map(m => m.trim()).forEach(pushModel);
+                    }
+
+                    return list;
+                };
+
+                const officialModels = normalizeOfficialModels(
+                    res.geminiOfficialModels,
+                    res.geminiOfficialModel || ''
+                );
+                let officialActiveModelId = res.geminiOfficialActiveModelId || null;
+                if (officialActiveModelId && !officialModels.includes(officialActiveModelId)) {
+                    officialModels.unshift(officialActiveModelId);
+                }
+                if (!officialActiveModelId) {
+                    officialActiveModelId = officialModels[0] || null;
+                }
+
                 // Handle OpenAI configs with backward compatibility
                 let openaiConfigs = Array.isArray(res.geminiOpenaiConfigs) ? res.geminiOpenaiConfigs : null;
                 let openaiActiveConfigId = res.geminiOpenaiActiveConfigId || null;
@@ -162,7 +198,9 @@ export class MessageBridge {
                         officialBaseUrl: res.geminiOfficialBaseUrl || '',
                         apiKey: res.geminiApiKey || "",
                         thinkingLevel: res.geminiThinkingLevel || "low",
-                        officialModel: res.geminiOfficialModel || "",
+                        officialModels: officialModels,
+                        officialActiveModelId: officialActiveModelId,
+                        officialModel: officialModels.length > 0 ? officialModels.join(', ') : (res.geminiOfficialModel || ""),
                         // Legacy single fields (populated from active config)
                         openaiBaseUrl: activeConfig ? activeConfig.baseUrl : (res.geminiOpenaiBaseUrl || ""),
                         openaiApiKey: activeConfig ? activeConfig.apiKey : (res.geminiOpenaiApiKey || ""),
@@ -225,6 +263,8 @@ export class MessageBridge {
             this.state.save('geminiOfficialBaseUrl', payload.officialBaseUrl || '');
             this.state.save('geminiApiKey', payload.apiKey);
             this.state.save('geminiThinkingLevel', payload.thinkingLevel);
+            this.state.save('geminiOfficialModels', Array.isArray(payload.officialModels) ? payload.officialModels : []);
+            this.state.save('geminiOfficialActiveModelId', payload.officialActiveModelId || null);
             this.state.save('geminiOfficialModel', payload.officialModel || '');
             // OpenAI - Multi-config
             this.state.save('geminiOpenaiConfigs', Array.isArray(payload.openaiConfigs) ? payload.openaiConfigs : []);
