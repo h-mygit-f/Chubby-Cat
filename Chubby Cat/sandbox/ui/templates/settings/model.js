@@ -48,6 +48,7 @@ export const ModelSettingsTemplate = `
                     <option value="medium">Medium (Balanced)</option>
                     <option value="high">High (Deep Reasoning)</option>
                 </select>
+                <div style="font-size: 12px; color: #f57c00; margin-top: 4px;">Gemini 3pro只支持low和high的思考等级.</div>
             </div>
         </div>
 
