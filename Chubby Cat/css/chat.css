@@ -12,6 +12,7 @@
     gap: 24px;
     /* Increased gap for breathing room */
     scroll-behavior: smooth;
+    scrollbar-gutter: stable;
 }
 
 /* Wide Layout Overrides */
@@ -29,11 +30,11 @@ body.layout-wide #chat-history {
 
 /* Constrain line width for better readability on wide screens */
 body.layout-wide .msg.user {
-    max-width: 70%;
+    max-width: min(70%, 720px);
 }
 
 body.layout-wide .msg.ai {
-    max-width: 85%;
+    max-width: min(85%, 900px);
 }
 
 #chat-history::-webkit-scrollbar {
@@ -49,6 +50,8 @@ body.layout-wide .msg.ai {
 .msg {
     position: relative;
     word-wrap: break-word;
+    overflow-wrap: anywhere;
+    word-break: break-word;
     line-height: 1.6;
     font-size: 15px;
     color: var(--text-primary);

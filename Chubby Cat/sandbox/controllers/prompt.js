@@ -2,13 +2,12 @@
 // sandbox/controllers/prompt.js
 import { appendMessage } from '../render/message.js';
 import { sendToBackground, saveSessionsToStorage } from '../../lib/messaging.js';
+import { TOOL_OUTPUT_MARKER, TOOL_OUTPUT_PREFIX } from '../../lib/constants.js';
 import { t } from '../core/i18n.js';
 
 // Safety timeout for regenerate buttons (2 minutes)
 // If backend doesn't respond within this time, buttons will be re-enabled
 const GENERATION_SAFETY_TIMEOUT_MS = 120000;
-const TOOL_OUTPUT_MARKER = '**Tool Output:**';
-
 export class PromptController {
     constructor(sessionManager, uiController, imageManager, appController) {
         this.sessionManager = sessionManager;
@@ -50,13 +49,20 @@ export class PromptController {
 
     _isToolOutputText(text) {
         if (!text || typeof text !== 'string') return false;
-        return text.includes(TOOL_OUTPUT_MARKER);
+        const normalized = text.trimStart();
+        return normalized.startsWith(TOOL_OUTPUT_PREFIX) || normalized.startsWith(TOOL_OUTPUT_MARKER);
+    }
+
+    _isToolOutputMessage(msg) {
+        if (!msg) return false;
+        if (msg.isToolOutput === true) return true;
+        return this._isToolOutputText(msg.text || '');
     }
 
     _findLastUserMessageIndex(messages, beforeIndex) {
         const start = typeof beforeIndex === 'number' ? beforeIndex - 1 : messages.length - 1;
         for (let i = start; i >= 0; i--) {
-            if (messages[i].role === 'user' && !this._isToolOutputText(messages[i].text || '')) {
+            if (messages[i].role === 'user' && !this._isToolOutputMessage(messages[i])) {
                 return i;
             }
         }

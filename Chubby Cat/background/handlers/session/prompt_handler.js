@@ -1,6 +1,7 @@
 
 // background/handlers/session/prompt_handler.js
 import { appendAiMessage, appendUserMessage } from '../../managers/history_manager.js';
+import { TOOL_OUTPUT_PREFIX } from '../../../lib/constants.js';
 import { PromptBuilder } from './prompt/builder.js';
 import { ToolExecutor } from './prompt/tool_executor.js';
 
@@ -187,10 +188,10 @@ export class PromptHandler {
                         // Save "User" message (Tool Output) to history to keep context in sync
                         // NOTE: We do NOT save the massive auto-snapshot text to the user history to keep the UI clean.
                         if (request.sessionId) {
-                            const userMsg = `🛠️ **Tool Output:**\n\`\`\`\n${toolResult.output}\n\`\`\`\n\n*(Proceeding to step ${loopCount + 1})*`;
+                            const userMsg = `${TOOL_OUTPUT_PREFIX}\n\`\`\`\n${toolResult.output}\n\`\`\`\n\n*(Proceeding to step ${loopCount + 1})*`;
 
                             let historyImages = toolResult.files ? toolResult.files.map(f => f.base64) : null;
-                            await appendUserMessage(request.sessionId, userMsg, historyImages);
+                            await appendUserMessage(request.sessionId, userMsg, historyImages, { isToolOutput: true });
                         }
 
                         // Update UI status

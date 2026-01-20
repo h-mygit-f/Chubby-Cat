@@ -1,5 +1,14 @@
 
 // lib/markdown_export.js
+import { TOOL_OUTPUT_MARKER, TOOL_OUTPUT_PREFIX } from './constants.js';
+
+function isToolOutputMessage(msg) {
+    if (!msg) return false;
+    if (msg.isToolOutput === true) return true;
+    if (!msg.text || typeof msg.text !== 'string') return false;
+    const normalized = msg.text.trimStart();
+    return normalized.startsWith(TOOL_OUTPUT_PREFIX) || normalized.startsWith(TOOL_OUTPUT_MARKER);
+}
 
 /**
  * Generate filename in MMDD_HHMM.md format
@@ -40,6 +49,7 @@ export function sessionToMarkdown(session) {
 
     // Convert messages
     for (const msg of session.messages) {
+        if (isToolOutputMessage(msg)) continue;
         const role = msg.role === 'user' ? '**User**' : '**Assistant**';
         lines.push(role);
         lines.push('');

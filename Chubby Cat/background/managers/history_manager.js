@@ -113,20 +113,26 @@ export async function appendAiMessage(sessionId, result) {
  * @param {string} sessionId 
  * @param {string} text 
  * @param {Array} images - Optional array of base64 image strings
+ * @param {object} options
+ * @param {boolean} options.isToolOutput
  */
-export async function appendUserMessage(sessionId, text, images = null) {
+export async function appendUserMessage(sessionId, text, images = null, options = {}) {
     try {
         const { geminiSessions = [] } = await chrome.storage.local.get(['geminiSessions']);
         const sessionIndex = geminiSessions.findIndex(s => s.id === sessionId);
         
         if (sessionIndex !== -1) {
             const session = geminiSessions[sessionIndex];
-            
-            session.messages.push({
+            const message = {
                 role: 'user',
                 text: text,
                 image: images // Store image array if present
-            });
+            };
+            if (options && options.isToolOutput === true) {
+                message.isToolOutput = true;
+            }
+
+            session.messages.push(message);
             session.timestamp = Date.now();
             
             // Move to top

@@ -2,6 +2,7 @@
 // sandbox/controllers/session_flow.js
 import { appendMessage } from '../render/message.js';
 import { sendToBackground, saveSessionsToStorage } from '../../lib/messaging.js';
+import { TOOL_OUTPUT_MARKER, TOOL_OUTPUT_PREFIX } from '../../lib/constants.js';
 import { t } from '../core/i18n.js';
 
 export class SessionFlowController {
@@ -9,6 +10,27 @@ export class SessionFlowController {
         this.sessionManager = sessionManager;
         this.ui = uiController;
         this.app = appController;
+    }
+
+    _isToolOutputMessage(msg) {
+        if (!msg) return false;
+        if (msg.isToolOutput === true) return true;
+        if (!msg.text || typeof msg.text !== 'string') return false;
+        const normalized = msg.text.trimStart();
+        return normalized.startsWith(TOOL_OUTPUT_PREFIX) || normalized.startsWith(TOOL_OUTPUT_MARKER);
+    }
+
+    _getDisplayMessages(session) {
+        if (!session || !Array.isArray(session.messages)) return [];
+        return session.messages.filter(msg => !this._isToolOutputMessage(msg));
+    }
+
+    _getDisplaySessions(sessions) {
+        if (!Array.isArray(sessions)) return [];
+        return sessions.map(session => ({
+            ...session,
+            messages: this._getDisplayMessages(session)
+        }));
     }
 
     handleNewChat() {
@@ -31,7 +53,8 @@ export class SessionFlowController {
         if (!session) return;
 
         this.ui.clearChatHistory();
-        session.messages.forEach(msg => {
+        const displayMessages = this._getDisplayMessages(session);
+        displayMessages.forEach(msg => {
             let attachment = null;
             if (msg.role === 'user') attachment = msg.image;
             if (msg.role === 'ai') attachment = msg.generatedImages;
@@ -58,7 +81,7 @@ export class SessionFlowController {
 
     refreshHistoryUI() {
         this.ui.renderHistoryList(
-            this.sessionManager.getSortedSessions(),
+            this._getDisplaySessions(this.sessionManager.getSortedSessions()),
             this.sessionManager.currentSessionId,
             {
                 onSwitch: (id) => this.switchToSession(id),
