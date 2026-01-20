@@ -196,8 +196,8 @@ export const translations = {
         "modelSelectTooltip": "Select Model (Tab to cycle)",
 
         // Model Source Groups
-        "modelGroupWeb": "── Web (Free) ──",
-        "modelGroupOfficial": "── Official API ──",
+        "modelGroupWeb": "── Gemini 网页(FREE) ──",
+        "modelGroupOfficial": "── Gemini API ──",
         "modelGroupOpenAI": "── Custom API ──",
         "providerSwitching": "Switching model provider...",
         "providerSwitched": "Switched to {provider}",
@@ -306,7 +306,7 @@ export const translations = {
         "general": "常规",
         "connection": "连接",
         "connectionProvider": "模型来源",
-        "providerWeb": "猫猫 网页版 (免费)",
+        "providerWeb": "Gemini 网页版 (免费)",
         "providerGrok": "Grok 网页版 (免费)",
         "providerOfficial": "Gemini API",
         "providerOpenAI": "OpenAI/Claude 兼容 API",

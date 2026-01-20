@@ -178,8 +178,8 @@ export function bindAppEvents(app, ui, setResizeRef) {
                         });
                         if (switched) {
                             const providerNames = {
-                                'web': 'Web (Free)',
-                                'official': 'Official API',
+                                'web': 'Gemini 网页(FREE)',
+                                'official': 'Gemini API',
                                 'openai': 'Custom API'
                             };
                             ui.updateStatus(`✓ ${providerNames[provider] || provider}`);
@@ -240,8 +240,8 @@ export function bindAppEvents(app, ui, setResizeRef) {
                     if (switched) {
                         // Provider was switched, update status to notify user
                         const providerNames = {
-                            'web': 'Web (Free)',
-                            'official': 'Official API',
+                            'web': 'Gemini 网页(FREE)',
+                            'official': 'Gemini API',
                             'openai': 'Custom API'
                         };
                         ui.updateStatus(`✓ ${providerNames[selectedProvider] || selectedProvider}`);

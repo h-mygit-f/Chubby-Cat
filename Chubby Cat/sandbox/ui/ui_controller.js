@@ -145,7 +145,7 @@ export class UIController {
         // Add Web models (always first, always available)
         if (webModels.length > 0) {
             const webGroup = document.createElement('optgroup');
-            webGroup.label = 'Web (Free)';
+            webGroup.label = 'Gemini 网页(FREE)';
             webModels.forEach(o => {
                 const opt = document.createElement('option');
                 opt.value = o.val;
@@ -173,7 +173,7 @@ export class UIController {
         // Add Official API models (if configured)
         if (officialModels.length > 0) {
             const officialGroup = document.createElement('optgroup');
-            officialGroup.label = 'Official API';
+            officialGroup.label = 'Gemini API';
             officialModels.forEach(o => {
                 const opt = document.createElement('option');
                 opt.value = o.val;
@@ -298,7 +298,7 @@ export class UIController {
 
         // Web models
         if (webModels.length > 0) {
-            html += `<div class="model-dropdown-group">Web (Free)</div>`;
+            html += `<div class="model-dropdown-group">Gemini 网页(FREE)</div>`;
             webModels.forEach(m => { html += renderOption(m); });
         }
 
@@ -310,7 +310,7 @@ export class UIController {
 
         // Official API models
         if (officialModels.length > 0) {
-            html += `<div class="model-dropdown-group">Official API</div>`;
+            html += `<div class="model-dropdown-group">Gemini API</div>`;
             officialModels.forEach(m => { html += renderOption(m); });
         }
 
