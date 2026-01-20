@@ -12,6 +12,9 @@ export class QuickPhrasesController {
         this.isModalOpen = false;
         this.inputFn = options.inputFn || null;
         this.isInitialized = false;
+        this.resizeObserver = null;
+        this.positionRaf = null;
+        this.handleViewportChange = this.handleViewportChange.bind(this);
 
         // DOM Elements
         this.wrapper = null;
@@ -61,6 +64,7 @@ export class QuickPhrasesController {
 
         // Bind events
         this.bindEvents();
+        this.setupObservers();
 
         // Initial render (empty, will be updated when phrases are loaded)
         this.render();
@@ -124,6 +128,23 @@ export class QuickPhrasesController {
         });
     }
 
+    setupObservers() {
+        if (!this.wrapper || !this.btn || typeof ResizeObserver === 'undefined') return;
+
+        this.resizeObserver = new ResizeObserver(() => {
+            if (this.isOpen) {
+                this.schedulePositionDropdown();
+            }
+        });
+
+        this.resizeObserver.observe(this.wrapper);
+        this.resizeObserver.observe(this.btn);
+
+        if (this.dropdown) {
+            this.resizeObserver.observe(this.dropdown);
+        }
+    }
+
     toggle() {
         if (this.isOpen) {
             this.close();
@@ -134,8 +155,11 @@ export class QuickPhrasesController {
 
     open() {
         this.isOpen = true;
+        this.attachViewportListeners();
+        this.positionDropdown();
         this.wrapper.classList.add('open');
         this.btn.classList.add('active');
+        this.schedulePositionDropdown();
     }
 
     close() {
@@ -144,6 +168,103 @@ export class QuickPhrasesController {
         this.wrapper.classList.remove('open');
         this.btn.classList.remove('active');
         this.closeModal();
+        this.detachViewportListeners();
+    }
+
+    attachViewportListeners() {
+        window.addEventListener('resize', this.handleViewportChange);
+        window.addEventListener('scroll', this.handleViewportChange, true);
+    }
+
+    detachViewportListeners() {
+        window.removeEventListener('resize', this.handleViewportChange);
+        window.removeEventListener('scroll', this.handleViewportChange, true);
+    }
+
+    handleViewportChange() {
+        if (this.isOpen) {
+            this.schedulePositionDropdown();
+        }
+    }
+
+    schedulePositionDropdown() {
+        if (this.positionRaf) {
+            cancelAnimationFrame(this.positionRaf);
+        }
+
+        this.positionRaf = requestAnimationFrame(() => {
+            this.positionRaf = null;
+            if (this.isOpen) {
+                this.positionDropdown();
+            }
+        });
+    }
+
+    positionDropdown() {
+        if (!this.dropdown || !this.btn) return;
+
+        const btnRect = this.btn.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const viewportPadding = 12;
+        const gap = 8;
+        const maxWidth = Math.max(240, viewportWidth - viewportPadding * 2);
+        const dropdownWidth = Math.min(360, maxWidth);
+
+        this.dropdown.style.width = `${dropdownWidth}px`;
+        this.dropdown.style.maxHeight = '';
+
+        const dropdownRect = this.dropdown.getBoundingClientRect();
+        const dropdownHeight = dropdownRect.height || 0;
+        const spaceAbove = btnRect.top - viewportPadding;
+        const spaceBelow = viewportHeight - btnRect.bottom - viewportPadding;
+        const fitsAbove = dropdownHeight + gap <= spaceAbove;
+        const fitsBelow = dropdownHeight + gap <= spaceBelow;
+
+        let placement = 'top';
+        if (!fitsAbove && (fitsBelow || spaceBelow >= spaceAbove)) {
+            placement = 'bottom';
+        }
+
+        const availableSpace = Math.max(
+            0,
+            (placement === 'top' ? spaceAbove : spaceBelow) - gap
+        );
+
+        if (availableSpace > 0) {
+            this.dropdown.style.maxHeight = `${availableSpace}px`;
+        }
+
+        const finalHeight = this.dropdown.getBoundingClientRect().height || dropdownHeight;
+        let top = placement === 'top'
+            ? btnRect.top - gap - finalHeight
+            : btnRect.bottom + gap;
+
+        top = Math.max(
+            viewportPadding,
+            Math.min(top, viewportHeight - finalHeight - viewportPadding)
+        );
+
+        let left = btnRect.left + (btnRect.width / 2) - (dropdownWidth / 2);
+        left = Math.max(
+            viewportPadding,
+            Math.min(left, viewportWidth - dropdownWidth - viewportPadding)
+        );
+
+        this.dropdown.style.top = `${top}px`;
+        this.dropdown.style.left = `${left}px`;
+        this.dropdown.dataset.placement = placement;
+
+        if (this.list) {
+            if (availableSpace > 0 && availableSpace < dropdownHeight) {
+                const header = this.dropdown.querySelector('.quick-phrases-header');
+                const headerHeight = header ? header.getBoundingClientRect().height : 0;
+                const listMaxHeight = Math.max(0, availableSpace - headerHeight - 16);
+                this.list.style.maxHeight = `${listMaxHeight}px`;
+            } else {
+                this.list.style.maxHeight = '';
+            }
+        }
     }
 
     openModal(index = -1) {
@@ -166,6 +287,10 @@ export class QuickPhrasesController {
         setTimeout(() => {
             this.modalInput.focus();
         }, 100);
+
+        if (this.isOpen) {
+            this.schedulePositionDropdown();
+        }
     }
 
     closeModal() {
@@ -246,6 +371,10 @@ export class QuickPhrasesController {
                 this.list.appendChild(item);
             });
         }
+
+        if (this.isOpen) {
+            this.schedulePositionDropdown();
+        }
     }
 
     createPhraseItem(phrase, index) {
@@ -303,4 +432,3 @@ export class QuickPhrasesController {
         this.inputFn = inputEl;
     }
 }
-
