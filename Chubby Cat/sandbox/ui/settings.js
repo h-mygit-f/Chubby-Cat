@@ -425,44 +425,76 @@ export class SettingsController {
                 return;
             }
 
+            const normalizeModelList = (raw) => {
+                if (!raw) return [];
+                let list = [];
+                if (Array.isArray(raw)) {
+                    list = raw.map(item => {
+                        if (typeof item === 'string') return item;
+                        if (item && typeof item === 'object') return item.id || item.name || item.value || '';
+                        return '';
+                    });
+                } else if (typeof raw === 'string') {
+                    list = raw.split(',').map(m => m.trim());
+                }
+                const seen = new Set();
+                return list.filter(m => m).filter(m => {
+                    if (seen.has(m)) return false;
+                    seen.add(m);
+                    return true;
+                });
+            };
+
+            const normalizeConfig = (cfg, options = {}) => {
+                const models = normalizeModelList(cfg.models || cfg.model);
+                const activeModelId = (cfg.activeModelId || '').trim() || models[0] || '';
+                return {
+                    ...cfg,
+                    id: options.forceNewId ? this._generateConfigId() : (cfg.id || this._generateConfigId()),
+                    providerType: cfg.providerType || 'openai',
+                    timeout: cfg.timeout || 60000,
+                    models: models,
+                    activeModelId: activeModelId,
+                    model: activeModelId || '',
+                    isDefault: options.clearDefault ? false : (cfg.isDefault === true)
+                };
+            };
+
+            const keyForConfig = (cfg) => {
+                const modelsKey = normalizeModelList(cfg.models || cfg.model).join(',');
+                return `${cfg.baseUrl || ''}|${modelsKey}`;
+            };
+
             const importedConfigs = data.openaiConfigs;
-            let existingConfigs = this.connectionData.openaiConfigs || [];
+            let existingConfigs = (this.connectionData.openaiConfigs || []).map(cfg => normalizeConfig(cfg));
             let finalConfigs;
             let message;
 
             if (mode === 'replace') {
                 // Replace mode: overwrite all existing configs
-                finalConfigs = importedConfigs.map(cfg => ({
-                    ...cfg,
-                    id: cfg.id || this._generateConfigId()
-                }));
+                finalConfigs = importedConfigs.map(cfg => normalizeConfig(cfg));
                 message = `Replaced with ${finalConfigs.length} configuration(s)`;
 
             } else {
                 // Merge mode: keep existing, add non-duplicates
                 const existingIds = new Set(existingConfigs.map(c => c.id));
-                const existingUrls = new Set(existingConfigs.map(c =>
-                    `${c.baseUrl || ''}|${c.model || ''}`
-                ));
+                const existingKeys = new Set(existingConfigs.map(c => keyForConfig(c)));
 
                 const newConfigs = [];
                 const skipped = [];
 
                 for (const cfg of importedConfigs) {
-                    const key = `${cfg.baseUrl || ''}|${cfg.model || ''}`;
+                    const normalized = normalizeConfig(cfg, { forceNewId: true, clearDefault: true });
+                    const key = keyForConfig(normalized);
 
                     // Skip if same ID or same baseUrl+model exists
-                    if (existingIds.has(cfg.id) || existingUrls.has(key)) {
+                    if (existingIds.has(cfg.id) || existingKeys.has(key)) {
                         skipped.push(cfg.name || 'Unnamed');
                         continue;
                     }
 
                     // Assign new ID to avoid conflicts
-                    newConfigs.push({
-                        ...cfg,
-                        id: this._generateConfigId(),
-                        isDefault: false // Don't override default
-                    });
+                    newConfigs.push(normalized);
                 }
 
                 // Check max config limit
@@ -487,9 +519,25 @@ export class SettingsController {
             // Update connection data
             this.connectionData.openaiConfigs = finalConfigs;
 
-            // Set active config if none exists
-            if (!this.connectionData.openaiActiveConfigId && finalConfigs.length > 0) {
+            const importedActiveId = data.openaiActiveConfigId;
+            if (importedActiveId && finalConfigs.some(c => c.id === importedActiveId)) {
+                this.connectionData.openaiActiveConfigId = importedActiveId;
+            }
+
+            const hasActiveConfig = this.connectionData.openaiActiveConfigId
+                && finalConfigs.some(c => c.id === this.connectionData.openaiActiveConfigId);
+
+            if (!hasActiveConfig && finalConfigs.length > 0) {
                 this.connectionData.openaiActiveConfigId = finalConfigs[0].id;
+            }
+
+            const activeConfig = finalConfigs.find(cfg => cfg.id === this.connectionData.openaiActiveConfigId) || finalConfigs[0] || null;
+            if (activeConfig) {
+                const models = Array.isArray(activeConfig.models) ? activeConfig.models : [];
+                const activeModel = activeConfig.activeModelId || activeConfig.model || models[0] || '';
+                this.connectionData.openaiBaseUrl = activeConfig.baseUrl || '';
+                this.connectionData.openaiApiKey = activeConfig.apiKey || '';
+                this.connectionData.openaiModel = activeModel || '';
             }
 
             // Also import MCP servers if present

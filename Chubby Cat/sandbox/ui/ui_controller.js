@@ -116,14 +116,28 @@ export class UIController {
         const configs = Array.isArray(settings.openaiConfigs) ? settings.openaiConfigs : [];
         if (configs.length > 0) {
             configs.forEach(c => {
-                // Only add configs that have at least baseUrl or apiKey configured
-                if (c.baseUrl || c.apiKey) {
+                if (!c || (!c.baseUrl && !c.apiKey)) return;
+                const label = (c.name || c.baseUrl || 'Unnamed Config').trim();
+                const models = this._normalizeOpenaiModels(c);
+                if (models.length > 0) {
+                    models.forEach(modelId => {
+                        openaiModels.push({
+                            val: this._buildOpenaiModelValue(c.id, modelId),
+                            txt: `${label} - ${modelId}`,
+                            provider: 'openai',
+                            isConfig: true,
+                            configId: c.id,
+                            modelId: modelId
+                        });
+                    });
+                } else {
                     openaiModels.push({
                         val: c.id,
-                        txt: c.name || c.model || 'Unnamed Config',
+                        txt: label,
                         provider: 'openai',
                         isConfig: true,
-                        configId: c.id
+                        configId: c.id,
+                        modelId: ''
                     });
                 }
             });
@@ -184,6 +198,7 @@ export class UIController {
                 opt.dataset.provider = 'openai';
                 opt.dataset.isConfig = 'true';
                 opt.dataset.configId = o.configId;
+                if (o.modelId) opt.dataset.modelId = o.modelId;
                 openaiGroup.appendChild(opt);
             });
             this.modelSelect.appendChild(openaiGroup);
@@ -209,15 +224,32 @@ export class UIController {
             }
         }
 
+        if (!restored && current && current.startsWith('cfg_') && openaiModels.length > 0) {
+            const match = openaiModels.find(m => m.configId === current);
+            if (match) {
+                this.modelSelect.value = match.val;
+                restored = true;
+            }
+        }
+
         // If not restored, select appropriate default based on current provider
         if (!restored) {
             let defaultValue = null;
 
             if (currentProvider === 'openai' && openaiModels.length > 0) {
-                // For OpenAI, prefer the active config
-                const activeId = settings.openaiActiveConfigId;
-                if (activeId && openaiModels.some(m => m.val === activeId)) {
-                    defaultValue = activeId;
+                const activeConfig = configs.find(c => c.id === settings.openaiActiveConfigId) || configs[0];
+                if (activeConfig) {
+                    const activeModel = activeConfig.activeModelId
+                        || activeConfig.model
+                        || this._normalizeOpenaiModels(activeConfig)[0]
+                        || '';
+                    const desiredValue = this._buildOpenaiModelValue(activeConfig.id, activeModel);
+                    if (desiredValue && openaiModels.some(m => m.val === desiredValue)) {
+                        defaultValue = desiredValue;
+                    } else {
+                        const fallback = openaiModels.find(m => m.configId === activeConfig.id);
+                        defaultValue = fallback ? fallback.val : openaiModels[0].val;
+                    }
                 } else {
                     defaultValue = openaiModels[0].val;
                 }
@@ -250,11 +282,13 @@ export class UIController {
         const renderOption = (model) => {
             const isSelected = model.val === selectedValue;
             const configAttrs = model.isConfig ? `data-is-config="true" data-config-id="${model.configId}"` : '';
+            const modelAttrs = model.modelId ? `data-model-id="${model.modelId}"` : '';
             return `
                 <div class="model-dropdown-option${isSelected ? ' selected' : ''}"
                      data-value="${model.val}"
                      data-provider="${model.provider}"
-                     ${configAttrs}>
+                     ${configAttrs}
+                     ${modelAttrs}>
                     <span class="model-dropdown-option-label">${model.txt}</span>
                     <span class="model-dropdown-option-icon">${heartSvg}</span>
                 </div>
@@ -312,10 +346,66 @@ export class UIController {
         });
     }
 
+    _buildOpenaiModelValue(configId, modelId) {
+        if (!configId) return modelId || '';
+        if (!modelId) return configId;
+        return `${configId}::${modelId}`;
+    }
+
+    _normalizeOpenaiModels(config) {
+        if (!config) return [];
+        const models = [];
+        const pushModel = (val) => {
+            if (!val) return;
+            const trimmed = String(val).trim();
+            if (!trimmed || models.includes(trimmed)) return;
+            models.push(trimmed);
+        };
+
+        if (Array.isArray(config.models)) {
+            config.models.forEach(m => {
+                if (typeof m === 'string') return pushModel(m);
+                if (m && typeof m === 'object') return pushModel(m.id || m.name || m.value || '');
+            });
+        }
+
+        if (typeof config.model === 'string') {
+            config.model.split(',').map(m => m.trim()).forEach(pushModel);
+        }
+
+        if (config.activeModelId) pushModel(config.activeModelId);
+
+        return models;
+    }
+
+    _applyOpenaiSelection(configId, modelId) {
+        if (!this._currentSettings) return false;
+        const configs = this._currentSettings.openaiConfigs || [];
+        const target = configs.find(c => c.id === configId);
+        if (!target) return false;
+
+        const models = this._normalizeOpenaiModels(target);
+        if (modelId && !models.includes(modelId)) {
+            models.push(modelId);
+        }
+
+        const nextActive = modelId || target.activeModelId || models[0] || '';
+        target.models = models;
+        target.activeModelId = nextActive;
+        target.model = nextActive || target.model || '';
+
+        this._currentSettings.openaiActiveConfigId = configId;
+        this._currentSettings.openaiBaseUrl = target.baseUrl || '';
+        this._currentSettings.openaiApiKey = target.apiKey || '';
+        this._currentSettings.openaiModel = target.model || '';
+
+        return true;
+    }
+
     /**
      * Select a model from dropdown (called from event handler)
      */
-    selectModelFromDropdown(value, provider, isConfig, configId) {
+    selectModelFromDropdown(value, provider, isConfig, configId, modelId) {
         if (!this.modelSelect) return;
 
         this.modelSelect.value = value;
@@ -326,7 +416,8 @@ export class UIController {
             value,
             provider,
             isConfig,
-            configId
+            configId,
+            modelId
         };
     }
 
@@ -350,15 +441,7 @@ export class UIController {
 
         // Handle OpenAI config switch
         if (newProvider === 'openai' && options.configId) {
-            const configs = this._currentSettings.openaiConfigs || [];
-            const newActive = configs.find(c => c.id === options.configId);
-            if (newActive) {
-                this._currentSettings.openaiActiveConfigId = options.configId;
-                // Update legacy fields for backward compatibility
-                this._currentSettings.openaiBaseUrl = newActive.baseUrl || '';
-                this._currentSettings.openaiApiKey = newActive.apiKey || '';
-                this._currentSettings.openaiModel = newActive.model || '';
-            }
+            this._applyOpenaiSelection(options.configId, options.modelId || '');
         }
 
         // Save to storage
@@ -375,20 +458,11 @@ export class UIController {
     /**
      * Handle OpenAI config quick-switch from dropdown (same provider)
      */
-    handleOpenaiConfigSwitch(configId) {
+    handleOpenaiConfigSwitch(configId, modelId = '') {
         if (!this._currentSettings) return;
 
-        const configs = this._currentSettings.openaiConfigs || [];
-        const newActive = configs.find(c => c.id === configId);
-        if (!newActive) return;
-
-        // Update active config ID
-        this._currentSettings.openaiActiveConfigId = configId;
-
-        // Update legacy fields for backward compatibility
-        this._currentSettings.openaiBaseUrl = newActive.baseUrl || '';
-        this._currentSettings.openaiApiKey = newActive.apiKey || '';
-        this._currentSettings.openaiModel = newActive.model || '';
+        const applied = this._applyOpenaiSelection(configId, modelId);
+        if (!applied) return;
 
         // Ensure provider is OpenAI
         this._currentSettings.provider = 'openai';

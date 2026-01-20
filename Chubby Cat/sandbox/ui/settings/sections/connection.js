@@ -1,6 +1,7 @@
 
 // sandbox/ui/settings/sections/connection.js
 import { sendToBackground } from '../../../../lib/messaging.js';
+import { t } from '../../../core/i18n.js';
 
 export class ConnectionSection {
     constructor(callbacks) {
@@ -15,6 +16,7 @@ export class ConnectionSection {
         // OpenAI Multi-Config state
         this.openaiConfigs = [];
         this.openaiActiveConfigId = null;
+        this.openaiModelEditingId = null;
         this.queryElements();
         this.bindEvents();
     }
@@ -67,7 +69,11 @@ export class ConnectionSection {
             openaiProviderType: get('openai-provider-type'),
             openaiBaseUrl: get('openai-base-url'),
             openaiApiKey: get('openai-api-key'),
-            openaiModel: get('openai-model'),
+            openaiModelInput: get('openai-model-input'),
+            openaiAddModel: get('openai-add-model'),
+            openaiCancelModelEdit: get('openai-cancel-model-edit'),
+            openaiModelList: get('openai-model-list'),
+            openaiModelStatus: get('openai-model-status'),
             openaiTimeout: get('openai-timeout'),
             openaiSetDefault: get('openai-set-default'),
             openaiConfigStatus: get('openai-config-status'),
@@ -299,7 +305,10 @@ export class ConnectionSection {
             openaiProviderType,
             openaiBaseUrl,
             openaiApiKey,
-            openaiModel,
+            openaiModelInput,
+            openaiAddModel,
+            openaiCancelModelEdit,
+            openaiModelList,
             openaiTimeout,
             openaiSetDefault,
             claudeMaxTokens,
@@ -311,6 +320,7 @@ export class ConnectionSection {
             openaiConfigSelect.addEventListener('change', (e) => {
                 this._saveCurrentOpenaiConfigEdits();
                 this.openaiActiveConfigId = e.target.value;
+                this.openaiModelEditingId = null;
                 this._loadActiveOpenaiConfigIntoForm();
                 this._renderOpenaiConfigOptions();
                 this._showOpenaiStatus('');
@@ -330,6 +340,7 @@ export class ConnectionSection {
                 const config = this._getDefaultOpenaiConfig();
                 this.openaiConfigs.push(config);
                 this.openaiActiveConfigId = config.id;
+                this.openaiModelEditingId = null;
                 this._renderOpenaiConfigOptions();
                 this._loadActiveOpenaiConfigIntoForm();
                 this._showOpenaiStatus('');
@@ -350,6 +361,7 @@ export class ConnectionSection {
 
                 this.openaiConfigs = this.openaiConfigs.filter(c => c.id !== id);
                 this.openaiActiveConfigId = this.openaiConfigs[0].id;
+                this.openaiModelEditingId = null;
                 this._renderOpenaiConfigOptions();
                 this._loadActiveOpenaiConfigIntoForm();
                 this._showOpenaiStatus('');
@@ -372,7 +384,6 @@ export class ConnectionSection {
         }
         if (openaiBaseUrl) openaiBaseUrl.addEventListener('input', onOpenaiEdit);
         if (openaiApiKey) openaiApiKey.addEventListener('input', onOpenaiEdit);
-        if (openaiModel) openaiModel.addEventListener('input', onOpenaiEdit);
         if (openaiTimeout) openaiTimeout.addEventListener('input', onOpenaiEdit);
         if (claudeMaxTokens) claudeMaxTokens.addEventListener('input', onOpenaiEdit);
         if (claudeThinkingEnabled) {
@@ -395,6 +406,46 @@ export class ConnectionSection {
                 config.isDefault = openaiSetDefault.checked;
 
                 this._showOpenaiStatus(openaiSetDefault.checked ? 'Set as default configuration' : '');
+            });
+        }
+
+        if (openaiAddModel) {
+            openaiAddModel.addEventListener('click', () => {
+                this._applyOpenaiModelInput();
+            });
+        }
+
+        if (openaiCancelModelEdit) {
+            openaiCancelModelEdit.addEventListener('click', () => {
+                this._cancelOpenaiModelEdit();
+            });
+        }
+
+        if (openaiModelInput) {
+            openaiModelInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this._applyOpenaiModelInput();
+                } else if (e.key === 'Escape') {
+                    this._cancelOpenaiModelEdit();
+                }
+            });
+        }
+
+        if (openaiModelList) {
+            openaiModelList.addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-action]');
+                if (!btn) return;
+                const action = btn.dataset.action;
+                const modelId = btn.dataset.modelId || '';
+                if (!action || !modelId) return;
+                if (action === 'use') {
+                    this._setActiveOpenaiModel(modelId);
+                } else if (action === 'edit') {
+                    this._startOpenaiModelEdit(modelId);
+                } else if (action === 'remove') {
+                    this._removeOpenaiModel(modelId);
+                }
             });
         }
 
@@ -437,22 +488,7 @@ export class ConnectionSection {
         const openaiActiveId = typeof data.openaiActiveConfigId === 'string' ? data.openaiActiveConfigId : null;
 
         if (openaiConfigs && openaiConfigs.length > 0) {
-            this.openaiConfigs = openaiConfigs.map(c => ({
-                id: c.id || this._makeOpenaiConfigId(),
-                name: c.name || '',
-                providerType: c.providerType || 'openai', // Default to 'openai' for backward compatibility
-                baseUrl: c.baseUrl || '',
-                apiKey: c.apiKey || '',
-                model: c.model || '',
-                timeout: c.timeout || 60000,
-                isDefault: c.isDefault === true,
-                textSelectionEnabled: c.textSelectionEnabled !== false,
-                imageToolsEnabled: c.imageToolsEnabled !== false,
-                // Claude-specific options
-                maxTokens: c.maxTokens || 8192,
-                thinkingEnabled: c.thinkingEnabled === true,
-                thinkingBudget: c.thinkingBudget || 10000
-            }));
+            this.openaiConfigs = openaiConfigs.map(c => this._normalizeOpenaiConfig(c));
             this.openaiActiveConfigId = openaiActiveId && this.openaiConfigs.some(c => c.id === openaiActiveId)
                 ? openaiActiveId
                 : this.openaiConfigs[0].id;
@@ -461,7 +497,10 @@ export class ConnectionSection {
             const config = this._getDefaultOpenaiConfig();
             config.baseUrl = data.openaiBaseUrl || '';
             config.apiKey = data.openaiApiKey || '';
-            config.model = data.openaiModel || '';
+            const legacyModels = this._normalizeModelList(data.openaiModel || '');
+            config.models = legacyModels;
+            config.activeModelId = legacyModels[0] || '';
+            config.model = config.activeModelId;
             config.isDefault = true;
             this.openaiConfigs = [config];
             this.openaiActiveConfigId = config.id;
@@ -560,7 +599,7 @@ export class ConnectionSection {
             // OpenAI - Legacy single fields (from active config for backward compat)
             openaiBaseUrl: activeOpenai ? activeOpenai.baseUrl : "",
             openaiApiKey: activeOpenai ? activeOpenai.apiKey : "",
-            openaiModel: activeOpenai ? activeOpenai.model : "",
+            openaiModel: activeOpenai ? (activeOpenai.activeModelId || activeOpenai.model || "") : "",
 
             // MCP - Multi-select support
             mcpEnabled: mcpEnabled ? mcpEnabled.checked === true : false,
@@ -613,6 +652,8 @@ export class ConnectionSection {
             baseUrl: '',
             apiKey: '',
             model: '',
+            models: [],
+            activeModelId: '',
             timeout: 60000,
             isDefault: false,
             textSelectionEnabled: true,
@@ -622,6 +663,80 @@ export class ConnectionSection {
             thinkingEnabled: false,
             thinkingBudget: 10000
         };
+    }
+
+    _normalizeModelList(raw) {
+        if (!raw) return [];
+        let list = [];
+        if (Array.isArray(raw)) {
+            list = raw.map(item => {
+                if (typeof item === 'string') return item;
+                if (item && typeof item === 'object') return item.id || item.name || item.value || '';
+                return '';
+            });
+        } else if (typeof raw === 'string') {
+            list = raw.split(',').map(m => m.trim());
+        }
+        const seen = new Set();
+        return list.filter(m => m).filter(m => {
+            if (seen.has(m)) return false;
+            seen.add(m);
+            return true;
+        });
+    }
+
+    _normalizeOpenaiConfig(raw) {
+        const config = {
+            id: raw.id || this._makeOpenaiConfigId(),
+            name: raw.name || '',
+            providerType: raw.providerType || 'openai',
+            baseUrl: raw.baseUrl || '',
+            apiKey: raw.apiKey || '',
+            model: '',
+            models: [],
+            activeModelId: '',
+            timeout: raw.timeout || 60000,
+            isDefault: raw.isDefault === true,
+            textSelectionEnabled: raw.textSelectionEnabled !== false,
+            imageToolsEnabled: raw.imageToolsEnabled !== false,
+            maxTokens: raw.maxTokens || 8192,
+            thinkingEnabled: raw.thinkingEnabled === true,
+            thinkingBudget: raw.thinkingBudget || 10000
+        };
+
+        const listFromModels = this._normalizeModelList(raw.models);
+        const listFromLegacy = this._normalizeModelList(raw.model);
+        const merged = this._normalizeModelList([...listFromModels, ...listFromLegacy]);
+
+        let activeModelId = (raw.activeModelId || '').trim();
+        if (activeModelId && !merged.includes(activeModelId)) {
+            merged.unshift(activeModelId);
+        }
+        if (!activeModelId) {
+            activeModelId = merged[0] || '';
+        }
+
+        config.models = merged;
+        config.activeModelId = activeModelId;
+        config.model = activeModelId || '';
+
+        return config;
+    }
+
+    _syncOpenaiConfigModel(config) {
+        if (!config) return;
+        const models = this._normalizeModelList(config.models || []);
+        if (models.length === 0 && config.activeModelId) {
+            models.push(config.activeModelId);
+        }
+        config.models = models;
+        if (config.activeModelId && !models.includes(config.activeModelId)) {
+            config.models.unshift(config.activeModelId);
+        }
+        if (!config.activeModelId && models.length > 0) {
+            config.activeModelId = models[0];
+        }
+        config.model = config.activeModelId || '';
     }
 
     _getActiveOpenaiConfig() {
@@ -637,7 +752,6 @@ export class ConnectionSection {
             openaiProviderType,
             openaiBaseUrl,
             openaiApiKey,
-            openaiModel,
             openaiTimeout,
             openaiSetDefault,
             claudeMaxTokens,
@@ -652,7 +766,6 @@ export class ConnectionSection {
         if (openaiProviderType) config.providerType = openaiProviderType.value || 'openai';
         if (openaiBaseUrl) config.baseUrl = (openaiBaseUrl.value || '').trim();
         if (openaiApiKey) config.apiKey = (openaiApiKey.value || '').trim();
-        if (openaiModel) config.model = (openaiModel.value || '').trim();
         if (openaiTimeout) config.timeout = parseInt(openaiTimeout.value, 10) || 60000;
         // Claude-specific options
         if (claudeMaxTokens) config.maxTokens = parseInt(claudeMaxTokens.value, 10) || 8192;
@@ -665,6 +778,8 @@ export class ConnectionSection {
             }
             config.isDefault = openaiSetDefault.checked;
         }
+
+        this._syncOpenaiConfigModel(config);
     }
 
     _loadActiveOpenaiConfigIntoForm() {
@@ -674,7 +789,7 @@ export class ConnectionSection {
             openaiProviderType,
             openaiBaseUrl,
             openaiApiKey,
-            openaiModel,
+            openaiModelInput,
             openaiTimeout,
             openaiSetDefault,
             claudeMaxTokens,
@@ -690,7 +805,7 @@ export class ConnectionSection {
         if (openaiProviderType) openaiProviderType.value = config.providerType || 'openai';
         if (openaiBaseUrl) openaiBaseUrl.value = config.baseUrl || '';
         if (openaiApiKey) openaiApiKey.value = config.apiKey || '';
-        if (openaiModel) openaiModel.value = config.model || '';
+        if (openaiModelInput) openaiModelInput.value = '';
         if (openaiTimeout) openaiTimeout.value = config.timeout || 60000;
         // Claude-specific options
         if (claudeMaxTokens) claudeMaxTokens.value = config.maxTokens || 8192;
@@ -702,6 +817,8 @@ export class ConnectionSection {
         this._updateClaudeOptionsVisibility();
         this._updateClaudeThinkingBudgetVisibility();
         this._updateBaseUrlPlaceholder();
+        this._renderOpenaiModelList();
+        this._showOpenaiModelStatus('');
     }
 
     _renderOpenaiConfigOptions() {
@@ -718,7 +835,10 @@ export class ConnectionSection {
 
             const name = (config.name || '').trim();
             const label = name || config.baseUrl || 'Unnamed Config';
-            opt.textContent = config.isDefault ? `${label} ★` : label;
+            const activeModel = config.activeModelId || config.model || '';
+            const suffix = activeModel ? ` - ${activeModel}` : '';
+            const finalLabel = `${label}${suffix}`;
+            opt.textContent = config.isDefault ? `${finalLabel} ★` : finalLabel;
             openaiConfigSelect.appendChild(opt);
         }
 
@@ -773,6 +893,226 @@ export class ConnectionSection {
                 }
             }, 2000);
         }
+    }
+
+    _showOpenaiModelStatus(text, isError = false) {
+        const { openaiModelStatus } = this.elements;
+        if (!openaiModelStatus) return;
+
+        if (!text) {
+            openaiModelStatus.style.display = 'none';
+            openaiModelStatus.textContent = '';
+            return;
+        }
+
+        openaiModelStatus.style.display = 'block';
+        openaiModelStatus.textContent = text;
+        openaiModelStatus.style.color = isError ? '#b00020' : '#4CAF50';
+
+        if (!isError) {
+            setTimeout(() => {
+                if (openaiModelStatus.textContent === text) {
+                    openaiModelStatus.style.display = 'none';
+                }
+            }, 2000);
+        }
+    }
+
+    _escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    _renderOpenaiModelList() {
+        const { openaiModelList, openaiAddModel, openaiCancelModelEdit } = this.elements;
+        if (!openaiModelList) return;
+
+        const config = this._getActiveOpenaiConfig();
+        if (!config) return;
+
+        this._syncOpenaiConfigModel(config);
+
+        if (openaiAddModel && !this.openaiModelEditingId) {
+            openaiAddModel.textContent = t('openaiAddModel');
+        }
+        if (openaiCancelModelEdit && !this.openaiModelEditingId) {
+            openaiCancelModelEdit.style.display = 'none';
+        }
+
+        const models = Array.isArray(config.models) ? config.models : [];
+        if (models.length === 0) {
+            openaiModelList.innerHTML = `<div style="font-size: 12px; color: var(--text-tertiary);" data-i18n="openaiModelEmpty">${t('openaiModelEmpty')}</div>`;
+            return;
+        }
+
+        const rows = models.map(modelId => {
+            const safeId = this._escapeHtml(modelId);
+            const isActive = modelId === config.activeModelId;
+            const activeBadge = isActive
+                ? `<span style="font-size: 10px; color: #4CAF50; font-weight: 600;">${t('openaiModelActive')}</span>`
+                : '';
+            const useLabel = isActive ? t('openaiModelActive') : t('openaiModelUse');
+            const useDisabled = isActive ? 'disabled' : '';
+            const useStyle = isActive ? 'opacity: 0.6; cursor: default;' : '';
+            return `
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 8px; background: rgba(0,0,0,0.02);">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 12px; font-weight: 500;">${safeId}</span>
+                        ${activeBadge}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <button class="tool-btn" style="padding: 4px 8px; font-size: 10px; ${useStyle}" ${useDisabled} data-action="use" data-model-id="${safeId}">${useLabel}</button>
+                        <button class="tool-btn" style="padding: 4px 8px; font-size: 10px;" data-action="edit" data-model-id="${safeId}">${t('openaiModelEdit')}</button>
+                        <button class="tool-btn" style="padding: 4px 8px; font-size: 10px;" data-action="remove" data-model-id="${safeId}">${t('openaiModelRemove')}</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        openaiModelList.innerHTML = rows;
+    }
+
+    _startOpenaiModelEdit(modelId) {
+        const { openaiModelInput, openaiAddModel, openaiCancelModelEdit } = this.elements;
+        if (!openaiModelInput) return;
+        this.openaiModelEditingId = modelId;
+        openaiModelInput.value = modelId;
+        openaiModelInput.focus();
+        if (openaiAddModel) openaiAddModel.textContent = t('openaiUpdateModel');
+        if (openaiCancelModelEdit) openaiCancelModelEdit.style.display = 'inline-flex';
+    }
+
+    _cancelOpenaiModelEdit() {
+        const { openaiModelInput, openaiAddModel, openaiCancelModelEdit } = this.elements;
+        this.openaiModelEditingId = null;
+        if (openaiModelInput) openaiModelInput.value = '';
+        if (openaiAddModel) openaiAddModel.textContent = t('openaiAddModel');
+        if (openaiCancelModelEdit) openaiCancelModelEdit.style.display = 'none';
+        this._showOpenaiModelStatus('');
+    }
+
+    _applyOpenaiModelInput() {
+        const { openaiModelInput } = this.elements;
+        if (!openaiModelInput) return;
+
+        const raw = openaiModelInput.value.trim();
+        if (!raw) {
+            this._showOpenaiModelStatus(t('openaiModelRequired'), true);
+            return;
+        }
+
+        const config = this._getActiveOpenaiConfig();
+        if (!config) return;
+
+        if (this.openaiModelEditingId) {
+            const nextId = this._normalizeModelList(raw)[0] || '';
+            if (!nextId) {
+                this._showOpenaiModelStatus(t('openaiModelRequired'), true);
+                return;
+            }
+            const models = Array.isArray(config.models) ? config.models : [];
+            const currentIndex = models.indexOf(this.openaiModelEditingId);
+            if (currentIndex === -1) {
+                this._cancelOpenaiModelEdit();
+                return;
+            }
+            if (models.includes(nextId) && nextId !== this.openaiModelEditingId) {
+                this._showOpenaiModelStatus(t('openaiModelDuplicate'), true);
+                return;
+            }
+            models[currentIndex] = nextId;
+            config.models = models;
+            if (config.activeModelId === this.openaiModelEditingId) {
+                config.activeModelId = nextId;
+            }
+            this._syncOpenaiConfigModel(config);
+            this.openaiModelEditingId = null;
+            openaiModelInput.value = '';
+            this._renderOpenaiModelList();
+            this._renderOpenaiConfigOptions();
+            this._showOpenaiModelStatus('');
+            return;
+        }
+
+        const toAdd = this._normalizeModelList(raw);
+        const result = this._addOpenaiModels(toAdd);
+        if (!result.added && result.duplicates > 0) {
+            this._showOpenaiModelStatus(t('openaiModelDuplicate'), true);
+            return;
+        }
+        openaiModelInput.value = '';
+        if (result.duplicates > 0) {
+            this._showOpenaiModelStatus(`${t('openaiModelDuplicate')} (${result.duplicates})`, true);
+        } else {
+            this._showOpenaiModelStatus('');
+        }
+    }
+
+    _addOpenaiModels(modelIds) {
+        const config = this._getActiveOpenaiConfig();
+        if (!config) return { added: 0, duplicates: 0 };
+
+        const models = Array.isArray(config.models) ? config.models : [];
+        let added = 0;
+        let duplicates = 0;
+
+        modelIds.forEach(id => {
+            if (!id) return;
+            if (models.includes(id)) {
+                duplicates += 1;
+                return;
+            }
+            models.push(id);
+            added += 1;
+            if (!config.activeModelId) {
+                config.activeModelId = id;
+            }
+        });
+
+        config.models = models;
+        this._syncOpenaiConfigModel(config);
+        if (added > 0) {
+            this._renderOpenaiModelList();
+            this._renderOpenaiConfigOptions();
+        }
+
+        return { added, duplicates };
+    }
+
+    _removeOpenaiModel(modelId) {
+        const config = this._getActiveOpenaiConfig();
+        if (!config) return;
+
+        const models = Array.isArray(config.models) ? config.models : [];
+        if (models.length === 0) return;
+
+        const nextModels = models.filter(id => id !== modelId);
+        config.models = nextModels;
+
+        if (config.activeModelId === modelId) {
+            config.activeModelId = nextModels[0] || '';
+        }
+
+        if (this.openaiModelEditingId === modelId) {
+            this._cancelOpenaiModelEdit();
+        }
+
+        this._syncOpenaiConfigModel(config);
+        this._renderOpenaiModelList();
+        this._renderOpenaiConfigOptions();
+    }
+
+    _setActiveOpenaiModel(modelId) {
+        const config = this._getActiveOpenaiConfig();
+        if (!config) return;
+        config.activeModelId = modelId;
+        this._syncOpenaiConfigModel(config);
+        this._renderOpenaiModelList();
+        this._renderOpenaiConfigOptions();
     }
 
     _showOfficialFetchStatus(text, isError = false) {
@@ -994,29 +1334,16 @@ export class ConnectionSection {
     }
 
     _onModelDropdownSelect() {
-        const { openaiModelDropdown, openaiModel } = this.elements;
-        if (!openaiModelDropdown || !openaiModel) return;
+        const { openaiModelDropdown } = this.elements;
+        if (!openaiModelDropdown) return;
 
         const selectedModel = openaiModelDropdown.value;
         if (!selectedModel) return;
 
-        // Append to existing models (comma separated) or set as new value
-        const currentValue = openaiModel.value.trim();
-        if (currentValue) {
-            // Check if already exists
-            const existing = currentValue.split(',').map(s => s.trim());
-            if (!existing.includes(selectedModel)) {
-                openaiModel.value = currentValue + ', ' + selectedModel;
-            }
-        } else {
-            openaiModel.value = selectedModel;
-        }
+        this._addOpenaiModels([selectedModel]);
 
         // Reset dropdown to placeholder
         openaiModelDropdown.selectedIndex = 0;
-
-        // Trigger input event to save changes
-        openaiModel.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     _getActiveServer() {

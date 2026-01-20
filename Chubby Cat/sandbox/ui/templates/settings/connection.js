@@ -81,12 +81,16 @@ export const ConnectionSettingsTemplate = `
                 <input type="password" id="openai-api-key" class="shortcut-input" style="width: 100%; text-align: left; box-sizing: border-box;" data-i18n-placeholder="apiKeyPlaceholder" placeholder="sk-...">
             </div>
             <div>
-                <label style="font-weight: 500; display: block; margin-bottom: 2px;">Model IDs (Comma separated)</label>
+                <label data-i18n="openaiModelsTitle" style="font-weight: 500; display: block; margin-bottom: 2px;">Models</label>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <input type="text" id="openai-model" class="shortcut-input" style="flex: 1; text-align: left; box-sizing: border-box;" placeholder="e.g. gpt-4o, claude-3-5-sonnet">
+                    <input type="text" id="openai-model-input" class="shortcut-input" style="flex: 1; text-align: left; box-sizing: border-box;" data-i18n-placeholder="modelIdPlaceholder" placeholder="e.g. gpt-4o, claude-3-5-sonnet">
+                    <button id="openai-add-model" class="tool-btn" style="padding: 6px 10px; white-space: nowrap;" type="button" data-i18n="openaiAddModel">Add</button>
+                    <button id="openai-cancel-model-edit" class="tool-btn" style="padding: 6px 10px; white-space: nowrap; display: none;" type="button" data-i18n="openaiCancelEdit">Cancel</button>
                     <button id="openai-fetch-models" class="tool-btn" style="padding: 6px 10px; white-space: nowrap;" type="button">获取</button>
                 </div>
+                <div id="openai-model-status" style="font-size: 12px; margin-top: 4px; display: none;"></div>
                 <div id="openai-fetch-status" style="font-size: 12px; margin-top: 4px; display: none;"></div>
+                <div id="openai-model-list" style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px;"></div>
                 <select id="openai-model-dropdown" class="shortcut-input" style="width: 100%; margin-top: 6px; padding: 6px 12px; display: none;">
                     <option value="" disabled selected>-- 选择模型 --</option>
                 </select>

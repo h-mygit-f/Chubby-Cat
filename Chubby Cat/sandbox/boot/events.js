@@ -156,6 +156,7 @@ export function bindAppEvents(app, ui, setResizeRef) {
                 const provider = option.dataset.provider;
                 const isConfig = option.dataset.isConfig === 'true';
                 const configId = option.dataset.configId;
+                const modelId = option.dataset.modelId;
 
                 // Close dropdown
                 if (ui.toggleDropdown) {
@@ -164,7 +165,7 @@ export function bindAppEvents(app, ui, setResizeRef) {
 
                 // Update selection
                 if (ui.selectModelFromDropdown) {
-                    ui.selectModelFromDropdown(value, provider, isConfig, configId);
+                    ui.selectModelFromDropdown(value, provider, isConfig, configId, modelId);
                 }
 
                 // Handle provider switching
@@ -172,7 +173,8 @@ export function bindAppEvents(app, ui, setResizeRef) {
                 if (provider && provider !== currentProvider) {
                     if (ui.handleProviderSwitch) {
                         const switched = ui.handleProviderSwitch(provider, {
-                            configId: isConfig ? configId : null
+                            configId: isConfig ? configId : null,
+                            modelId: isConfig ? modelId : null
                         });
                         if (switched) {
                             const providerNames = {
@@ -186,7 +188,7 @@ export function bindAppEvents(app, ui, setResizeRef) {
                     }
                 } else if (isConfig && configId) {
                     if (ui.handleOpenaiConfigSwitch) {
-                        ui.handleOpenaiConfigSwitch(configId);
+                        ui.handleOpenaiConfigSwitch(configId, modelId);
                     }
                 }
 
@@ -221,13 +223,15 @@ export function bindAppEvents(app, ui, setResizeRef) {
             const currentProvider = ui.getCurrentProvider ? ui.getCurrentProvider() : 'web';
             const isOpenAIConfig = selectedOption.dataset.isConfig === 'true';
             const configId = selectedOption.dataset.configId;
+            const modelId = selectedOption.dataset.modelId;
 
             // Check if this is a provider switch (cross-provider model selection)
             if (selectedProvider && selectedProvider !== currentProvider) {
                 // Provider switch detected
                 if (ui.handleProviderSwitch) {
                     const switched = ui.handleProviderSwitch(selectedProvider, {
-                        configId: isOpenAIConfig ? configId : null
+                        configId: isOpenAIConfig ? configId : null,
+                        modelId: isOpenAIConfig ? modelId : null
                     });
                     if (switched) {
                         // Provider was switched, update status to notify user
@@ -244,7 +248,7 @@ export function bindAppEvents(app, ui, setResizeRef) {
             } else if (isOpenAIConfig && configId) {
                 // Same provider (OpenAI), but different config
                 if (ui.handleOpenaiConfigSwitch) {
-                    ui.handleOpenaiConfigSwitch(configId);
+                    ui.handleOpenaiConfigSwitch(configId, modelId);
                 }
             }
 

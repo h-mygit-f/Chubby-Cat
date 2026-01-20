@@ -130,12 +130,18 @@ export class MessageBridge {
 
                 // Migration: if no configs but legacy single fields exist, create initial config
                 if (!openaiConfigs && (res.geminiOpenaiBaseUrl || res.geminiOpenaiApiKey || res.geminiOpenaiModel)) {
+                    const legacyModels = (res.geminiOpenaiModel || '')
+                        .split(',')
+                        .map(m => m.trim())
+                        .filter(m => m);
                     const migratedConfig = {
                         id: `cfg_${Date.now()}`,
                         name: 'Default',
                         baseUrl: res.geminiOpenaiBaseUrl || '',
                         apiKey: res.geminiOpenaiApiKey || '',
-                        model: res.geminiOpenaiModel || '',
+                        model: legacyModels[0] || '',
+                        models: legacyModels,
+                        activeModelId: legacyModels[0] || '',
                         timeout: 60000,
                         isDefault: true
                     };
@@ -160,7 +166,7 @@ export class MessageBridge {
                         // Legacy single fields (populated from active config)
                         openaiBaseUrl: activeConfig ? activeConfig.baseUrl : (res.geminiOpenaiBaseUrl || ""),
                         openaiApiKey: activeConfig ? activeConfig.apiKey : (res.geminiOpenaiApiKey || ""),
-                        openaiModel: activeConfig ? activeConfig.model : (res.geminiOpenaiModel || ""),
+                        openaiModel: activeConfig ? (activeConfig.activeModelId || activeConfig.model || "") : (res.geminiOpenaiModel || ""),
                         // Document Processing (OCR)
                         docProcessingEnabled: res.geminiDocProcessingEnabled === true,
                         docProcessingProvider: res.geminiDocProcessingProvider || 'mistral',

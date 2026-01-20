@@ -55,54 +55,85 @@ export class RequestDispatcher {
     }
 
     async _handleOpenAIRequest(request, settings, files, onUpdate, signal) {
-        // Determine the config to use
-        // In multi-config mode, request.model contains a config ID (e.g., "cfg_xxx")
-        // We need to resolve this to the actual configuration
-
-        let config = null;
         const requestModel = request.model || '';
 
-        // Check if request.model is a config ID
-        if (requestModel.startsWith('cfg_') && Array.isArray(settings.openaiConfigs) && settings.openaiConfigs.length > 0) {
-            // Multi-config mode: find the config by ID
-            config = settings.openaiConfigs.find(c => c.id === requestModel);
+        const parseSelection = (value) => {
+            let configId = '';
+            let modelId = '';
+            if (typeof value !== 'string') return { configId, modelId };
+            if (value.includes('::')) {
+                const parts = value.split('::');
+                configId = parts.shift() || '';
+                modelId = parts.join('::');
+            } else if (value.startsWith('cfg_')) {
+                configId = value;
+            } else {
+                modelId = value;
+            }
+            return { configId, modelId };
+        };
 
-            if (!config) {
-                // Config ID not found, try to use active config or first config
-                if (settings.openaiActiveConfigId) {
-                    config = settings.openaiConfigs.find(c => c.id === settings.openaiActiveConfigId);
-                }
-                if (!config) {
-                    config = settings.openaiConfigs[0];
-                }
+        const normalizeModelList = (cfg) => {
+            const list = [];
+            const pushModel = (val) => {
+                const trimmed = (val || '').trim();
+                if (!trimmed || list.includes(trimmed)) return;
+                list.push(trimmed);
+            };
+            if (cfg && Array.isArray(cfg.models)) {
+                cfg.models.forEach(m => {
+                    if (typeof m === 'string') return pushModel(m);
+                    if (m && typeof m === 'object') return pushModel(m.id || m.name || m.value || '');
+                });
+            }
+            if (cfg && typeof cfg.model === 'string') {
+                cfg.model.split(',').map(m => m.trim()).forEach(pushModel);
+            }
+            return list;
+        };
+
+        const { configId, modelId } = parseSelection(requestModel);
+        let config = null;
+
+        if (configId && Array.isArray(settings.openaiConfigs) && settings.openaiConfigs.length > 0) {
+            let resolved = settings.openaiConfigs.find(c => c.id === configId);
+            if (!resolved && settings.openaiActiveConfigId) {
+                resolved = settings.openaiConfigs.find(c => c.id === settings.openaiActiveConfigId);
+            }
+            if (!resolved) {
+                resolved = settings.openaiConfigs[0];
             }
 
-            if (config) {
+            if (resolved) {
+                const models = normalizeModelList(resolved);
+                const selectedModel = modelId
+                    || resolved.activeModelId
+                    || resolved.model
+                    || models[0]
+                    || '';
+
                 config = {
-                    providerType: config.providerType || 'openai',
-                    baseUrl: config.baseUrl || '',
-                    apiKey: config.apiKey || '',
-                    model: config.model || '',
+                    providerType: resolved.providerType || 'openai',
+                    baseUrl: resolved.baseUrl || '',
+                    apiKey: resolved.apiKey || '',
+                    model: selectedModel,
                     // Claude-specific options
-                    maxTokens: config.maxTokens || 8192,
-                    thinkingEnabled: config.thinkingEnabled === true,
-                    thinkingBudget: config.thinkingBudget || 10000
+                    maxTokens: resolved.maxTokens || 8192,
+                    thinkingEnabled: resolved.thinkingEnabled === true,
+                    thinkingBudget: resolved.thinkingBudget || 10000
                 };
             }
         }
 
-        // Fallback to legacy single-config mode
         if (!config) {
-            // Legacy mode: prioritize request.model if it's a real model name
-            let targetModel = requestModel;
+            let targetModel = modelId || requestModel;
             if (!targetModel || targetModel === 'openai_custom' || targetModel.startsWith('cfg_')) {
-                // Use legacy settings
                 const configuredModels = settings.openaiModel ? settings.openaiModel.split(',') : [];
                 targetModel = configuredModels.length > 0 ? configuredModels[0].trim() : "";
             }
 
             config = {
-                providerType: 'openai', // Legacy mode always uses OpenAI
+                providerType: 'openai',
                 baseUrl: settings.openaiBaseUrl,
                 apiKey: settings.openaiApiKey,
                 model: targetModel

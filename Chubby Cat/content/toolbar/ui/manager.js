@@ -242,12 +242,58 @@
                     { val: 'grok-imagine-0.9', txt: 'Grok Imagine' }
                 ];
             } else if (provider === 'openai') {
-                const rawModels = settings.openaiModel || "";
-                const models = rawModels.split(',').map(m => m.trim()).filter(m => m);
-                if (models.length === 0) {
-                    opts = [{ val: 'openai_custom', txt: 'Custom Model' }];
-                } else {
-                    opts = models.map(m => ({ val: m, txt: m }));
+                const configs = Array.isArray(settings.openaiConfigs) ? settings.openaiConfigs : [];
+                const normalizeModels = (cfg) => {
+                    const list = [];
+                    const pushModel = (val) => {
+                        const trimmed = (val || '').trim();
+                        if (!trimmed || list.includes(trimmed)) return;
+                        list.push(trimmed);
+                    };
+                    if (cfg && Array.isArray(cfg.models)) {
+                        cfg.models.forEach(m => {
+                            if (typeof m === 'string') return pushModel(m);
+                            if (m && typeof m === 'object') return pushModel(m.id || m.name || m.value || '');
+                        });
+                    }
+                    if (cfg && typeof cfg.model === 'string') {
+                        cfg.model.split(',').map(m => m.trim()).forEach(pushModel);
+                    }
+                    if (cfg && cfg.activeModelId) pushModel(cfg.activeModelId);
+                    return list;
+                };
+                const buildValue = (configId, modelId) => {
+                    if (!configId) return modelId || '';
+                    if (!modelId) return configId;
+                    return `${configId}::${modelId}`;
+                };
+
+                if (configs.length > 0) {
+                    configs.forEach(cfg => {
+                        if (!cfg || (!cfg.baseUrl && !cfg.apiKey)) return;
+                        const label = (cfg.name || cfg.baseUrl || 'Unnamed Config').trim();
+                        const models = normalizeModels(cfg);
+                        if (models.length > 0) {
+                            models.forEach(modelId => {
+                                opts.push({
+                                    val: buildValue(cfg.id, modelId),
+                                    txt: `${label} - ${modelId}`
+                                });
+                            });
+                        } else {
+                            opts.push({ val: cfg.id, txt: label });
+                        }
+                    });
+                }
+
+                if (opts.length === 0) {
+                    const rawModels = settings.openaiModel || "";
+                    const models = rawModels.split(',').map(m => m.trim()).filter(m => m);
+                    if (models.length === 0) {
+                        opts = [{ val: 'openai_custom', txt: 'Custom Model' }];
+                    } else {
+                        opts = models.map(m => ({ val: m, txt: m }));
+                    }
                 }
             } else {
                 opts = [
@@ -257,7 +303,13 @@
                 ];
             }
 
-            this.view.updateModelOptions(opts, currentModel);
+            let selectedValue = currentModel;
+            if (selectedValue && selectedValue.startsWith('cfg_') && !opts.some(o => o.val === selectedValue)) {
+                const match = opts.find(o => o.val.startsWith(`${selectedValue}::`));
+                if (match) selectedValue = match.val;
+            }
+
+            this.view.updateModelOptions(opts, selectedValue);
         }
 
         // --- Grammar Mode Delegation ---

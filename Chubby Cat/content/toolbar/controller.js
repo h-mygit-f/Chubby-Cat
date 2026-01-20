@@ -66,7 +66,15 @@
             // Listen for global setting changes to keep toolbar in sync
             chrome.storage.onChanged.addListener((changes, area) => {
                 if (area === 'local') {
-                    const keys = ['geminiModel', 'geminiProvider', 'geminiUseOfficialApi', 'geminiOpenaiModel', 'geminiOfficialModel'];
+                    const keys = [
+                        'geminiModel',
+                        'geminiProvider',
+                        'geminiUseOfficialApi',
+                        'geminiOpenaiModel',
+                        'geminiOpenaiConfigs',
+                        'geminiOpenaiActiveConfigId',
+                        'geminiOfficialModel'
+                    ];
                     if (keys.some(k => changes[k])) {
                         this.syncSettings();
                     }
@@ -80,10 +88,12 @@
         
         async syncSettings() {
             const result = await chrome.storage.local.get([
-                'geminiModel', 
-                'geminiProvider', 
+                'geminiModel',
+                'geminiProvider',
                 'geminiUseOfficialApi',
                 'geminiOpenaiModel',
+                'geminiOpenaiConfigs',
+                'geminiOpenaiActiveConfigId',
                 'geminiOfficialModel'
             ]);
             
@@ -91,6 +101,8 @@
                 provider: result.geminiProvider,
                 useOfficialApi: result.geminiUseOfficialApi,
                 openaiModel: result.geminiOpenaiModel,
+                openaiConfigs: Array.isArray(result.geminiOpenaiConfigs) ? result.geminiOpenaiConfigs : [],
+                openaiActiveConfigId: result.geminiOpenaiActiveConfigId || null,
                 officialModel: result.geminiOfficialModel
             };
             
@@ -230,6 +242,57 @@
         handleModelChange(model) {
             // Update Global Preference
             chrome.storage.local.set({ 'geminiModel': model });
+
+            if (typeof model !== 'string') return;
+
+            let configId = '';
+            let modelId = '';
+            if (model.includes('::')) {
+                const parts = model.split('::');
+                configId = parts.shift() || '';
+                modelId = parts.join('::');
+            } else if (model.startsWith('cfg_')) {
+                configId = model;
+            }
+
+            if (!configId) return;
+
+            chrome.storage.local.get(['geminiOpenaiConfigs'], (res) => {
+                const configs = Array.isArray(res.geminiOpenaiConfigs) ? res.geminiOpenaiConfigs : [];
+                const target = configs.find(c => c.id === configId);
+                if (!target) return;
+
+                const models = [];
+                const pushModel = (val) => {
+                    const trimmed = (val || '').trim();
+                    if (!trimmed || models.includes(trimmed)) return;
+                    models.push(trimmed);
+                };
+                if (Array.isArray(target.models)) {
+                    target.models.forEach(m => {
+                        if (typeof m === 'string') return pushModel(m);
+                        if (m && typeof m === 'object') return pushModel(m.id || m.name || m.value || '');
+                    });
+                }
+                if (typeof target.model === 'string') {
+                    target.model.split(',').map(m => m.trim()).forEach(pushModel);
+                }
+                if (target.activeModelId) pushModel(target.activeModelId);
+                if (modelId && !models.includes(modelId)) pushModel(modelId);
+
+                const nextActive = modelId || target.activeModelId || target.model || models[0] || '';
+                target.models = models;
+                target.activeModelId = nextActive;
+                target.model = nextActive || target.model || '';
+
+                chrome.storage.local.set({
+                    geminiOpenaiConfigs: configs,
+                    geminiOpenaiActiveConfigId: configId,
+                    geminiOpenaiModel: target.model || '',
+                    geminiOpenaiBaseUrl: target.baseUrl || '',
+                    geminiOpenaiApiKey: target.apiKey || ''
+                });
+            });
         }
 
         handleAction(actionType, data) {
