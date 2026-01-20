@@ -10,6 +10,10 @@ This directory contains tests for verifying bug fixes and functionality.
   - Input preservation when switching sessions
   - Input preservation when creating new chat
   - Input cleared after sending message (expected behavior)
+- **`storage_management.test.js`** - Tests for storage management and upload handling
+  - Session hard limit and near-limit cleanup
+  - Storage threshold cleanup
+  - Image compression and upload size limit
 
 - **`multi_tab_context.test.js`** - Tests for multi-tab context persistence
   - Content persists after first message

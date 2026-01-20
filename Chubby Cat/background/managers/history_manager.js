@@ -1,6 +1,28 @@
 
 // background/managers/history_manager.js
 import { generateUUID } from '../../lib/utils.js';
+import { applyStoragePolicy, STORAGE_POLICY_DEFAULTS } from './storage_policy.js';
+
+async function enforceStoragePolicy(sessions) {
+    const fallbackQuotaBytes = STORAGE_POLICY_DEFAULTS.defaultQuotaBytes;
+    const quotaBytes = typeof chrome?.storage?.local?.QUOTA_BYTES === 'number'
+        ? chrome.storage.local.QUOTA_BYTES
+        : fallbackQuotaBytes;
+    const thresholdBytes = Math.floor(quotaBytes * STORAGE_POLICY_DEFAULTS.storageThresholdRatio);
+
+    let applyStorageThreshold = false;
+    try {
+        const usageBytes = await chrome.storage.local.getBytesInUse(null);
+        applyStorageThreshold = usageBytes >= thresholdBytes;
+    } catch (e) {
+        applyStorageThreshold = true;
+    }
+
+    return applyStoragePolicy(sessions, {
+        ...STORAGE_POLICY_DEFAULTS,
+        storageThresholdBytes: applyStorageThreshold ? thresholdBytes : Infinity
+    });
+}
 
 /**
  * Saves a completed interaction to the chat history in local storage.
@@ -48,12 +70,14 @@ export async function saveToHistory(text, result, filesObj = null) {
         };
 
         geminiSessions.unshift(newSession);
-        await chrome.storage.local.set({ geminiSessions });
+        const policy = await enforceStoragePolicy(geminiSessions);
+        const nextSessions = policy.sessions;
+        await chrome.storage.local.set({ geminiSessions: nextSessions });
         
         // Notify Sidepanel to reload if open
         chrome.runtime.sendMessage({ 
             action: "SESSIONS_UPDATED", 
-            sessions: geminiSessions 
+            sessions: nextSessions 
         }).catch(() => {}); 
         
         return newSession;
@@ -90,12 +114,14 @@ export async function appendAiMessage(sessionId, result) {
             // Move to top
             geminiSessions.splice(sessionIndex, 1);
             geminiSessions.unshift(session);
-            
-            await chrome.storage.local.set({ geminiSessions });
+
+            const policy = await enforceStoragePolicy(geminiSessions);
+            const nextSessions = policy.sessions;
+            await chrome.storage.local.set({ geminiSessions: nextSessions });
             
             chrome.runtime.sendMessage({ 
                 action: "SESSIONS_UPDATED", 
-                sessions: geminiSessions 
+                sessions: nextSessions 
             }).catch(() => {});
             
             return true;
@@ -138,12 +164,14 @@ export async function appendUserMessage(sessionId, text, images = null, options 
             // Move to top
             geminiSessions.splice(sessionIndex, 1);
             geminiSessions.unshift(session);
-            
-            await chrome.storage.local.set({ geminiSessions });
+
+            const policy = await enforceStoragePolicy(geminiSessions);
+            const nextSessions = policy.sessions;
+            await chrome.storage.local.set({ geminiSessions: nextSessions });
             
             chrome.runtime.sendMessage({ 
                 action: "SESSIONS_UPDATED", 
-                sessions: geminiSessions 
+                sessions: nextSessions 
             }).catch(() => {});
             
             return true;

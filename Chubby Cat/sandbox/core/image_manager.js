@@ -1,5 +1,16 @@
 
 // sandbox/core/image_manager.js
+import { t } from './i18n.js';
+import {
+    MAX_UPLOAD_BYTES,
+    IMAGE_COMPRESSION_OPTIONS,
+    compressImageDataUrl,
+    estimateDataUrlBytes,
+    getDataUrlMimeType,
+    isCompressibleImageType,
+    isUploadSizeAllowed,
+    normalizeImageType
+} from './image_utils.js';
 
 export class ImageManager {
     constructor(elements, callbacks = {}) {
@@ -10,6 +21,7 @@ export class ImageManager {
         this.inputFn = elements.inputFn;
         
         this.onUrlDrop = callbacks.onUrlDrop;
+        this.onError = callbacks.onError;
         
         this.files = []; // Array of { base64, type, name }
 
@@ -192,25 +204,39 @@ export class ImageManager {
         input.focus();
     }
 
-    handleFile(file) {
+    async handleFile(file) {
         if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            this.addFile(event.target.result, file.type, file.name);
-        };
-        reader.readAsDataURL(file);
+        const inferredType = normalizeImageType(file.type) || file.type || '';
+        const isImage = inferredType.startsWith('image/');
+        if (!isImage && file.size > MAX_UPLOAD_BYTES) {
+            this._notifyError(t('uploadTooLarge'));
+            return;
+        }
+
+        try {
+            const base64 = await this._readFileAsDataUrl(file);
+            await this.addFile(base64, inferredType, file.name, { originalBytes: file.size });
+        } catch (e) {
+            console.error('File read error:', e);
+            this._notifyError(t('uploadFailed'));
+        }
     }
 
     // Used by background response handler or direct file input
-    setFile(base64, type, name) {
-        this.addFile(base64, type, name);
+    async setFile(base64, type, name) {
+        await this.addFile(base64, type, name);
     }
 
-    addFile(base64, type, name) {
-        this.files.push({ base64, type, name });
-        this._render();
-        this.inputFn.focus();
+    async addFile(base64, type, name, options = {}) {
+        try {
+            const prepared = await this._prepareFileData(base64, type, name, options);
+            if (!prepared) return;
+            this._commitFile(prepared);
+        } catch (e) {
+            console.error('File processing error:', e);
+            this._notifyError(t('uploadFailed'));
+        }
     }
     
     removeFile(index) {
@@ -225,6 +251,75 @@ export class ImageManager {
 
     getFiles() {
         return [...this.files];
+    }
+
+    _notifyError(message) {
+        if (this.onError) {
+            this.onError(message);
+        } else {
+            console.warn(message);
+        }
+    }
+
+    _readFileAsDataUrl(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => resolve(event.target.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async _prepareFileData(base64, type, name, options = {}) {
+        const inferredType = normalizeImageType(type)
+            || getDataUrlMimeType(base64)
+            || type
+            || '';
+        const isImage = inferredType.startsWith('image/');
+        if (isImage) {
+            return await this._prepareImageData(base64, inferredType, name);
+        }
+
+        const finalBytes = estimateDataUrlBytes(base64);
+        if (!isUploadSizeAllowed(finalBytes)) {
+            this._notifyError(t('uploadTooLarge'));
+            return null;
+        }
+
+        return { base64, type: inferredType, name };
+    }
+
+    async _prepareImageData(base64, type, name) {
+        const normalizedType = normalizeImageType(type) || type;
+        let candidate = { base64, type: normalizedType, name };
+        const initialBytes = estimateDataUrlBytes(base64);
+        const shouldCompress = initialBytes >= IMAGE_COMPRESSION_OPTIONS.minBytes;
+
+        if (shouldCompress && isCompressibleImageType(normalizedType)) {
+            try {
+                const compressed = await compressImageDataUrl(base64, normalizedType, IMAGE_COMPRESSION_OPTIONS);
+                const compressedBytes = estimateDataUrlBytes(compressed.base64);
+                if (compressedBytes > 0 && compressedBytes < initialBytes * 0.95) {
+                    candidate = { base64: compressed.base64, type: compressed.type, name };
+                }
+            } catch (e) {
+                console.warn('Image compression failed, using original:', e);
+            }
+        }
+
+        const finalBytes = estimateDataUrlBytes(candidate.base64);
+        if (!isUploadSizeAllowed(finalBytes)) {
+            this._notifyError(t('uploadTooLarge'));
+            return null;
+        }
+
+        return candidate;
+    }
+
+    _commitFile(file) {
+        this.files.push(file);
+        this._render();
+        this.inputFn.focus();
     }
     
     _render() {

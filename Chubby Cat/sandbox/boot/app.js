@@ -68,6 +68,10 @@ export function initAppMode() {
             onUrlDrop: (url) => {
                 ui.updateStatus("Loading image...");
                 sendToBackground({ action: "FETCH_IMAGE", url: url });
+            },
+            onError: (message) => {
+                ui.updateStatus(message);
+                setTimeout(() => ui.updateStatus(""), 3000);
             }
         });
 
@@ -107,4 +111,3 @@ export function initAppMode() {
 
     })();
 }
-
