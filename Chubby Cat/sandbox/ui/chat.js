@@ -10,11 +10,16 @@ export class ChatController {
         this.inputFn = elements.inputFn;
         this.sendBtn = elements.sendBtn;
         this.pageContextBtn = document.getElementById('page-context-btn');
+        this._initialFocusDone = false;
+        this._initialFocusQueued = false;
+        this._handleVisibilityFocus = this._handleVisibilityFocus.bind(this);
+        this._handleWindowFocus = this._handleWindowFocus.bind(this);
 
         // Debounce timer for saving prompt draft
         this._savePromptTimer = null;
 
         this.initListeners();
+        this.scheduleInitialFocus();
     }
 
     initListeners() {
@@ -57,6 +62,63 @@ export class ChatController {
                 }
             });
         }
+    }
+
+    focusInputAtStart() {
+        if (!this.inputFn) return;
+        const input = this.inputFn;
+        try {
+            input.focus({ preventScroll: true });
+        } catch (err) {
+            input.focus();
+        }
+        if (typeof input.setSelectionRange === 'function') {
+            try {
+                input.setSelectionRange(0, 0);
+            } catch (err) {
+                // Ignore selection errors for unsupported input states.
+            }
+        }
+        input.scrollTop = 0;
+    }
+
+    scheduleInitialFocus() {
+        if (this._initialFocusQueued) return;
+        this._initialFocusQueued = true;
+        const delays = [0, 50, 150, 300, 600];
+        delays.forEach((delay) => {
+            setTimeout(() => this._attemptInitialFocus(), delay);
+        });
+        document.addEventListener('visibilitychange', this._handleVisibilityFocus);
+        window.addEventListener('focus', this._handleWindowFocus);
+    }
+
+    _attemptInitialFocus() {
+        if (this._initialFocusDone || !this.inputFn) return;
+        const active = document.activeElement;
+        if (active && active !== document.body && active !== document.documentElement && active !== this.inputFn) {
+            return;
+        }
+        this.focusInputAtStart();
+        if (document.activeElement === this.inputFn) {
+            this._markInitialFocusDone();
+        }
+    }
+
+    _handleVisibilityFocus() {
+        if (document.visibilityState === 'visible') {
+            this._attemptInitialFocus();
+        }
+    }
+
+    _handleWindowFocus() {
+        this._attemptInitialFocus();
+    }
+
+    _markInitialFocusDone() {
+        this._initialFocusDone = true;
+        document.removeEventListener('visibilitychange', this._handleVisibilityFocus);
+        window.removeEventListener('focus', this._handleWindowFocus);
     }
 
     /**

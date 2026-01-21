@@ -89,50 +89,56 @@ export const FooterTemplate = `
             <div id="image-preview" class="image-preview"></div>
             
             <div class="input-row">
-                <!-- New Chat Button -->
-                <button id="new-chat-input-btn" class="input-action-btn" data-i18n-title="newChatTooltip" title="New Chat">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                </button>
-                
-                <!-- Upload File Button -->
-                <label id="upload-btn" class="input-action-btn" data-i18n-title="uploadImageTooltip" title="Upload File">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-                    <input type="file" id="image-input" multiple accept="image/*, .pdf, .txt, .js, .py, .html, .css, .json, .csv, .md" style="display: none;">
-                </label>
-                
-                <!-- Quick Phrases Button with Dropdown -->
-                <div class="quick-phrases-wrapper" id="quick-phrases-wrapper">
-                    <button id="quick-phrases-btn" class="input-action-btn" data-i18n-title="quickPhrasesTooltip" title="Quick Phrases">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                <div class="input-actions">
+                    <!-- New Chat Button -->
+                    <button id="new-chat-input-btn" class="input-action-btn" data-i18n-title="newChatTooltip" title="New Chat">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H8l-5 3V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            <line x1="12" y1="8" x2="12" y2="14"></line>
+                            <line x1="9" y1="11" x2="15" y2="11"></line>
+                        </svg>
                     </button>
                     
-                    <!-- Quick Phrases Dropdown Panel -->
-                    <div class="quick-phrases-dropdown" id="quick-phrases-dropdown">
-                        <div class="quick-phrases-header">
-                            <span class="quick-phrases-title" data-i18n="quickPhrases">Quick Phrases</span>
-                            <button class="quick-phrases-add-btn" id="quick-phrases-add-btn" data-i18n-title="addQuickPhrase" title="Add Quick Phrase">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            </button>
-                        </div>
-                        <div class="quick-phrases-list" id="quick-phrases-list">
-                            <!-- Quick phrase items will be dynamically rendered here -->
-                        </div>
-                        <div class="quick-phrases-empty" id="quick-phrases-empty" data-i18n="noQuickPhrases">No quick phrases yet. Click + to add one.</div>
+                    <!-- Upload File Button -->
+                    <label id="upload-btn" class="input-action-btn" data-i18n-title="uploadImageTooltip" title="Upload File">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                        <input type="file" id="image-input" multiple accept="image/*, .pdf, .txt, .js, .py, .html, .css, .json, .csv, .md" style="display: none;">
+                    </label>
+                    
+                    <!-- Quick Phrases Button with Dropdown -->
+                    <div class="quick-phrases-wrapper" id="quick-phrases-wrapper">
+                        <button id="quick-phrases-btn" class="input-action-btn" data-i18n-title="quickPhrasesTooltip" title="Quick Phrases">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                        </button>
                         
-                        <!-- Add/Edit Modal -->
-                        <div class="quick-phrase-modal" id="quick-phrase-modal">
-                            <div class="quick-phrase-modal-header">
-                                <span class="quick-phrase-modal-title" id="quick-phrase-modal-title" data-i18n="addQuickPhrase">Add Quick Phrase</span>
-                                <button class="quick-phrase-modal-close" id="quick-phrase-modal-close">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        <!-- Quick Phrases Dropdown Panel -->
+                        <div class="quick-phrases-dropdown" id="quick-phrases-dropdown">
+                            <div class="quick-phrases-header">
+                                <span class="quick-phrases-title" data-i18n="quickPhrases">Quick Phrases</span>
+                                <button class="quick-phrases-add-btn" id="quick-phrases-add-btn" data-i18n-title="addQuickPhrase" title="Add Quick Phrase">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                 </button>
                             </div>
-                            <div class="quick-phrase-modal-body">
-                                <input type="text" id="quick-phrase-input" class="quick-phrase-text-input" data-i18n-placeholder="quickPhrasePlaceholder" placeholder="Enter your quick phrase...">
+                            <div class="quick-phrases-list" id="quick-phrases-list">
+                                <!-- Quick phrase items will be dynamically rendered here -->
                             </div>
-                            <div class="quick-phrase-modal-footer">
-                                <button class="quick-phrase-cancel-btn" id="quick-phrase-cancel-btn" data-i18n="cancel">Cancel</button>
-                                <button class="quick-phrase-save-btn" id="quick-phrase-save-btn" data-i18n="save">Save</button>
+                            <div class="quick-phrases-empty" id="quick-phrases-empty" data-i18n="noQuickPhrases">No quick phrases yet. Click + to add one.</div>
+                            
+                            <!-- Add/Edit Modal -->
+                            <div class="quick-phrase-modal" id="quick-phrase-modal">
+                                <div class="quick-phrase-modal-header">
+                                    <span class="quick-phrase-modal-title" id="quick-phrase-modal-title" data-i18n="addQuickPhrase">Add Quick Phrase</span>
+                                    <button class="quick-phrase-modal-close" id="quick-phrase-modal-close">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                    </button>
+                                </div>
+                                <div class="quick-phrase-modal-body">
+                                    <input type="text" id="quick-phrase-input" class="quick-phrase-text-input" data-i18n-placeholder="quickPhrasePlaceholder" placeholder="Enter your quick phrase...">
+                                </div>
+                                <div class="quick-phrase-modal-footer">
+                                    <button class="quick-phrase-cancel-btn" id="quick-phrase-cancel-btn" data-i18n="cancel">Cancel</button>
+                                    <button class="quick-phrase-save-btn" id="quick-phrase-save-btn" data-i18n="save">Save</button>
+                                </div>
                             </div>
                         </div>
                     </div>

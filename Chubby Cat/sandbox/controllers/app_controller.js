@@ -240,6 +240,9 @@ export class AppController {
                     this.handleNewChat();
                 }
             }
+            if (this.ui && this.ui.chat && this.ui.chat.scheduleInitialFocus) {
+                this.ui.chat.scheduleInitialFocus();
+            }
             return;
         }
 

@@ -104,6 +104,9 @@ export class AppMessageBridge {
             if (this.ui.chat && this.ui.chat.restorePromptDraft) {
                 this.ui.chat.restorePromptDraft(payload);
             }
+            if (this.ui.chat && this.ui.chat.scheduleInitialFocus) {
+                this.ui.chat.scheduleInitialFocus();
+            }
             return;
         }
 

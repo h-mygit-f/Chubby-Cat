@@ -85,6 +85,11 @@ export function initAppMode() {
         // Bind DOM Events
         bindAppEvents(app, ui, (fn) => bridge.setResizeFn(fn));
 
+        // Ensure input is focused at the top-left on launch
+        if (ui.chat && ui.chat.scheduleInitialFocus) {
+            ui.chat.scheduleInitialFocus();
+        }
+
         // Initialize Quick Phrases Controller
         new QuickPhrasesController({
             inputFn: document.getElementById('prompt')

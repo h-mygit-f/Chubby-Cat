@@ -398,29 +398,59 @@ body.layout-wide .active-tab-container {
 }
 
 .input-wrapper {
+    --input-min-height: 72px;
+    --input-action-size: 28px;
+    --input-action-icon: 16px;
+    --input-action-offset: 4px;
+    --input-focus-ring: 0 0 0 3px rgba(11, 87, 208, 0.16);
+    --input-focus-shadow: 0 12px 28px rgba(11, 87, 208, 0.18);
+    --input-accent-border: rgba(11, 87, 208, 0.35);
+    --input-accent-shadow: rgba(11, 87, 208, 0.1);
+    --input-error: #d93025;
     background: var(--bg-input);
-    border: 1px solid transparent;
-    border-radius: 28px;
-    padding: 8px 8px 8px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    padding: 14px 12px 14px 16px;
     display: flex;
     flex-direction: column;
+    position: relative;
     transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
     width: 100%;
     max-width: 800px;
     pointer-events: auto;
     box-sizing: border-box;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 /* Active State: White with shadow */
 .input-wrapper:focus-within {
     background: var(--bg-input-focus);
-    border-color: var(--border-focus);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary);
+    box-shadow: var(--input-focus-shadow), var(--input-focus-ring);
 }
 
 .input-wrapper.dragging {
     background-color: var(--btn-active-bg);
     border-color: var(--primary);
+}
+
+.input-wrapper:has(#prompt:not(:placeholder-shown)):not(:focus-within) {
+    border-color: var(--input-accent-border);
+    box-shadow: 0 10px 24px var(--input-accent-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.input-wrapper.is-error,
+.input-wrapper:has(#prompt[aria-invalid="true"]) {
+    border-color: var(--input-error);
+    box-shadow: 0 0 0 2px rgba(217, 48, 37, 0.18);
+}
+
+[data-theme="dark"] .input-wrapper {
+    --input-focus-ring: 0 0 0 3px rgba(74, 144, 226, 0.25);
+    --input-focus-shadow: 0 12px 28px rgba(74, 144, 226, 0.22);
+    --input-accent-border: rgba(74, 144, 226, 0.45);
+    --input-accent-shadow: rgba(74, 144, 226, 0.2);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* Tools Container & Navigation */
@@ -540,27 +570,45 @@ body.layout-wide .active-tab-container {
 }
 
 .input-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    column-gap: 8px;
+    row-gap: clamp(6px, calc(var(--input-action-offset) + 6px), 10px);
+    align-items: start;
+}
+
+.input-actions {
+    position: static;
+    grid-column: 1 / -1;
+    grid-row: 2;
     display: flex;
-    align-items: flex-end;
-    gap: 4px;
-    padding-bottom: 0;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
 }
 
 /* Textarea */
 #prompt {
+    grid-column: 1 / 2;
+    grid-row: 1;
     flex: 1;
     border: none;
     outline: none;
     font-size: 16px;
-    padding: 10px 4px;
+    padding: 6px 8px 10px 0;
     background: transparent;
-    min-height: 24px;
-    max-height: 200px;
+    min-height: var(--input-min-height);
+    max-height: 320px;
     color: var(--text-primary);
     font-family: inherit;
     resize: none;
-    line-height: 1.5;
-    margin-left: 6px;
+    line-height: 1.6;
+    margin-left: 0;
+    align-self: stretch;
+    text-align: left;
+    caret-color: var(--primary);
+    min-width: 0;
     /* Spacing from buttons */
 }
 
@@ -574,15 +622,15 @@ body.layout-wide .active-tab-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: var(--input-action-size);
+    height: var(--input-action-size);
     color: var(--text-secondary);
     border-radius: 50%;
     transition: background 0.2s, color 0.2s;
     flex-shrink: 0;
     background: transparent;
     border: none;
-    margin-bottom: 4px;
+    margin-bottom: 0;
 }
 
 #upload-btn:hover {
@@ -591,6 +639,8 @@ body.layout-wide .active-tab-container {
 }
 
 #send {
+    grid-column: 2 / 3;
+    grid-row: 1;
     width: 40px;
     height: 40px;
     background: var(--primary);
@@ -603,9 +653,10 @@ body.layout-wide .active-tab-container {
     justify-content: center;
     transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
     flex-shrink: 0;
-    margin-bottom: 2px;
+    margin-bottom: 0;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    margin-left: 6px;
+    margin-left: 8px;
+    align-self: flex-end;
 }
 
 #send:hover {
@@ -808,14 +859,21 @@ body.layout-wide .active-tab-container {
     }
 
     .input-wrapper {
-        padding: 6px 6px 6px 12px;
+        padding: 12px 10px 12px 12px;
+        --input-action-size: 26px;
+        --input-action-icon: 14px;
+        --input-action-offset: 2px;
+    }
+
+    #send {
+        margin-bottom: 0;
     }
 }
 
 /* --- Input Action Buttons (New Chat, Quick Phrases) --- */
 .input-action-btn {
-    width: 32px;
-    height: 32px;
+    width: var(--input-action-size);
+    height: var(--input-action-size);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -826,7 +884,7 @@ body.layout-wide .active-tab-container {
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
     flex-shrink: 0;
-    margin-bottom: 4px;
+    margin-bottom: 0;
 }
 
 .input-action-btn:hover {
@@ -860,8 +918,8 @@ body.layout-wide .active-tab-container {
 }
 
 .input-action-btn svg {
-    width: 18px;
-    height: 18px;
+    width: var(--input-action-icon);
+    height: var(--input-action-icon);
 }
 
 /* --- Quick Phrases Wrapper --- */
