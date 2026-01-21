@@ -5,7 +5,7 @@ import { UIMessageHandler } from './handlers/ui.js';
 
 /**
  * Sets up the global runtime message listener.
- * @param {GeminiSessionManager} sessionManager 
+ * @param {SessionManager} sessionManager
  * @param {ImageHandler} imageHandler 
  * @param {BrowserControlManager} controlManager
  * @param {McpRemoteManager} mcpManager

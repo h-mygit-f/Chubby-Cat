@@ -20,7 +20,7 @@ export class QuickAskHandler {
         const onUpdate = (partialText, partialThoughts) => {
             if (tabId) {
                 chrome.tabs.sendMessage(tabId, {
-                    action: "GEMINI_STREAM_UPDATE",
+                    action: "AI_STREAM_UPDATE",
                     text: partialText,
                     thoughts: partialThoughts
                 }).catch(() => {});
@@ -36,7 +36,7 @@ export class QuickAskHandler {
 
         if (tabId) {
             chrome.tabs.sendMessage(tabId, {
-                action: "GEMINI_STREAM_DONE",
+                action: "AI_STREAM_DONE",
                 result: result,
                 sessionId: savedSession ? savedSession.id : null
             }).catch(() => {});
@@ -51,7 +51,7 @@ export class QuickAskHandler {
         if (imgRes.error) {
             if (tabId) {
                 chrome.tabs.sendMessage(tabId, {
-                    action: "GEMINI_STREAM_DONE",
+                    action: "AI_STREAM_DONE",
                     result: { status: "error", text: "Failed to load image: " + imgRes.error }
                 }).catch(() => {});
             }
@@ -73,7 +73,7 @@ export class QuickAskHandler {
         const onUpdate = (partialText, partialThoughts) => {
             if (tabId) {
                 chrome.tabs.sendMessage(tabId, {
-                    action: "GEMINI_STREAM_UPDATE",
+                    action: "AI_STREAM_UPDATE",
                     text: partialText,
                     thoughts: partialThoughts
                 }).catch(() => {});
@@ -89,7 +89,7 @@ export class QuickAskHandler {
 
         if (tabId) {
             chrome.tabs.sendMessage(tabId, {
-                action: "GEMINI_STREAM_DONE",
+                action: "AI_STREAM_DONE",
                 result: result,
                 sessionId: savedSession ? savedSession.id : null
             }).catch(() => {});

@@ -29,7 +29,7 @@ export class PromptHandler {
             const onUpdate = (partialText, partialThoughts) => {
                 // Catch errors if receiver (UI) is closed/unavailable
                 chrome.runtime.sendMessage({
-                    action: "GEMINI_STREAM_UPDATE",
+                    action: "AI_STREAM_UPDATE",
                     text: partialText,
                     thoughts: partialThoughts
                 }).catch(() => { });
@@ -100,15 +100,15 @@ export class PromptHandler {
                         }
 
                         if (result) {
-                            console.log('[Chubby Cat] Sending error GEMINI_REPLY to UI');
+                            console.log('[Chubby Cat] Sending error AI_REPLY to UI');
                             chrome.runtime.sendMessage(result).catch((e) => {
                                 console.error('[Chubby Cat] Failed to send error message:', e);
                             });
                         } else {
-                            console.warn('[Chubby Cat] Result is null, sending default error GEMINI_REPLY');
+                            console.warn('[Chubby Cat] Result is null, sending default error AI_REPLY');
                             // If result is null (e.g., AbortError was quietly caught), send a generic error
                             const defaultError = {
-                                action: "GEMINI_REPLY",
+                                action: "AI_REPLY",
                                 text: "Error: Request failed or was cancelled",
                                 status: "error"
                             };
@@ -196,7 +196,7 @@ export class PromptHandler {
 
                         // Update UI status
                         const loopStatus = MAX_LOOPS === Infinity ? `${loopCount}` : `${loopCount}/${MAX_LOOPS}`;
-                        onUpdate("Gemini is thinking...", `Observed output from tool. Planning next step (${loopStatus})...`);
+                        onUpdate("Thinking...", `Observed output from tool. Planning next step (${loopStatus})...`);
 
                         // === RATE LIMIT MITIGATION ===
                         // Wait 2-4 seconds before sending the next request.
@@ -214,7 +214,7 @@ export class PromptHandler {
             } catch (e) {
                 console.error("Prompt loop error:", e);
                 chrome.runtime.sendMessage({
-                    action: "GEMINI_REPLY",
+                    action: "AI_REPLY",
                     text: "Error: " + e.message,
                     status: "error"
                 }).catch(() => { });

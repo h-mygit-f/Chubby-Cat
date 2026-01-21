@@ -44,7 +44,7 @@ export class RequestDispatcher {
         );
 
         return {
-            action: "GEMINI_REPLY",
+            action: "AI_REPLY",
             text: response.text,
             thoughts: response.thoughts,
             images: response.images,
@@ -157,7 +157,7 @@ export class RequestDispatcher {
         );
 
         return {
-            action: "GEMINI_REPLY",
+            action: "AI_REPLY",
             text: response.text,
             thoughts: response.thoughts,
             images: response.images,
@@ -180,7 +180,7 @@ export class RequestDispatcher {
         );
 
         return {
-            action: "GEMINI_REPLY",
+            action: "AI_REPLY",
             text: response.text,
             thoughts: response.thoughts,
             images: response.images,
@@ -221,7 +221,7 @@ export class RequestDispatcher {
                 await this.auth.updateContext(response.newContext, request.model);
 
                 return {
-                    action: "GEMINI_REPLY",
+                    action: "AI_REPLY",
                     text: response.text,
                     thoughts: response.thoughts,
                     images: response.images,

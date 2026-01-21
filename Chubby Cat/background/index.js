@@ -1,6 +1,6 @@
 
 // background/index.js
-import { GeminiSessionManager } from './managers/session_manager.js';
+import { SessionManager } from './managers/session_manager.js';
 import { ImageManager } from './managers/image_manager.js';
 import { BrowserControlManager } from './managers/control_manager.js';
 import { McpRemoteManager } from './managers/mcp_remote_manager.js';
@@ -21,7 +21,7 @@ setupConsoleInterception(logManager);
 console.info("[Chubby Cat] Background Service Worker Started");
 
 // Initialize Managers
-const sessionManager = new GeminiSessionManager();
+const sessionManager = new SessionManager();
 const imageManager = new ImageManager();
 const controlManager = new BrowserControlManager();
 const mcpManager = new McpRemoteManager({

@@ -31,14 +31,14 @@ export class MessageHandler {
         }
 
         // 0. Stream Update
-        if (request.action === "GEMINI_STREAM_UPDATE") {
+        if (request.action === "AI_STREAM_UPDATE") {
             this.handleStreamUpdate(request);
             return;
         }
 
         // 1. AI Reply
-        if (request.action === "GEMINI_REPLY") {
-            this.handleGeminiReply(request);
+        if (request.action === "AI_REPLY") {
+            this.handleAIReply(request);
             return;
         }
 
@@ -110,8 +110,8 @@ export class MessageHandler {
         }
     }
 
-    handleGeminiReply(request) {
-        console.log('[Chubby Cat] handleGeminiReply called', { status: request.status, action: request.action });
+    handleAIReply(request) {
+        console.log('[Chubby Cat] handleAIReply called', { status: request.status, action: request.action });
 
         this.app.isGenerating = false;
         this.ui.setLoading(false);

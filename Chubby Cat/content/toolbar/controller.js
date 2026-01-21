@@ -14,7 +14,7 @@
                 onHide: () => this.ui.hideImageButton()
             });
 
-            this.streamHandler = new window.GeminiStreamHandler(this.ui, {
+            this.streamHandler = new window.AIStreamHandler(this.ui, {
                 onSessionId: (id) => { this.lastSessionId = id; }
             });
 

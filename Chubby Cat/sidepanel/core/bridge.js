@@ -301,7 +301,7 @@ export class MessageBridge {
             return;
         }
 
-        // Forward all other background messages to sandbox (e.g. GEMINI_STREAM_UPDATE)
+        // Forward all other background messages to sandbox (e.g. AI_STREAM_UPDATE)
         console.log('[Chubby Cat Bridge] Forwarding to sandbox:', message.action);
         this.frame.postMessage({
             action: 'BACKGROUND_MESSAGE',

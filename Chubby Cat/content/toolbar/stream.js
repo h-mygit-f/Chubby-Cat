@@ -2,7 +2,7 @@
 // content/toolbar/stream.js
 
 (function() {
-    class GeminiStreamHandler {
+    class AIStreamHandler {
         constructor(uiController, callbacks) {
             this.ui = uiController;
             this.callbacks = callbacks || {}; // { onSessionId }
@@ -14,14 +14,14 @@
         }
 
         handleStreamMessage(request, sender, sendResponse) {
-            if (request.action === "GEMINI_STREAM_UPDATE") {
+            if (request.action === "AI_STREAM_UPDATE") {
                 if (this.ui.isVisible()) {
                     // Update result in real-time, passing isStreaming = true
                     this.ui.showResult(request.text, null, true);
                 }
             }
             
-            if (request.action === "GEMINI_STREAM_DONE") {
+            if (request.action === "AI_STREAM_DONE") {
                 const result = request.result;
                 
                 if (request.sessionId) {
@@ -45,5 +45,5 @@
     }
 
     // Export to Window
-    window.GeminiStreamHandler = GeminiStreamHandler;
+    window.AIStreamHandler = AIStreamHandler;
 })();

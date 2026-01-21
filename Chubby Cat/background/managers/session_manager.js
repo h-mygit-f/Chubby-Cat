@@ -4,7 +4,7 @@ import { AuthManager } from './auth_manager.js';
 import { getConnectionSettings } from './session/settings_store.js';
 import { RequestDispatcher } from './session/request_dispatcher.js';
 
-export class GeminiSessionManager {
+export class SessionManager {
     constructor() {
         this.auth = new AuthManager();
         this.dispatcher = new RequestDispatcher(this.auth);
@@ -77,9 +77,9 @@ export class GeminiSessionManager {
                 errorMessage = isZh ? "请求过于频繁，请稍后再试 (429)" : "Too many requests, please try again later (429)";
             }
 
-            console.log('[Chubby Cat] Creating error GEMINI_REPLY with status error');
+            console.log('[Chubby Cat] Creating error AI_REPLY with status error');
             return {
-                action: "GEMINI_REPLY",
+                action: "AI_REPLY",
                 text: "Error: " + errorMessage,
                 status: "error"
             };
