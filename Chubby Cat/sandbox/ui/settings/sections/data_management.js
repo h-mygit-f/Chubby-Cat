@@ -18,6 +18,7 @@ export class DataManagementSection {
         this.elements = {
             exportBtn: get('export-configs-btn'),
             exportStatus: get('export-status'),
+            exportChatHistory: get('export-chat-history'),
             importDropZone: get('import-drop-zone'),
             importFileInput: get('import-file-input'),
             importOptions: get('import-options'),
@@ -281,7 +282,8 @@ export class DataManagementSection {
 
     handleExport() {
         this.showExportStatus('Preparing export...', false);
-        this.fire('onExport');
+        const includeChatHistory = this.elements.exportChatHistory?.checked || false;
+        this.fire('onExport', { includeChatHistory });
     }
 
     // --- Import Handler ---

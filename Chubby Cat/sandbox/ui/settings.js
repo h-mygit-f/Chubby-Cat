@@ -8,6 +8,7 @@ import { DEFAULT_SHORTCUTS } from '../../lib/constants.js';
 export class SettingsController {
     constructor(callbacks) {
         this.callbacks = callbacks || {};
+        this.sessionManager = null; // Will be set by app_controller
 
         // State
         this.defaultShortcuts = { ...DEFAULT_SHORTCUTS };
@@ -78,7 +79,7 @@ export class SettingsController {
             onSidebarBehaviorChange: (val) => saveSidebarBehaviorToStorage(val),
             onSummaryPromptChange: (val) => saveSummaryPromptToStorage(val),
             onDownloadLogs: () => this.downloadLogs(),
-            onExport: () => this.handleExport(),
+            onExport: (options) => this.handleExport(options),
             onImport: (payload) => this.handleImport(payload)
         });
 
@@ -108,6 +109,10 @@ export class SettingsController {
 
     close() {
         this.view.close();
+    }
+
+    setSessionManager(sessionManager) {
+        this.sessionManager = sessionManager;
     }
 
     handleOpen() {
@@ -376,31 +381,39 @@ export class SettingsController {
 
     // --- Data Export/Import ---
 
-    handleExport() {
+    handleExport(options = {}) {
         try {
+            const { includeChatHistory = false } = options;
             const configs = this.connectionData.openaiConfigs || [];
-
-            if (configs.length === 0) {
-                this.view.setExportResult(false, 'No configurations to export');
-                return;
-            }
 
             const exportData = {
                 exportedFrom: 'chubby-cat',
-                version: '1.0',
+                version: '1.1',
                 exportedAt: new Date().toISOString(),
+                // Gemini API settings
+                geminiApiKey: this.connectionData.apiKey || null,
+                geminiProvider: this.connectionData.provider || 'web',
+                geminiThinkingLevel: this.connectionData.thinkingLevel || 'low',
+                geminiOfficialModel: this.connectionData.officialModel || null,
+                geminiOfficialBaseUrl: this.connectionData.officialBaseUrl || null,
+                // OpenAI compatible configs
                 openaiConfigs: configs,
                 openaiActiveConfigId: this.connectionData.openaiActiveConfigId || null,
+                // MCP servers
                 mcpServers: this.connectionData.mcpServers || [],
                 mcpActiveServerId: this.connectionData.mcpActiveServerId || null
             };
 
+            // Include chat history if requested
+            if (includeChatHistory && this.sessionManager) {
+                exportData.chatHistory = this.sessionManager.sessions || [];
+            }
+
             const jsonString = JSON.stringify(exportData, null, 2);
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-            const filename = `chubby-cat-configs-${timestamp}.json`;
+            const filename = `chubby-cat-backup-${timestamp}.json`;
 
-            // Trigger download via parent frame - send text content instead of blob URL
-            // (Blob URLs created in sandbox cannot be accessed by sidepanel due to different origins)
+            // Trigger download via parent frame
             window.parent.postMessage({
                 action: 'DOWNLOAD_EXPORT_TEXT',
                 payload: {
@@ -409,10 +422,12 @@ export class SettingsController {
                 }
             }, '*');
 
-            // Log export action
-            console.log(`[Chubby Cat] Exported ${configs.length} configuration(s) to ${filename}`);
-
-            this.view.setExportResult(true, `Exported ${configs.length} configuration(s) successfully`);
+            const configCount = configs.length;
+            const historyCount = includeChatHistory ? (exportData.chatHistory?.length || 0) : 0;
+            let msg = `Exported ${configCount} config(s)`;
+            if (includeChatHistory) msg += `, ${historyCount} chat(s)`;
+            console.log(`[Chubby Cat] ${msg} to ${filename}`);
+            this.view.setExportResult(true, msg);
 
         } catch (err) {
             console.error('[Chubby Cat] Export error:', err);

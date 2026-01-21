@@ -47,7 +47,7 @@ export class SettingsView {
         this.shortcuts = new ShortcutsSection();
 
         this.dataManagement = new DataManagementSection({
-            onExport: () => this.fire('onExport'),
+            onExport: (options) => this.fire('onExport', options),
             onImport: (payload) => this.fire('onImport', payload)
         });
 

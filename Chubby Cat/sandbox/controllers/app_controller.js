@@ -33,6 +33,9 @@ export class AppController {
         this.sessionFlow = new SessionFlowController(sessionManager, uiController, this);
         this.prompt = new PromptController(sessionManager, uiController, imageManager, this);
 
+        // Pass sessionManager to settings for export functionality
+        this.ui.settings.setSessionManager(sessionManager);
+
         // Initialize Active Tab Controller with callbacks
         this._initActiveTabController();
 

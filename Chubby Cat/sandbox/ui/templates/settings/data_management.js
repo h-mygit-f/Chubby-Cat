@@ -10,7 +10,7 @@ export const DataManagementSettingsTemplate = `
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
             <div style="flex: 1;">
                 <label data-i18n="exportConfigs" style="font-weight: 500; display: block; margin-bottom: 2px;">Export Configurations</label>
-                <span class="setting-desc" data-i18n="exportConfigsDesc">Export all OpenAI API configurations to a JSON file for backup or migration.</span>
+                <span class="setting-desc" data-i18n="exportConfigsDesc">Export all API configurations to a JSON file for backup or migration.</span>
             </div>
             <button id="export-configs-btn" class="btn-secondary" style="padding: 8px 16px; font-size: 13px; white-space: nowrap; margin-left: 12px;">
                 <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px; margin-top: -2px;">
@@ -22,6 +22,15 @@ export const DataManagementSettingsTemplate = `
             </button>
         </div>
         <div id="export-status" class="data-operation-status" style="display: none; font-size: 12px; padding: 6px 10px; border-radius: 6px; margin-top: 4px;"></div>
+
+        <!-- Export Options -->
+        <div id="export-options" style="margin-top: 12px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text-secondary);">
+                <input type="checkbox" id="export-chat-history" style="margin: 0; width: 16px; height: 16px;">
+                <span data-i18n="exportChatHistory">Include chat history</span>
+            </label>
+            <p style="margin: 6px 0 0 24px; font-size: 11px; color: var(--text-tertiary);" data-i18n="exportChatHistoryDesc">Export all conversation history (may result in a large file)</p>
+        </div>
     </div>
 
     <!-- Divider -->

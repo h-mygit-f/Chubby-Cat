@@ -229,8 +229,10 @@ export const translations = {
         // Data Management
         "dataManagement": "Data Management",
         "exportConfigs": "Export Configurations",
-        "exportConfigsDesc": "Export all OpenAI API configurations to a JSON file for backup or migration.",
+        "exportConfigsDesc": "Export all API configurations to a JSON file for backup or migration.",
         "exportButton": "Export",
+        "exportChatHistory": "Include chat history",
+        "exportChatHistoryDesc": "Export all conversation history (may result in a large file)",
         "importConfigs": "Import Configurations",
         "importConfigsDesc": "Import OpenAI API configurations from a previously exported JSON file.",
         "importButton": "Import",
@@ -493,8 +495,10 @@ export const translations = {
         // Data Management
         "dataManagement": "数据管理",
         "exportConfigs": "导出配置",
-        "exportConfigsDesc": "将所有 OpenAI API 配置导出为 JSON 文件，用于备份或迁移。",
+        "exportConfigsDesc": "将所有 API 配置导出为 JSON 文件，用于备份或迁移。",
         "exportButton": "导出",
+        "exportChatHistory": "包含聊天记录",
+        "exportChatHistoryDesc": "导出所有对话历史（可能生成较大文件）",
         "importConfigs": "导入配置",
         "importConfigsDesc": "从之前导出的 JSON 文件中导入 OpenAI API 配置。",
         "importButton": "导入",
