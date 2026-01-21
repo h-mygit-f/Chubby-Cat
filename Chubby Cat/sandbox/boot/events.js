@@ -63,24 +63,6 @@ export function bindAppEvents(app, ui, setResizeRef) {
         });
     }
 
-    const ocrBtn = document.getElementById('ocr-btn');
-    if (ocrBtn) {
-        ocrBtn.addEventListener('click', () => {
-            app.setCaptureMode('ocr');
-            sendToBackground({ action: "INITIATE_CAPTURE", mode: 'ocr', source: 'sidepanel' });
-            ui.updateStatus(t('selectOcr'));
-        });
-    }
-
-    const screenshotTranslateBtn = document.getElementById('screenshot-translate-btn');
-    if (screenshotTranslateBtn) {
-        screenshotTranslateBtn.addEventListener('click', () => {
-            app.setCaptureMode('screenshot_translate');
-            sendToBackground({ action: "INITIATE_CAPTURE", mode: 'screenshot_translate', source: 'sidepanel' });
-            ui.updateStatus(t('selectTranslate'));
-        });
-    }
-
     const snipBtn = document.getElementById('snip-btn');
     if (snipBtn) {
         snipBtn.addEventListener('click', () => {

@@ -17,29 +17,6 @@ export const RightSidebarTemplate = `
                 <span class="tool-label">控制🌍</span>
             </button>
 
-            <!-- OCR Button -->
-            <button id="ocr-btn" class="right-sidebar-tool-btn context-aware" data-tooltip="文字识别" data-i18n-tooltip="ocr">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <path d="M7 8h4"/>
-                    <path d="M7 12h6"/>
-                    <path d="M7 16h8"/>
-                </svg>
-                <span class="tool-label">OCR</span>
-            </button>
-
-            <!-- Screenshot Translate Button -->
-            <button id="screenshot-translate-btn" class="right-sidebar-tool-btn context-aware" data-tooltip="截图翻译" data-i18n-tooltip="screenshotTranslate">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M5 8l4 4-4 4"/>
-                    <path d="M4 4h8"/>
-                    <path d="M2 12h6"/>
-                    <path d="M14 18l3-6 3 6"/>
-                    <path d="M15 16h4"/>
-                </svg>
-                <span class="tool-label">翻译</span>
-            </button>
-
             <!-- Screenshot/Snip Button -->
             <button id="snip-btn" class="right-sidebar-tool-btn context-aware" data-tooltip="截图" data-i18n-tooltip="snip">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
