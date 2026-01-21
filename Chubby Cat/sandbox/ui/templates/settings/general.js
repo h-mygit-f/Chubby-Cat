@@ -27,12 +27,6 @@ export const GeneralSettingsTemplate = `
         <input type="text" id="account-indices-input" class="shortcut-input" style="width: 100px; text-align: left;" placeholder="0">
     </div>
 
-    <div style="margin-top: 16px; margin-bottom: 16px;">
-        <h5 data-i18n="summaryPromptTitle" style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">Page Summary Prompt</h5>
-        <span class="setting-desc" data-i18n="summaryPromptDesc" style="display: block; margin-bottom: 8px;">Customize the prompt used when clicking the sidebar icon to summarize pages.</span>
-        <textarea id="summary-prompt-input" class="shortcut-input" style="width: 100%; min-height: 60px; resize: vertical; padding: 8px; font-size: 13px; line-height: 1.4; border-radius: 6px;" placeholder="请总结这个网页的主要内容"></textarea>
-    </div>
-
     <div style="margin-top: 16px;">
         <h5 data-i18n="sidebarBehavior" style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">When Sidebar Reopens</h5>
 

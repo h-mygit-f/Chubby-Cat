@@ -6,6 +6,9 @@
 
     const ICON_ID = 'chubby-cat-sidebar-icon';
     const STORAGE_KEY = 'geminiSidebarIconPosition';
+    const FLOATING_TOOL_ENABLED_KEY = 'geminiFloatingToolEnabled';
+    const FLOATING_TOOL_ACTION_KEY = 'geminiFloatingToolAction';
+    const DEFAULT_ACTION = 'summary';
     const DEBOUNCE_MS = 300;
     const DRAG_THRESHOLD = 5; // pixels to move before considered a drag
 
@@ -21,8 +24,11 @@
     class SidebarIcon {
         constructor() {
             this.iconElement = null;
+            this.tooltipElement = null;
             this.lastClickTime = 0;
             this.isLoading = false;
+            this.isEnabled = true;
+            this.action = DEFAULT_ACTION;
 
             // Drag state
             this.isDragging = false;
@@ -59,6 +65,22 @@
                     this._setLoading(request.loading);
                 }
                 return false;
+            });
+
+            this._loadSettings();
+
+            chrome.storage.onChanged.addListener((changes, area) => {
+                if (!isContextValid() || area !== 'local') {
+                    return;
+                }
+                if (changes[FLOATING_TOOL_ENABLED_KEY]) {
+                    this.isEnabled = changes[FLOATING_TOOL_ENABLED_KEY].newValue !== false;
+                    this._applyVisibility();
+                }
+                if (changes[FLOATING_TOOL_ACTION_KEY]) {
+                    this.action = this._normalizeAction(changes[FLOATING_TOOL_ACTION_KEY].newValue);
+                    this._applyActionLabels();
+                }
             });
         }
 
@@ -105,6 +127,7 @@
             tooltip.className = 'icon-tooltip';
             tooltip.textContent = '总结此网页';
             icon.appendChild(tooltip);
+            this.tooltipElement = tooltip;
 
             // Mouse events
             icon.addEventListener('mousedown', (e) => this._handleMouseDown(e));
@@ -119,6 +142,9 @@
 
             // Restore saved position
             this._restorePosition();
+
+            this._applyVisibility();
+            this._applyActionLabels();
         }
 
         _handleMouseDown(e) {
@@ -270,7 +296,12 @@
                 return;
             }
 
-            this._setLoading(true);
+            const action = this._normalizeAction(this.action);
+            const shouldShowLoading = action === DEFAULT_ACTION;
+
+            if (shouldShowLoading) {
+                this._setLoading(true);
+            }
 
             // Check if extension context is still valid
             if (!isContextValid()) {
@@ -280,15 +311,19 @@
                 return;
             }
 
-            // Send message to background to open sidepanel with summary
+            const messageAction = action === 'open_sidebar' ? 'OPEN_SIDE_PANEL' : 'OPEN_SIDE_PANEL_WITH_SUMMARY';
+
+            // Send message to background to open sidepanel
             chrome.runtime.sendMessage({
-                action: 'OPEN_SIDE_PANEL_WITH_SUMMARY'
+                action: messageAction
             }).then(() => {
-                // Loading state will be cleared by background response
-                // Set a timeout fallback in case background doesn't respond
-                setTimeout(() => {
-                    this._setLoading(false);
-                }, 5000);
+                if (shouldShowLoading) {
+                    // Loading state will be cleared by background response
+                    // Set a timeout fallback in case background doesn't respond
+                    setTimeout(() => {
+                        this._setLoading(false);
+                    }, 5000);
+                }
             }).catch((err) => {
                 // Handle extension context invalidated error
                 if (err.message?.includes('Extension context invalidated')) {
@@ -297,7 +332,9 @@
                     return;
                 }
                 console.warn('[Chubby Cat] Failed to send message:', err);
-                this._setLoading(false);
+                if (shouldShowLoading) {
+                    this._setLoading(false);
+                }
             });
         }
 
@@ -312,6 +349,44 @@
             }
         }
 
+        _loadSettings() {
+            if (!isContextValid()) return;
+
+            chrome.storage.local.get([FLOATING_TOOL_ENABLED_KEY, FLOATING_TOOL_ACTION_KEY], (result) => {
+                this.isEnabled = result[FLOATING_TOOL_ENABLED_KEY] !== false;
+                this.action = this._normalizeAction(result[FLOATING_TOOL_ACTION_KEY]);
+                this._applyVisibility();
+                this._applyActionLabels();
+            });
+        }
+
+        _normalizeAction(action) {
+            return action === 'open_sidebar' ? 'open_sidebar' : DEFAULT_ACTION;
+        }
+
+        _applyVisibility() {
+            const root = document.documentElement;
+            if (!root) return;
+            if (this.isEnabled) {
+                root.classList.remove('chubby-cat-hide-icon');
+            } else {
+                root.classList.add('chubby-cat-hide-icon');
+            }
+        }
+
+        _applyActionLabels() {
+            if (!this.iconElement) return;
+
+            const isOpen = this.action === 'open_sidebar';
+            const tooltipText = isOpen ? '打开侧边栏' : '总结此网页';
+            const ariaLabel = isOpen ? 'Open Chubby Cat side panel' : 'Summarize this page with Chubby Cat';
+
+            this.iconElement.setAttribute('aria-label', ariaLabel);
+            if (this.tooltipElement) {
+                this.tooltipElement.textContent = tooltipText;
+            }
+        }
+
         destroy() {
             document.removeEventListener('mousemove', this._boundMouseMove);
             document.removeEventListener('mouseup', this._boundMouseUp);
@@ -322,6 +397,7 @@
                 this.iconElement.parentNode.removeChild(this.iconElement);
             }
             this.iconElement = null;
+            this.tooltipElement = null;
         }
     }
 

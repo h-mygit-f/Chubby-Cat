@@ -1,6 +1,6 @@
 
 // sandbox/ui/settings.js
-import { saveShortcutsToStorage, saveThemeToStorage, requestThemeFromStorage, saveLanguageToStorage, requestLanguageFromStorage, saveTextSelectionToStorage, requestTextSelectionFromStorage, saveSidebarBehaviorToStorage, saveImageToolsToStorage, requestImageToolsFromStorage, saveAccountIndicesToStorage, requestAccountIndicesFromStorage, saveConnectionSettingsToStorage, requestConnectionSettingsFromStorage, saveSummaryPromptToStorage, requestSummaryPromptFromStorage, sendToBackground } from '../../lib/messaging.js';
+import { saveShortcutsToStorage, saveThemeToStorage, requestThemeFromStorage, saveLanguageToStorage, requestLanguageFromStorage, saveTextSelectionToStorage, requestTextSelectionFromStorage, saveSidebarBehaviorToStorage, saveImageToolsToStorage, requestImageToolsFromStorage, saveAccountIndicesToStorage, requestAccountIndicesFromStorage, saveConnectionSettingsToStorage, requestConnectionSettingsFromStorage, saveSummaryPromptToStorage, requestSummaryPromptFromStorage, saveFloatingToolSettingsToStorage, requestFloatingToolSettingsFromStorage, sendToBackground } from '../../lib/messaging.js';
 import { setLanguagePreference, getLanguagePreference } from '../core/i18n.js';
 import { SettingsView } from './settings/view.js';
 import { DEFAULT_SHORTCUTS } from '../../lib/constants.js';
@@ -17,6 +17,8 @@ export class SettingsController {
         this.textSelectionEnabled = true;
         this.imageToolsEnabled = true;
         this.accountIndices = "0";
+        this.floatingToolEnabled = true;
+        this.floatingToolAction = "summary";
 
         // Connection State
         this.connectionData = {
@@ -78,6 +80,13 @@ export class SettingsController {
             },
             onSidebarBehaviorChange: (val) => saveSidebarBehaviorToStorage(val),
             onSummaryPromptChange: (val) => saveSummaryPromptToStorage(val),
+            onFloatingToolSettingsChange: (settings) => {
+                const nextEnabled = settings && settings.enabled !== false;
+                const nextAction = settings && settings.action === 'open_sidebar' ? 'open_sidebar' : 'summary';
+                this.floatingToolEnabled = nextEnabled;
+                this.floatingToolAction = nextAction;
+                saveFloatingToolSettingsToStorage({ enabled: nextEnabled, action: nextAction });
+            },
             onDownloadLogs: () => this.downloadLogs(),
             onExport: (options) => this.handleExport(options),
             onImport: (payload) => this.handleImport(payload)
@@ -121,6 +130,10 @@ export class SettingsController {
         this.view.setLanguageValue(getLanguagePreference());
         this.view.setAccountIndices(this.accountIndices);
         this.view.setConnectionSettings(this.connectionData);
+        this.view.setFloatingToolSettings({
+            enabled: this.floatingToolEnabled,
+            action: this.floatingToolAction
+        });
         this._syncTogglesToView();
 
         // Refresh from storage
@@ -129,6 +142,7 @@ export class SettingsController {
         requestAccountIndicesFromStorage();
         requestConnectionSettingsFromStorage();
         requestSummaryPromptFromStorage();
+        requestFloatingToolSettingsFromStorage();
 
         this.fetchGithubData();
     }
@@ -162,6 +176,14 @@ export class SettingsController {
         this.accountIndices = val;
         const cleaned = val.replace(/[^0-9,]/g, '');
         saveAccountIndicesToStorage(cleaned);
+
+        if (data.floatingTool) {
+            const nextEnabled = data.floatingTool.enabled !== false;
+            const nextAction = data.floatingTool.action === 'open_sidebar' ? 'open_sidebar' : 'summary';
+            this.floatingToolEnabled = nextEnabled;
+            this.floatingToolAction = nextAction;
+            saveFloatingToolSettingsToStorage({ enabled: nextEnabled, action: nextAction });
+        }
 
         // Connection
         this.connectionData = {
@@ -332,6 +354,14 @@ export class SettingsController {
 
     updateSummaryPrompt(prompt) {
         this.view.setSummaryPrompt(prompt || '');
+    }
+
+    updateFloatingToolSettings(settings) {
+        const nextEnabled = settings && settings.enabled !== false;
+        const nextAction = settings && settings.action === 'open_sidebar' ? 'open_sidebar' : 'summary';
+        this.floatingToolEnabled = nextEnabled;
+        this.floatingToolAction = nextAction;
+        this.view.setFloatingToolSettings({ enabled: nextEnabled, action: nextAction });
     }
 
     async fetchGithubData() {

@@ -7,6 +7,7 @@ import { ShortcutsSection } from './sections/shortcuts.js';
 import { DataManagementSection } from './sections/data_management.js';
 import { AboutSection } from './sections/about.js';
 import { DocumentTranslationSection } from './sections/document_translation.js';
+import { FloatingToolSection } from './sections/floating_tool.js';
 
 export class SettingsView {
     constructor(callbacks) {
@@ -31,7 +32,11 @@ export class SettingsView {
         this.general = new GeneralSection({
             onTextSelectionChange: (val) => this.fire('onTextSelectionChange', val),
             onImageToolsChange: (val) => this.fire('onImageToolsChange', val),
-            onSidebarBehaviorChange: (val) => this.fire('onSidebarBehaviorChange', val),
+            onSidebarBehaviorChange: (val) => this.fire('onSidebarBehaviorChange', val)
+        });
+
+        this.floatingTool = new FloatingToolSection({
+            onFloatingToolSettingsChange: (settings) => this.fire('onFloatingToolSettingsChange', settings),
             onSummaryPromptChange: (val) => this.fire('onSummaryPromptChange', val)
         });
 
@@ -195,13 +200,18 @@ export class SettingsView {
         const connectionData = this.connection.getData();
         const generalData = this.general.getData();
         const documentTranslationData = this.documentTranslation.getData();
+        const floatingToolData = this.floatingTool.getData();
 
         const data = {
             shortcuts: shortcutsData,
             connection: { ...connectionData, ...documentTranslationData },
             textSelection: generalData.textSelection,
             imageTools: generalData.imageTools,
-            accountIndices: generalData.accountIndices
+            accountIndices: generalData.accountIndices,
+            floatingTool: {
+                enabled: floatingToolData.enabled,
+                action: floatingToolData.action
+            }
         };
 
         this.fire('onSave', data);
@@ -267,6 +277,7 @@ export class SettingsView {
             shortcuts: this.shortcuts.getData(),
             connection: this.connection.getData(),
             general: this.general.getData(),
+            floatingTool: this.floatingTool.getData(),
             documentTranslation: this.documentTranslation.getData()
         };
     }
@@ -328,7 +339,13 @@ export class SettingsView {
     }
 
     setSummaryPrompt(val) {
-        this.general.setSummaryPrompt(val);
+        this.floatingTool.setSummaryPrompt(val);
+    }
+
+    setFloatingToolSettings(settings) {
+        if (this.floatingTool) {
+            this.floatingTool.setSettings(settings);
+        }
     }
 
     // Delegation to Connection

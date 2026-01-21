@@ -7,6 +7,7 @@ import { ShortcutsSettingsTemplate } from './settings/shortcuts.js';
 import { DataManagementSettingsTemplate } from './settings/data_management.js';
 import { AboutSettingsTemplate } from './settings/about.js';
 import { DocumentTranslationSettingsTemplate } from './settings/document_translation.js';
+import { FloatingToolSettingsTemplate } from './settings/floating_tool.js';
 
 export const SettingsTemplate = `
     <!-- SETTINGS -->
@@ -82,6 +83,17 @@ export const SettingsTemplate = `
                         </svg>
                         <span>数据管理</span>
                     </div>
+                    <div class="settings-nav-item" data-panel="floating-tool">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="5 9 2 12 5 15"></polyline>
+                            <polyline points="9 5 12 2 15 5"></polyline>
+                            <polyline points="15 19 12 22 9 19"></polyline>
+                            <polyline points="19 9 22 12 19 15"></polyline>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <line x1="12" y1="2" x2="12" y2="22"></line>
+                        </svg>
+                        <span>浮动工具</span>
+                    </div>
                     <div class="settings-nav-item" data-panel="about">
                         <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
@@ -148,6 +160,17 @@ export const SettingsTemplate = `
                         </div>
                         <div class="settings-panel-content">
                             ${DataManagementSettingsTemplate}
+                        </div>
+                    </div>
+
+                    <!-- Floating Tool Panel -->
+                    <div class="settings-panel" data-panel="floating-tool">
+                        <div class="settings-panel-header">
+                            <h4 data-i18n="floatingToolConfigTitle">Floating Tool</h4>
+                            <p class="settings-panel-desc" data-i18n="floatingToolConfigDesc">Floating sidebar icon controls</p>
+                        </div>
+                        <div class="settings-panel-content">
+                            ${FloatingToolSettingsTemplate}
                         </div>
                     </div>
 

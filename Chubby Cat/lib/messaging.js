@@ -117,6 +117,17 @@ export function saveSummaryPromptToStorage(prompt) {
     }, '*');
 }
 
+export function requestFloatingToolSettingsFromStorage() {
+    window.parent.postMessage({ action: 'GET_FLOATING_TOOL_SETTINGS' }, '*');
+}
+
+export function saveFloatingToolSettingsToStorage(settings) {
+    window.parent.postMessage({
+        action: 'SAVE_FLOATING_TOOL_SETTINGS',
+        payload: settings
+    }, '*');
+}
+
 export function requestSaveChat(payload) {
     window.parent.postMessage({
         action: 'SAVE_CHAT_MARKDOWN',

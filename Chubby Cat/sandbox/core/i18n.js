@@ -264,6 +264,17 @@ export const translations = {
         "chatSaved": "Chat saved",
         "chatUpdated": "Chat updated",
 
+        // Floating Tool
+        "floatingTool": "Floating Tool",
+        "floatingToolConfigTitle": "Floating Tool",
+        "floatingToolConfigDesc": "Floating sidebar icon controls",
+        "floatingToolVisibility": "Show Floating Tool",
+        "floatingToolVisibilityDesc": "Show the sidebar floating icon on web pages.",
+        "floatingToolAction": "Click Action",
+        "floatingToolActionDesc": "Choose what happens when you click the floating icon.",
+        "floatingToolActionSummary": "Summarize Page",
+        "floatingToolActionOpenSidebar": "Open Side Panel",
+
         // Summary Prompt
         "summaryPromptTitle": "Page Summary Prompt",
         "summaryPromptDesc": "Customize the prompt used when clicking the sidebar icon to summarize pages.",
@@ -529,6 +540,17 @@ export const translations = {
         "saving": "保存中...",
         "chatSaved": "对话已保存",
         "chatUpdated": "对话已更新",
+
+        // Floating Tool
+        "floatingTool": "浮动工具",
+        "floatingToolConfigTitle": "浮动工具",
+        "floatingToolConfigDesc": "配置侧边栏浮动图标的显示与行为。",
+        "floatingToolVisibility": "显示浮动工具",
+        "floatingToolVisibilityDesc": "控制网页中的侧边栏浮动图标显示。",
+        "floatingToolAction": "功能选择",
+        "floatingToolActionDesc": "选择点击浮动工具时的执行动作。",
+        "floatingToolActionSummary": "总结网页",
+        "floatingToolActionOpenSidebar": "打开插件侧边栏",
 
         // Summary Prompt
         "summaryPromptTitle": "网页总结 Prompt",
