@@ -3,7 +3,15 @@
 import { saveShortcutsToStorage, saveThemeToStorage, requestThemeFromStorage, saveLanguageToStorage, requestLanguageFromStorage, saveTextSelectionToStorage, requestTextSelectionFromStorage, saveSidebarBehaviorToStorage, saveImageToolsToStorage, requestImageToolsFromStorage, saveAccountIndicesToStorage, requestAccountIndicesFromStorage, saveConnectionSettingsToStorage, requestConnectionSettingsFromStorage, saveSummaryPromptToStorage, requestSummaryPromptFromStorage, saveFloatingToolSettingsToStorage, requestFloatingToolSettingsFromStorage, sendToBackground } from '../../lib/messaging.js';
 import { setLanguagePreference, getLanguagePreference } from '../core/i18n.js';
 import { SettingsView } from './settings/view.js';
-import { DEFAULT_SHORTCUTS } from '../../lib/constants.js';
+import { DEFAULT_SHORTCUTS, DEFAULT_MCP_SERVERS } from '../../lib/constants.js';
+
+const buildDefaultMcpServers = () => {
+    const seed = Date.now();
+    return DEFAULT_MCP_SERVERS.map((server, index) => ({
+        id: `srv_${seed}_${index}_${Math.random().toString(16).slice(2)}`,
+        ...server
+    }));
+};
 
 export class SettingsController {
     constructor(callbacks) {
@@ -19,6 +27,8 @@ export class SettingsController {
         this.accountIndices = "0";
         this.floatingToolEnabled = true;
         this.floatingToolAction = "summary";
+
+        const defaultMcpServers = buildDefaultMcpServers();
 
         // Connection State
         this.connectionData = {
@@ -46,15 +56,7 @@ export class SettingsController {
             mcpEnabled: false,
             mcpTransport: "sse",
             mcpServerUrl: "http://127.0.0.1:3006/sse",
-            mcpServers: [{
-                id: `srv_${Date.now()}`,
-                name: "Local Proxy",
-                transport: "sse",
-                url: "http://127.0.0.1:3006/sse",
-                enabled: true,
-                toolMode: "all",
-                enabledTools: []
-            }],
+            mcpServers: defaultMcpServers,
             mcpActiveServerId: null,
             mcpActiveServerIds: [] // Multi-select support
         };
@@ -301,7 +303,14 @@ export class SettingsController {
     }
 
     updateConnectionSettings(settings) {
-        this.connectionData = { ...this.connectionData, ...settings };
+        const nextConnection = { ...this.connectionData, ...settings };
+        if (!Array.isArray(settings.mcpServers) || settings.mcpServers.length === 0) {
+            nextConnection.mcpServers = this.connectionData.mcpServers;
+        }
+        if (!Array.isArray(settings.mcpActiveServerIds)) {
+            nextConnection.mcpActiveServerIds = this.connectionData.mcpActiveServerIds;
+        }
+        this.connectionData = nextConnection;
 
         // Legacy compat: If provider missing but useOfficialApi is true, set to official
         if (!this.connectionData.provider) {

@@ -1,6 +1,7 @@
 
 // sidepanel/core/bridge.js
 import { downloadFile, downloadText } from '../utils/download.js';
+import { DEFAULT_QUICK_PHRASES } from '../../lib/constants.js';
 
 export class MessageBridge {
     constructor(frameManager, stateManager) {
@@ -229,7 +230,9 @@ export class MessageBridge {
 
         if (action === 'GET_QUICK_PHRASES') {
             chrome.storage.local.get(['geminiQuickPhrases'], (res) => {
-                const phrases = Array.isArray(res.geminiQuickPhrases) ? res.geminiQuickPhrases : [];
+                const phrases = Array.isArray(res.geminiQuickPhrases)
+                    ? res.geminiQuickPhrases
+                    : [...DEFAULT_QUICK_PHRASES];
                 this.frame.postMessage({ action: 'RESTORE_QUICK_PHRASES', payload: phrases });
             });
             return;
