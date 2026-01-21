@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="Chubby Cat/logo.png" width="128" height="128" alt="Chubby Cat Logo">
+  <img src="Chubby%20Cat/logo.png" width="128" height="128" alt="Chubby Cat Logo">
   <h1>Chubby Cat</h1>
   <p><strong>将您的浏览器转化为由最新 AI 模型驱动的智能工作空间。</strong></p>
 

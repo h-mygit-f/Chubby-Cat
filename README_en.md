@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="Chubby Cat/logo.png" width="128" height="128" alt="Chubby Cat Logo">
+  <img src="Chubby%20Cat/logo.png" width="128" height="128" alt="Chubby Cat Logo">
   <h1>Chubby Cat</h1>
   <p><strong>Transform your browser into an intelligent workspace powered by the latest AI models.</strong></p>
 
