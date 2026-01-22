@@ -132,6 +132,7 @@ export class PromptController {
     _getSkillErrorMessage(result) {
         if (!result || !result.error) return '';
         if (result.error === 'skills_disabled') return t('skillsDisabledNotice');
+        if (result.error === 'custom_skills_disabled') return t('skillsCustomDisabledNotice');
         if (result.error === 'skill_not_found') return t('skillsNotFound').replace('{id}', result.invocation?.id || '');
         if (result.error === 'skill_disabled') return t('skillsDisabledSkill').replace('{id}', result.invocation?.id || '');
         if (result.error === 'skill_error') {

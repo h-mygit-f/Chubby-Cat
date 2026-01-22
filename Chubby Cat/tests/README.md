@@ -14,6 +14,10 @@ This directory contains tests for verifying bug fixes and functionality.
   - Session hard limit and near-limit cleanup
   - Storage threshold cleanup
   - Image compression and upload size limit
+- **`skills_custom.test.js`** - Tests for custom skills logic
+  - Custom skill normalization and validation
+  - Template execution with tokens
+  - Serialization persistence
 
 - **`multi_tab_context.test.js`** - Tests for multi-tab context persistence
   - Content persists after first message
@@ -27,6 +31,10 @@ This directory contains tests for verifying bug fixes and functionality.
   - Complete multi-tab context flow
   - Input preservation flow
   - Storage verification
+- **`skills_integration.test.js`** - Manual integration tests for custom skills
+  - Add custom skill from Settings
+  - Execute skill via /skill command
+  - Verify permission toggle behavior
 
 ## Running Tests
 

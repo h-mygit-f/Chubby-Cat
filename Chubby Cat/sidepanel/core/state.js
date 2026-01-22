@@ -48,6 +48,8 @@ export class StateManager {
             'geminiMcpActiveServerIds',
             'geminiSkillsEnabled',
             'geminiSkills',
+            'geminiCustomSkillsEnabled',
+            'geminiCustomSkills',
             'geminiPromptDraft' // Persist user input draft
         ], (result) => {
             this.data = result;
@@ -131,7 +133,9 @@ export class StateManager {
             action: 'RESTORE_SKILLS_SETTINGS',
             payload: {
                 enabled: this.data.geminiSkillsEnabled !== false,
-                skills: Array.isArray(this.data.geminiSkills) ? this.data.geminiSkills : []
+                skills: Array.isArray(this.data.geminiSkills) ? this.data.geminiSkills : [],
+                customEnabled: this.data.geminiCustomSkillsEnabled === true,
+                customSkills: Array.isArray(this.data.geminiCustomSkills) ? this.data.geminiCustomSkills : []
             }
         });
 

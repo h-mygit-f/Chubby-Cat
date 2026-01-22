@@ -261,12 +261,14 @@ export class MessageBridge {
         }
 
         if (action === 'GET_SKILLS_SETTINGS') {
-            chrome.storage.local.get(['geminiSkillsEnabled', 'geminiSkills'], (res) => {
+            chrome.storage.local.get(['geminiSkillsEnabled', 'geminiSkills', 'geminiCustomSkillsEnabled', 'geminiCustomSkills'], (res) => {
                 this.frame.postMessage({
                     action: 'RESTORE_SKILLS_SETTINGS',
                     payload: {
                         enabled: res.geminiSkillsEnabled !== false,
-                        skills: Array.isArray(res.geminiSkills) ? res.geminiSkills : []
+                        skills: Array.isArray(res.geminiSkills) ? res.geminiSkills : [],
+                        customEnabled: res.geminiCustomSkillsEnabled === true,
+                        customSkills: Array.isArray(res.geminiCustomSkills) ? res.geminiCustomSkills : []
                     }
                 });
             });
@@ -295,8 +297,12 @@ export class MessageBridge {
         if (action === 'SAVE_SKILLS_SETTINGS') {
             const enabled = payload && payload.enabled !== false;
             const skills = payload && Array.isArray(payload.skills) ? payload.skills : [];
+            const customEnabled = payload && payload.customEnabled === true;
+            const customSkills = payload && Array.isArray(payload.customSkills) ? payload.customSkills : [];
             this.state.save('geminiSkillsEnabled', enabled);
             this.state.save('geminiSkills', skills);
+            this.state.save('geminiCustomSkillsEnabled', customEnabled);
+            this.state.save('geminiCustomSkills', customSkills);
         }
         if (action === 'SAVE_CONNECTION_SETTINGS') {
             this.state.save('geminiProvider', payload.provider);

@@ -56,8 +56,12 @@ export class SkillsManager {
             return { handled: true, error: 'skill_disabled', invocation, skill };
         }
 
+        if (skill.isCustom && !this.settings.customEnabled) {
+            return { handled: true, error: 'custom_skills_disabled', invocation, skill };
+        }
+
         try {
-            const output = await executeSkill(skill.id, invocation.input, context);
+            const output = await executeSkill(skill, invocation.input, context);
             return { handled: true, skill, invocation, output };
         } catch (err) {
             this.logger.error('[Chubby Cat] Skill execution failed', err);

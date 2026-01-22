@@ -20,6 +20,48 @@ export const SkillsSettingsTemplate = `
 </div>
 
 <div class="setting-group">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
+        <div>
+            <label data-i18n="skillsCustomTitle" style="font-weight: 500; display: block; margin-bottom: 2px;">Custom Skills</label>
+            <div data-i18n="skillsCustomDesc" style="font-size: 12px; opacity: 0.85;">Create reusable skills with safe templates.</div>
+        </div>
+        <label style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="skills-custom-enabled" />
+            <span data-i18n="skillsCustomEnabled">Enable custom skills</span>
+        </label>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.5); border: 1px dashed rgba(0,0,0,0.08);">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <input id="skills-custom-id" class="shortcut-input" style="flex: 1; min-width: 140px;" maxlength="40"
+                data-i18n-placeholder="skillsCustomIdPlaceholder" placeholder="skill_id">
+            <input id="skills-custom-name" class="shortcut-input" style="flex: 1; min-width: 160px;" maxlength="60"
+                data-i18n-placeholder="skillsCustomNamePlaceholder" placeholder="Skill name">
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <input id="skills-custom-short-desc" class="shortcut-input" style="flex: 1; min-width: 180px;" maxlength="80"
+                data-i18n-placeholder="skillsCustomShortDescPlaceholder" placeholder="Short description">
+            <input id="skills-custom-input-hint" class="shortcut-input" style="flex: 1; min-width: 180px;" maxlength="120"
+                data-i18n-placeholder="skillsCustomInputHintPlaceholder" placeholder="Input hint">
+        </div>
+        <input id="skills-custom-description" class="shortcut-input" style="width: 100%;" maxlength="200"
+            data-i18n-placeholder="skillsCustomDescPlaceholder" placeholder="Description">
+        <textarea id="skills-custom-template" class="shortcut-input" rows="4" style="width: 100%; resize: vertical;" maxlength="2000"
+            data-i18n-placeholder="skillsCustomTemplatePlaceholder" placeholder="Template"></textarea>
+        <div id="skills-custom-tokens" data-i18n="skillsCustomTokensHint" style="font-size: 11px; opacity: 0.7;">Available tokens: {tokens}</div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button id="skills-custom-add" class="tool-btn" type="button" data-i18n="skillsCustomAdd">Add skill</button>
+            <span id="skills-custom-error" style="font-size: 12px; color: #b42318; display: none;"></span>
+        </div>
+    </div>
+
+    <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 10px;">
+        <div id="skills-custom-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        <div id="skills-custom-empty" data-i18n="skillsCustomEmpty" style="font-size: 12px; opacity: 0.7;">No custom skills yet.</div>
+    </div>
+</div>
+
+<div class="setting-group">
     <h4 data-i18n="skillsRunnerTitle">Skill Runner</h4>
     <p class="setting-desc" data-i18n="skillsRunnerDesc">Test a skill with sample input.</p>
     <div style="display: flex; flex-direction: column; gap: 8px;">

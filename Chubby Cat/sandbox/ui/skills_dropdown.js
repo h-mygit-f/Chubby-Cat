@@ -238,10 +238,20 @@ export class SkillsDropdownController {
             return;
         }
 
-        const enabledSkills = this.settings.skills.filter((skill) => skill.enabled !== false);
+        const enabledSkills = this.settings.skills.filter((skill) => {
+            if (skill.enabled === false) return false;
+            if (skill.isCustom && !this.settings.customEnabled) return false;
+            return true;
+        });
 
         if (enabledSkills.length === 0) {
-            this.showEmptyState(t('skillsEmpty'));
+            const hasCustomEnabled = this.settings.skills.some((skill) => skill.isCustom && skill.enabled !== false);
+            const hasBaseEnabled = this.settings.skills.some((skill) => !skill.isCustom && skill.enabled !== false);
+            if (!this.settings.customEnabled && hasCustomEnabled && !hasBaseEnabled) {
+                this.showEmptyState(t('skillsCustomDisabledNotice'));
+            } else {
+                this.showEmptyState(t('skillsEmpty'));
+            }
             return;
         }
 
