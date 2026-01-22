@@ -128,6 +128,17 @@ export function saveFloatingToolSettingsToStorage(settings) {
     }, '*');
 }
 
+export function requestSkillsSettingsFromStorage() {
+    window.parent.postMessage({ action: 'GET_SKILLS_SETTINGS' }, '*');
+}
+
+export function saveSkillsSettingsToStorage(settings) {
+    window.parent.postMessage({
+        action: 'SAVE_SKILLS_SETTINGS',
+        payload: settings
+    }, '*');
+}
+
 export function requestSaveChat(payload) {
     window.parent.postMessage({
         action: 'SAVE_CHAT_MARKDOWN',

@@ -61,13 +61,21 @@ export class SessionManager {
         return false;
     }
 
-    addMessage(id, role, text, attachment = null, thoughts = null) {
+    addMessage(id, role, text, attachment = null, thoughts = null, options = {}) {
         const session = this.sessions.find(s => s.id === id);
         if (session) {
             const msg = { role, text };
             
             if (thoughts) {
                 msg.thoughts = thoughts;
+            }
+
+            if (options && options.isToolOutput === true) {
+                msg.isToolOutput = true;
+            }
+
+            if (options && options.skillInvocation) {
+                msg.skillInvocation = options.skillInvocation;
             }
             
             // Handle attachments based on role

@@ -46,6 +46,8 @@ export class StateManager {
             'geminiMcpServers',
             'geminiMcpActiveServerId',
             'geminiMcpActiveServerIds',
+            'geminiSkillsEnabled',
+            'geminiSkills',
             'geminiPromptDraft' // Persist user input draft
         ], (result) => {
             this.data = result;
@@ -125,6 +127,13 @@ export class StateManager {
         this.frame.postMessage({ action: 'RESTORE_TEXT_SELECTION', payload: this.data.geminiTextSelectionEnabled !== false });
         this.frame.postMessage({ action: 'RESTORE_IMAGE_TOOLS', payload: this.data.geminiImageToolsEnabled !== false });
         this.frame.postMessage({ action: 'RESTORE_ACCOUNT_INDICES', payload: this.data.geminiAccountIndices || "0" });
+        this.frame.postMessage({
+            action: 'RESTORE_SKILLS_SETTINGS',
+            payload: {
+                enabled: this.data.geminiSkillsEnabled !== false,
+                skills: Array.isArray(this.data.geminiSkills) ? this.data.geminiSkills : []
+            }
+        });
 
         // Restore prompt draft (user's input content)
         if (this.data.geminiPromptDraft) {

@@ -278,6 +278,25 @@ export const translations = {
         // Summary Prompt
         "summaryPromptTitle": "Page Summary Prompt",
         "summaryPromptDesc": "Customize the prompt used when clicking the sidebar icon to summarize pages.",
+
+        // Skills
+        "skillsTitle": "Skills",
+        "skillsDesc": "Reusable agent capabilities with scripts and instructions.",
+        "skillsCommandHint": "Use /skill <id> <input> in chat to execute a skill.",
+        "skillsConfigTitle": "Skills",
+        "skillsConfigDesc": "Manage reusable agent skills and execution",
+        "skillsRunnerTitle": "Skill Runner",
+        "skillsRunnerDesc": "Test a skill with sample input.",
+        "skillsRunnerPlaceholder": "Enter input for the skill",
+        "skillsRunnerRun": "Run",
+        "skillsRunnerDisabled": "Skills are disabled",
+        "skillsRunnerNotFound": "Skill not found",
+        "skillsRunnerDone": "Done",
+        "skillsRunnerError": "Skill failed",
+        "skillsDisabledNotice": "Skills are disabled in settings",
+        "skillsNotFound": "Skill not found: {id}",
+        "skillsDisabledSkill": "Skill is disabled: {id}",
+        "skillsExecutionFailed": "Skill execution failed: {error}",
     },
     zh: {
         "mcpTools": "外部 MCP 工具",
@@ -555,6 +574,25 @@ export const translations = {
         // Summary Prompt
         "summaryPromptTitle": "网页总结 Prompt",
         "summaryPromptDesc": "自定义点击侧边图标时使用的网页总结提示词。",
+
+        // Skills
+        "skillsTitle": "技能",
+        "skillsDesc": "带脚本与指令的可复用能力单元。",
+        "skillsCommandHint": "在对话中使用 /skill <id> <input> 执行技能。",
+        "skillsConfigTitle": "技能",
+        "skillsConfigDesc": "管理技能库与执行配置",
+        "skillsRunnerTitle": "技能运行器",
+        "skillsRunnerDesc": "使用示例输入测试技能。",
+        "skillsRunnerPlaceholder": "输入技能参数",
+        "skillsRunnerRun": "运行",
+        "skillsRunnerDisabled": "技能已在设置中关闭",
+        "skillsRunnerNotFound": "未找到技能",
+        "skillsRunnerDone": "完成",
+        "skillsRunnerError": "技能执行失败",
+        "skillsDisabledNotice": "技能已在设置中关闭",
+        "skillsNotFound": "未找到技能：{id}",
+        "skillsDisabledSkill": "技能已停用：{id}",
+        "skillsExecutionFailed": "技能执行失败：{error}",
     }
 };
 

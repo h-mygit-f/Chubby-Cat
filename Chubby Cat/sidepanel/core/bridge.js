@@ -260,6 +260,19 @@ export class MessageBridge {
             return;
         }
 
+        if (action === 'GET_SKILLS_SETTINGS') {
+            chrome.storage.local.get(['geminiSkillsEnabled', 'geminiSkills'], (res) => {
+                this.frame.postMessage({
+                    action: 'RESTORE_SKILLS_SETTINGS',
+                    payload: {
+                        enabled: res.geminiSkillsEnabled !== false,
+                        skills: Array.isArray(res.geminiSkills) ? res.geminiSkills : []
+                    }
+                });
+            });
+            return;
+        }
+
         // 6. Data Setters (Sync to Storage & Cache)
         if (action === 'SAVE_SESSIONS') this.state.save('geminiSessions', payload);
         if (action === 'SAVE_SHORTCUTS') this.state.save('geminiShortcuts', payload);
@@ -278,6 +291,12 @@ export class MessageBridge {
             const actionValue = payload && payload.action === 'open_sidebar' ? 'open_sidebar' : 'summary';
             this.state.save('geminiFloatingToolEnabled', enabled);
             this.state.save('geminiFloatingToolAction', actionValue);
+        }
+        if (action === 'SAVE_SKILLS_SETTINGS') {
+            const enabled = payload && payload.enabled !== false;
+            const skills = payload && Array.isArray(payload.skills) ? payload.skills : [];
+            this.state.save('geminiSkillsEnabled', enabled);
+            this.state.save('geminiSkills', skills);
         }
         if (action === 'SAVE_CONNECTION_SETTINGS') {
             this.state.save('geminiProvider', payload.provider);

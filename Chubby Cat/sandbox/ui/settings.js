@@ -1,9 +1,10 @@
 
 // sandbox/ui/settings.js
-import { saveShortcutsToStorage, saveThemeToStorage, requestThemeFromStorage, saveLanguageToStorage, requestLanguageFromStorage, saveTextSelectionToStorage, requestTextSelectionFromStorage, saveSidebarBehaviorToStorage, saveImageToolsToStorage, requestImageToolsFromStorage, saveAccountIndicesToStorage, requestAccountIndicesFromStorage, saveConnectionSettingsToStorage, requestConnectionSettingsFromStorage, saveSummaryPromptToStorage, requestSummaryPromptFromStorage, saveFloatingToolSettingsToStorage, requestFloatingToolSettingsFromStorage, sendToBackground } from '../../lib/messaging.js';
+import { saveShortcutsToStorage, saveThemeToStorage, requestThemeFromStorage, saveLanguageToStorage, requestLanguageFromStorage, saveTextSelectionToStorage, requestTextSelectionFromStorage, saveSidebarBehaviorToStorage, saveImageToolsToStorage, requestImageToolsFromStorage, saveAccountIndicesToStorage, requestAccountIndicesFromStorage, saveConnectionSettingsToStorage, requestConnectionSettingsFromStorage, saveSummaryPromptToStorage, requestSummaryPromptFromStorage, saveFloatingToolSettingsToStorage, requestFloatingToolSettingsFromStorage, saveSkillsSettingsToStorage, requestSkillsSettingsFromStorage, sendToBackground } from '../../lib/messaging.js';
 import { setLanguagePreference, getLanguagePreference } from '../core/i18n.js';
 import { SettingsView } from './settings/view.js';
 import { DEFAULT_SHORTCUTS, DEFAULT_MCP_SERVERS } from '../../lib/constants.js';
+import { normalizeSkillsSettings, serializeSkillsSettings } from '../../lib/skills/index.js';
 
 const buildDefaultMcpServers = () => {
     const seed = Date.now();
@@ -27,6 +28,8 @@ export class SettingsController {
         this.accountIndices = "0";
         this.floatingToolEnabled = true;
         this.floatingToolAction = "summary";
+
+        this.skillsData = normalizeSkillsSettings();
 
         const defaultMcpServers = buildDefaultMcpServers();
 
@@ -136,6 +139,7 @@ export class SettingsController {
             enabled: this.floatingToolEnabled,
             action: this.floatingToolAction
         });
+        this.view.setSkillsSettings(this.skillsData);
         this._syncTogglesToView();
 
         // Refresh from storage
@@ -145,6 +149,7 @@ export class SettingsController {
         requestConnectionSettingsFromStorage();
         requestSummaryPromptFromStorage();
         requestFloatingToolSettingsFromStorage();
+        requestSkillsSettingsFromStorage();
 
         this.fetchGithubData();
     }
@@ -185,6 +190,14 @@ export class SettingsController {
             this.floatingToolEnabled = nextEnabled;
             this.floatingToolAction = nextAction;
             saveFloatingToolSettingsToStorage({ enabled: nextEnabled, action: nextAction });
+        }
+
+        if (data.skills) {
+            this.skillsData = normalizeSkillsSettings(data.skills);
+            saveSkillsSettingsToStorage(serializeSkillsSettings(this.skillsData));
+            if (this.callbacks.onSkillsSettingsChanged) {
+                this.callbacks.onSkillsSettingsChanged(this.skillsData);
+            }
         }
 
         // Connection
@@ -371,6 +384,14 @@ export class SettingsController {
         this.floatingToolEnabled = nextEnabled;
         this.floatingToolAction = nextAction;
         this.view.setFloatingToolSettings({ enabled: nextEnabled, action: nextAction });
+    }
+
+    updateSkillsSettings(settings) {
+        this.skillsData = normalizeSkillsSettings(settings);
+        this.view.setSkillsSettings(this.skillsData);
+        if (this.callbacks.onSkillsSettingsChanged) {
+            this.callbacks.onSkillsSettingsChanged(this.skillsData);
+        }
     }
 
     async fetchGithubData() {

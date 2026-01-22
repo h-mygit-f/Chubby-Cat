@@ -4,7 +4,7 @@
   <p><strong>Transform your browser into an intelligent workspace powered by the latest AI models.</strong></p>
 
   <p>
-    <img src="https://img.shields.io/badge/Version-1.6.0-blue" alt="Version">
+    <img src="https://img.shields.io/badge/Version-1.7.0-blue" alt="Version">
     <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
     <img src="https://img.shields.io/badge/Chrome-Extension-orange" alt="Platform">
   </p>
@@ -37,6 +37,7 @@ Our core vision is to build a **secure, efficient, and extensible** browser AI w
 
 | Version | Major Updates |
 | :--- | :--- |
+| **v1.7.0** | Dynamic adjustment of chat history area bottom spacing, initial input box auto-focus, input box style optimization, default quick phrases and MCP server configuration |
 | **v1.6.0** | Chat history export, file attachment support, Gemini model list management, multi-model management optimization, quick phrases panel improvement |
 | **v1.5.0** | Grok web support, document OCR processing, storage policy management |
 | **v1.4.0** | MCP protocol integration, page summary feature, right sidebar, floating sidebar icon, settings UI refactoring |

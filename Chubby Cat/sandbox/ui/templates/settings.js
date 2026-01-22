@@ -8,6 +8,7 @@ import { DataManagementSettingsTemplate } from './settings/data_management.js';
 import { AboutSettingsTemplate } from './settings/about.js';
 import { DocumentTranslationSettingsTemplate } from './settings/document_translation.js';
 import { FloatingToolSettingsTemplate } from './settings/floating_tool.js';
+import { SkillsSettingsTemplate } from './settings/skills.js';
 
 export const SettingsTemplate = `
     <!-- SETTINGS -->
@@ -67,6 +68,12 @@ export const SettingsTemplate = `
                             <line x1="1" y1="14" x2="4" y2="14"></line>
                         </svg>
                         <span>MCP配置</span>
+                    </div>
+                    <div class="settings-nav-item" data-panel="skills">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3 3-7z"></path>
+                        </svg>
+                        <span data-i18n="skillsTitle">Skills</span>
                     </div>
                     <div class="settings-nav-item" data-panel="general">
                         <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -136,6 +143,17 @@ export const SettingsTemplate = `
                         </div>
                         <div class="settings-panel-content">
                             ${McpSettingsTemplate}
+                        </div>
+                    </div>
+
+                    <!-- Skills Panel -->
+                    <div class="settings-panel" data-panel="skills">
+                        <div class="settings-panel-header">
+                            <h4 data-i18n="skillsConfigTitle">Skills</h4>
+                            <p class="settings-panel-desc" data-i18n="skillsConfigDesc">Manage reusable agent skills and execution</p>
+                        </div>
+                        <div class="settings-panel-content">
+                            ${SkillsSettingsTemplate}
                         </div>
                     </div>
 

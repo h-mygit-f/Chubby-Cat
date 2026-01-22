@@ -8,6 +8,7 @@ import { DataManagementSection } from './sections/data_management.js';
 import { AboutSection } from './sections/about.js';
 import { DocumentTranslationSection } from './sections/document_translation.js';
 import { FloatingToolSection } from './sections/floating_tool.js';
+import { SkillsSection } from './sections/skills.js';
 
 export class SettingsView {
     constructor(callbacks) {
@@ -55,6 +56,8 @@ export class SettingsView {
             onExport: (options) => this.fire('onExport', options),
             onImport: (payload) => this.fire('onImport', payload)
         });
+
+        this.skills = new SkillsSection();
 
         this.about = new AboutSection({
             onDownloadLogs: () => this.fire('onDownloadLogs')
@@ -201,6 +204,7 @@ export class SettingsView {
         const generalData = this.general.getData();
         const documentTranslationData = this.documentTranslation.getData();
         const floatingToolData = this.floatingTool.getData();
+        const skillsData = this.skills.getData();
 
         const data = {
             shortcuts: shortcutsData,
@@ -211,7 +215,8 @@ export class SettingsView {
             floatingTool: {
                 enabled: floatingToolData.enabled,
                 action: floatingToolData.action
-            }
+            },
+            skills: skillsData
         };
 
         this.fire('onSave', data);
@@ -278,7 +283,8 @@ export class SettingsView {
             connection: this.connection.getData(),
             general: this.general.getData(),
             floatingTool: this.floatingTool.getData(),
-            documentTranslation: this.documentTranslation.getData()
+            documentTranslation: this.documentTranslation.getData(),
+            skills: this.skills.getData()
         };
     }
 
@@ -352,6 +358,12 @@ export class SettingsView {
     setConnectionSettings(data) {
         this.connection.setData(data);
         this.documentTranslation.setData(data);
+    }
+
+    setSkillsSettings(data) {
+        if (this.skills) {
+            this.skills.setData(data);
+        }
     }
 
     // Delegation to About

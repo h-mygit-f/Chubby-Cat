@@ -5,6 +5,7 @@ import { SessionFlowController } from './session_flow.js';
 import { PromptController } from './prompt.js';
 import { t } from '../core/i18n.js';
 import { saveSessionsToStorage, sendToBackground } from '../../lib/messaging.js';
+import { SkillsManager } from '../skills/manager.js';
 
 export class AppController {
     constructor(sessionManager, uiController, imageManager) {
@@ -35,6 +36,23 @@ export class AppController {
 
         // Pass sessionManager to settings for export functionality
         this.ui.settings.setSessionManager(sessionManager);
+
+        this.skillsManager = new SkillsManager({
+            logger: console,
+            onStatus: (message) => {
+                if (message) this.ui.updateStatus(message);
+            }
+        });
+
+        if (this.ui.settings && this.ui.settings.callbacks) {
+            this.ui.settings.callbacks.onSkillsSettingsChanged = (skillsData) => {
+                this.skillsManager.updateSettings(skillsData);
+            };
+        }
+
+        if (this.ui.settings && this.ui.settings.skillsData) {
+            this.skillsManager.updateSettings(this.ui.settings.skillsData);
+        }
 
         // Initialize Active Tab Controller with callbacks
         this._initActiveTabController();

@@ -93,6 +93,68 @@ export class PromptController {
         }
     }
 
+    async _runSkillIfNeeded(text, sessionId) {
+        if (!this.app || !this.app.skillsManager) {
+            return { textForModel: text, skillResult: null };
+        }
+
+        const skillsSettings = this.ui && this.ui.settings ? this.ui.settings.skillsData : null;
+        this.app.skillsManager.updateSettings(skillsSettings);
+
+        const result = await this.app.skillsManager.executeFromText(text, { sessionId });
+        if (!result || !result.handled) {
+            return { textForModel: text, skillResult: null };
+        }
+
+        if (result.error) {
+            const message = this._getSkillErrorMessage(result);
+            if (message) {
+                this.ui.updateStatus(message);
+                setTimeout(() => {
+                    if (!this.app.isGenerating) this.ui.updateStatus("");
+                }, 3000);
+            }
+            return { textForModel: text, skillResult: null };
+        }
+
+        const toolOutput = this.app.skillsManager.formatToolOutput(result.skill, result.output);
+        const promptText = this.app.skillsManager.buildPromptText(text, result.invocation, result.skill, result.output);
+
+        return {
+            textForModel: promptText,
+            skillResult: {
+                ...result,
+                toolOutput
+            }
+        };
+    }
+
+    _getSkillErrorMessage(result) {
+        if (!result || !result.error) return '';
+        if (result.error === 'skills_disabled') return t('skillsDisabledNotice');
+        if (result.error === 'skill_not_found') return t('skillsNotFound').replace('{id}', result.invocation?.id || '');
+        if (result.error === 'skill_disabled') return t('skillsDisabledSkill').replace('{id}', result.invocation?.id || '');
+        if (result.error === 'skill_error') {
+            const detail = result.details && result.details.message ? result.details.message : t('skillsExecutionFailed');
+            return t('skillsExecutionFailed').replace('{error}', detail);
+        }
+        return t('skillsExecutionFailed').replace('{error}', result.error);
+    }
+
+    _attachSkillInvocation(sessionId, invocation) {
+        const session = this.sessionManager.getCurrentSession();
+        if (!session || !Array.isArray(session.messages) || session.messages.length === 0) return;
+        const lastMessage = session.messages[session.messages.length - 1];
+        if (lastMessage && lastMessage.role === 'user') {
+            lastMessage.skillInvocation = invocation;
+        }
+    }
+
+    _appendSkillToolOutput(sessionId, toolOutput) {
+        if (!toolOutput) return;
+        this.sessionManager.addMessage(sessionId, 'user', toolOutput, null, null, { isToolOutput: true });
+    }
+
     async send() {
         if (this.app.isGenerating) return;
 
@@ -128,6 +190,15 @@ export class PromptController {
 
         saveSessionsToStorage(this.sessionManager.sessions);
         this.app.sessionFlow.refreshHistoryUI();
+
+        const skillOutcome = await this._runSkillIfNeeded(text, currentId);
+        let promptText = skillOutcome.textForModel || text;
+
+        if (skillOutcome.skillResult) {
+            this._attachSkillInvocation(currentId, skillOutcome.skillResult.invocation);
+            this._appendSkillToolOutput(currentId, skillOutcome.skillResult.toolOutput);
+            saveSessionsToStorage(this.sessionManager.sessions);
+        }
 
         // Prepare Context & Model
         const selectedModel = this.app.getSelectedModel();
@@ -189,7 +260,7 @@ export class PromptController {
 
         sendToBackground({
             action: "SEND_PROMPT",
-            text: text,
+            text: promptText,
             files: files, // Send full file objects array
             model: selectedModel,
             includePageContext: this.app.pageContextActive,
@@ -391,9 +462,17 @@ export class PromptController {
 
             // Resend the user message
             console.log('[Chubby Cat] Sending SEND_PROMPT to background with model:', selectedModel);
+            const skillOutcome = await this._runSkillIfNeeded(lastUserMessage.text || '', currentId);
+            let promptText = skillOutcome.textForModel || (lastUserMessage.text || '');
+
+            if (skillOutcome.skillResult) {
+                this._appendSkillToolOutput(currentId, skillOutcome.skillResult.toolOutput);
+                saveSessionsToStorage(this.sessionManager.sessions);
+            }
+
             sendToBackground({
                 action: "SEND_PROMPT",
-                text: lastUserMessage.text || '',
+                text: promptText,
                 files: files,
                 model: selectedModel,
                 includePageContext: this.app.pageContextActive,

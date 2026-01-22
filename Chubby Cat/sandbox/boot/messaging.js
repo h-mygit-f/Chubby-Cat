@@ -99,6 +99,10 @@ export class AppMessageBridge {
             this.ui.settings.updateFloatingToolSettings(payload);
             return;
         }
+        if (action === 'RESTORE_SKILLS_SETTINGS') {
+            this.ui.settings.updateSkillsSettings(payload);
+            return;
+        }
         if (action === 'RESTORE_PROMPT_DRAFT') {
             // Restore saved input draft content
             if (this.ui.chat && this.ui.chat.restorePromptDraft) {

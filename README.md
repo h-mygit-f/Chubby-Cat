@@ -4,7 +4,7 @@
   <p><strong>将您的浏览器转化为由最新 AI 模型驱动的智能工作空间。</strong></p>
 
   <p>
-    <img src="https://img.shields.io/badge/版本-1.6.0-blue" alt="Version">
+    <img src="https://img.shields.io/badge/版本-1.7.0-blue" alt="Version">
     <img src="https://img.shields.io/badge/许可-MIT-green" alt="License">
     <img src="https://img.shields.io/badge/平台-Chrome_扩展-orange" alt="Platform">
   </p>
@@ -37,6 +37,7 @@
 
 | 版本 | 主要更新 |
 | :--- | :--- |
+| **v1.7.0** | 动态调整聊天历史区域底部间距、初始输入框自动聚焦功能、输入框样式优化、默认快速短语和MCP服务器配置 |
 | **v1.6.0** | 聊天历史导出、文件附件支持、Gemini 模型列表管理、多模型管理优化、快捷短语面板改进 |
 | **v1.5.0** | Grok 网页版支持、文档 OCR 处理功能、存储策略管理 |
 | **v1.4.0** | MCP 协议集成、页面总结功能、右侧边栏、浮动侧边栏图标、设置界面重构 |
