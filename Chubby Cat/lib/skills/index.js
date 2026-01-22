@@ -5,6 +5,7 @@ const BASE_SKILLS = [
         id: 'timestamp',
         name: 'Timestamp',
         description: 'Generate the current ISO timestamp.',
+        shortDescription: 'Current timestamp',
         command: '/skill timestamp',
         inputHint: '',
         enabledByDefault: true
@@ -13,6 +14,7 @@ const BASE_SKILLS = [
         id: 'word_count',
         name: 'Word Count',
         description: 'Count words, characters, and lines from input text.',
+        shortDescription: 'Word count stats',
         command: '/skill word_count <text>',
         inputHint: 'Paste text to analyze',
         enabledByDefault: true
@@ -21,6 +23,7 @@ const BASE_SKILLS = [
         id: 'json_prettify',
         name: 'JSON Prettify',
         description: 'Format JSON input into pretty-printed output.',
+        shortDescription: 'Format JSON',
         command: '/skill json_prettify <json>',
         inputHint: 'Paste JSON to format',
         enabledByDefault: true

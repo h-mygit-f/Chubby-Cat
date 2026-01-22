@@ -104,7 +104,29 @@ export const FooterTemplate = `
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
                         <input type="file" id="image-input" multiple accept="image/*, .pdf, .txt, .js, .py, .html, .css, .json, .csv, .md" style="display: none;">
                     </label>
-                    
+
+                    <!-- Skills Button with Dropdown -->
+                    <div class="skills-wrapper" id="skills-wrapper">
+                        <button id="skills-btn" class="input-action-btn" data-i18n-title="skillsTooltip" title="Skills" aria-haspopup="true" aria-expanded="false" aria-controls="skills-dropdown">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2l1.8 4.2L18 8l-4.2 1.8L12 14l-1.8-4.2L6 8l4.2-1.8L12 2z"></path>
+                                <path d="M19 11l1.2 2.4L22 14l-1.8.6L19 17l-1.2-2.4L16 14l1.8-.6L19 11z"></path>
+                                <path d="M6 16l.9 1.8L9 18l-2.1.8L6 21l-.9-2.2L3 18l2.1-.2L6 16z"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Skills Dropdown Panel -->
+                        <div class="skills-dropdown" id="skills-dropdown">
+                            <div class="skills-header">
+                                <span class="skills-title" data-i18n="skillsTitle">Skills</span>
+                            </div>
+                            <div class="skills-list" id="skills-list">
+                                <!-- Skill items will be dynamically rendered here -->
+                            </div>
+                            <div class="skills-empty" id="skills-empty" data-i18n="skillsEmpty">No skills enabled.</div>
+                        </div>
+                    </div>
+
                     <!-- Quick Phrases Button with Dropdown -->
                     <div class="quick-phrases-wrapper" id="quick-phrases-wrapper">
                         <button id="quick-phrases-btn" class="input-action-btn" data-i18n-title="quickPhrasesTooltip" title="Quick Phrases">

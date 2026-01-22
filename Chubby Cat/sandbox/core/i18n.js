@@ -256,6 +256,9 @@ export const translations = {
         "save": "Save",
         "cancel": "Cancel",
         "edit": "Edit",
+        "skillsTooltip": "Skills",
+        "skillsEmpty": "No skills enabled.",
+        "skillsLoading": "Loading skills...",
 
         // Save Chat
         "saveChatTooltip": "Save Chat as Markdown",
@@ -552,6 +555,9 @@ export const translations = {
         "save": "保存",
         "cancel": "取消",
         "edit": "编辑",
+        "skillsTooltip": "技能调用",
+        "skillsEmpty": "暂无可用技能。",
+        "skillsLoading": "加载技能中...",
 
         // Save Chat
         "saveChatTooltip": "保存对话为 Markdown",

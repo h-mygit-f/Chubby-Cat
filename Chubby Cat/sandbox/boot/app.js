@@ -34,13 +34,15 @@ export function initAppMode() {
             { SessionManager },
             { UIController },
             { AppController },
-            { QuickPhrasesController }
+            { QuickPhrasesController },
+            { SkillsDropdownController }
         ] = await Promise.all([
             import('../core/image_manager.js'),
             import('../core/session_manager.js'),
             import('../ui/ui_controller.js'),
             import('../controllers/app_controller.js'),
-            import('../ui/quick_phrases.js')
+            import('../ui/quick_phrases.js'),
+            import('../ui/skills_dropdown.js')
         ]);
 
         // Init Managers
@@ -92,6 +94,11 @@ export function initAppMode() {
 
         // Initialize Quick Phrases Controller
         new QuickPhrasesController({
+            inputFn: document.getElementById('prompt')
+        });
+
+        // Initialize Skills Dropdown Controller
+        new SkillsDropdownController({
             inputFn: document.getElementById('prompt')
         });
 
