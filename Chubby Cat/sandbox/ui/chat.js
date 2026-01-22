@@ -14,12 +14,16 @@ export class ChatController {
         this._initialFocusQueued = false;
         this._handleVisibilityFocus = this._handleVisibilityFocus.bind(this);
         this._handleWindowFocus = this._handleWindowFocus.bind(this);
+        this._syncFooterSpacing = this._syncFooterSpacing.bind(this);
+        this._footerResizeObserver = null;
+        this.footerEl = document.querySelector('.footer');
 
         // Debounce timer for saving prompt draft
         this._savePromptTimer = null;
 
         this.initListeners();
         this.scheduleInitialFocus();
+        this._initFooterSpacing();
     }
 
     initListeners() {
@@ -62,6 +66,29 @@ export class ChatController {
                 }
             });
         }
+    }
+
+    _initFooterSpacing() {
+        if (!this.historyDiv || !this.footerEl) return;
+
+        this._syncFooterSpacing();
+
+        if (typeof ResizeObserver !== 'undefined') {
+            this._footerResizeObserver = new ResizeObserver(() => {
+                this._syncFooterSpacing();
+            });
+            this._footerResizeObserver.observe(this.footerEl);
+        }
+
+        window.addEventListener('resize', this._syncFooterSpacing);
+    }
+
+    _syncFooterSpacing() {
+        if (!this.historyDiv || !this.footerEl) return;
+        const footerHeight = Math.ceil(this.footerEl.getBoundingClientRect().height);
+        if (!footerHeight) return;
+        const offset = footerHeight + 16;
+        this.historyDiv.style.setProperty('--chat-footer-offset', `${offset}px`);
     }
 
     focusInputAtStart() {

@@ -4,7 +4,7 @@
     flex: 1;
     overflow-y: auto;
     padding: 80px 20px 0 20px;
-    padding-bottom: 200px;
+    padding-bottom: var(--chat-footer-offset, 200px);
     padding-right: 60px; /* 20px base + 40px for right sidebar */
     /* Space for input and active tab display */
     display: flex;
@@ -479,7 +479,7 @@ body.layout-wide .msg.ai {
 @media (max-width: 600px) {
     #chat-history {
         padding: 80px 16px 0 16px;
-        padding-bottom: 180px;
+        padding-bottom: var(--chat-footer-offset, 180px);
         /* Space for input and active tab display on mobile */
     }
 }
