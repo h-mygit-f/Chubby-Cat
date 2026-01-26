@@ -147,6 +147,7 @@ export class SettingsController {
         requestFloatingToolSettingsFromStorage();
 
         this.fetchGithubData();
+        this._refreshDirtyBaseline();
     }
 
     _syncTogglesToView() {
@@ -158,6 +159,12 @@ export class SettingsController {
             }
         }
         this.view.setToggles(this.textSelectionEnabled, this.imageToolsEnabled);
+    }
+
+    _refreshDirtyBaseline() {
+        if (this.view && typeof this.view.refreshDirtyBaseline === 'function') {
+            this.view.refreshDirtyBaseline();
+        }
     }
 
     saveSettings(data) {
@@ -289,17 +296,20 @@ export class SettingsController {
         if (payload) {
             this.shortcuts = { ...this.defaultShortcuts, ...payload };
             this.view.setShortcuts(this.shortcuts);
+            this._refreshDirtyBaseline();
         }
     }
 
     updateTextSelection(enabled) {
         this.textSelectionEnabled = enabled;
         this.view.setToggles(this.textSelectionEnabled, this.imageToolsEnabled);
+        this._refreshDirtyBaseline();
     }
 
     updateImageTools(enabled) {
         this.imageToolsEnabled = enabled;
         this.view.setToggles(this.textSelectionEnabled, this.imageToolsEnabled);
+        this._refreshDirtyBaseline();
     }
 
     updateConnectionSettings(settings) {
@@ -320,6 +330,7 @@ export class SettingsController {
 
         this.view.setConnectionSettings(this.connectionData);
         this._syncTogglesToView();
+        this._refreshDirtyBaseline();
     }
 
     updateMcpTestResult(result) {
@@ -359,10 +370,12 @@ export class SettingsController {
     updateAccountIndices(indicesString) {
         this.accountIndices = indicesString || "0";
         this.view.setAccountIndices(this.accountIndices);
+        this._refreshDirtyBaseline();
     }
 
     updateSummaryPrompt(prompt) {
         this.view.setSummaryPrompt(prompt || '');
+        this._refreshDirtyBaseline();
     }
 
     updateFloatingToolSettings(settings) {
@@ -371,6 +384,7 @@ export class SettingsController {
         this.floatingToolEnabled = nextEnabled;
         this.floatingToolAction = nextAction;
         this.view.setFloatingToolSettings({ enabled: nextEnabled, action: nextAction });
+        this._refreshDirtyBaseline();
     }
 
     async fetchGithubData() {

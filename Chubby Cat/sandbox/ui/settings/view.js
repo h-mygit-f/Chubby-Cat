@@ -16,6 +16,7 @@ export class SettingsView {
 
         // Dirty state tracking
         this._initialSnapshot = null;
+        this._hasUserEdits = false;
 
         // Fullscreen state
         this._isFullscreen = false;
@@ -94,6 +95,11 @@ export class SettingsView {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) this.tryClose();
             });
+            const markUserEdit = () => {
+                this._hasUserEdits = true;
+            };
+            modal.addEventListener('input', markUserEdit, true);
+            modal.addEventListener('change', markUserEdit, true);
         }
 
         // Fullscreen toggle
@@ -227,6 +233,7 @@ export class SettingsView {
     open() {
         if (this.elements.modal) {
             this.elements.modal.classList.add('visible');
+            this._hasUserEdits = false;
             this.fire('onOpen');
             // Capture initial state for dirty checking (defer to allow sections to populate)
             setTimeout(() => {
@@ -244,6 +251,7 @@ export class SettingsView {
             }
         }
         this._initialSnapshot = null;
+        this._hasUserEdits = false;
     }
 
     tryClose() {
@@ -272,14 +280,22 @@ export class SettingsView {
         return !this._deepEqual(this._initialSnapshot, current);
     }
 
+    refreshDirtyBaseline() {
+        const { modal } = this.elements;
+        if (!modal || !modal.classList.contains('visible')) return;
+        if (this._hasUserEdits) return;
+        this._initialSnapshot = this._getCurrentData();
+    }
+
     _getCurrentData() {
-        return {
+        const data = {
             shortcuts: this.shortcuts.getData(),
             connection: this.connection.getData(),
             general: this.general.getData(),
             floatingTool: this.floatingTool.getData(),
             documentTranslation: this.documentTranslation.getData()
         };
+        return this._cloneData(data);
     }
 
     _deepEqual(a, b) {
@@ -305,6 +321,22 @@ export class SettingsView {
             if (!this._deepEqual(a[key], b[key])) return false;
         }
         return true;
+    }
+
+    _cloneData(data) {
+        if (typeof structuredClone === 'function') {
+            try {
+                return structuredClone(data);
+            } catch (e) {
+                // Fall through to JSON cloning.
+            }
+        }
+        try {
+            const json = JSON.stringify(data);
+            return json ? JSON.parse(json) : data;
+        } catch (e) {
+            return data;
+        }
     }
 
     // Delegation to Shortcuts
