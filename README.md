@@ -4,7 +4,7 @@
   <p><strong>将您的浏览器转化为由最新 AI 模型驱动的智能工作空间。</strong></p>
 
   <p>
-    <img src="https://img.shields.io/badge/版本-1.6.0-blue" alt="Version">
+    <img src="https://img.shields.io/badge/版本-1.8.0-blue" alt="Version">
     <img src="https://img.shields.io/badge/许可-MIT-green" alt="License">
     <img src="https://img.shields.io/badge/平台-Chrome_扩展-orange" alt="Platform">
   </p>
@@ -37,6 +37,7 @@
 
 | 版本 | 主要更新 |
 | :--- | :--- |
+| **v1.8.0** | 稳定性与可维护性升级：会话与保活逻辑优化、设置页与工具栏多语言/交互改进、上传与 Grok Provider 链路整理 |
 | **v1.6.0** | 聊天历史导出、文件附件支持、Gemini 模型列表管理、多模型管理优化、快捷短语面板改进 |
 | **v1.5.0** | Grok 网页版支持、文档 OCR 处理功能、存储策略管理 |
 | **v1.4.0** | MCP 协议集成、页面总结功能、右侧边栏、浮动侧边栏图标、设置界面重构 |
@@ -44,6 +45,13 @@
 | **v1.2.0** | Markdown 渲染优化、代码高亮、LaTeX 数学公式渲染、模糊搜索支持 |
 | **v1.1.0** | 快捷消息功能、UI 优化调整 |
 | **v1.0.0** | 初始版本发布，核心聊天功能 |
+
+## 🆕 v1.8.0 升级说明
+
+- 优化会话与保活相关逻辑，降低长会话中断概率。
+- 调整设置页与工具栏的交互细节，并完善多语言文案一致性。
+- 整理上传与 Grok Provider 相关代码路径，提升可维护性与后续扩展性。
+- 细化侧边栏状态同步，减少 UI 状态错位问题。
 
 ## ✨ 核心功能
 
