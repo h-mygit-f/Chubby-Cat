@@ -75,6 +75,12 @@ export class SessionManager {
                 }
             } else if (errorMessage.includes("429") || errorMessage.includes("Too Many Requests")) {
                 errorMessage = isZh ? "请求过于频繁，请稍后再试 (429)" : "Too many requests, please try again later (429)";
+            } else if (errorMessage.includes("Upload failed: 502") || errorMessage.includes("AssetsUploadReverse") || (errorMessage.includes("Upload failed") && errorMessage.includes("502"))) {
+                // Gemini's content-push service occasionally fails with a server-side TLS error.
+                // The upload already retried automatically; this message is shown only on final failure.
+                errorMessage = isZh
+                    ? "图片上传失败 (Google 服务器暂时异常，请稍后重试)"
+                    : "Image upload failed (Google server error, please try again later)";
             }
 
             console.log('[Chubby Cat] Creating error AI_REPLY with status error');

@@ -163,7 +163,7 @@ export class StateManager {
 
         // 5. LocalStorage Sync (Theme/Lang)
         const cachedTheme = localStorage.getItem('geminiTheme') || 'system';
-        const cachedLang = localStorage.getItem('geminiLanguage') || 'system';
+        const cachedLang = localStorage.getItem('geminiLanguage') || 'zh';
 
         this.frame.postMessage({ action: 'RESTORE_LANGUAGE', payload: cachedLang });
         this.frame.postMessage({ action: 'RESTORE_THEME', payload: cachedTheme });
@@ -195,7 +195,7 @@ export class StateManager {
     getCached(key) {
         // For localStorage items, read directly
         if (key === 'geminiTheme') return localStorage.getItem('geminiTheme') || 'system';
-        if (key === 'geminiLanguage') return localStorage.getItem('geminiLanguage') || 'system';
+        if (key === 'geminiLanguage') return localStorage.getItem('geminiLanguage') || 'zh';
 
         // For Async items, try memory cache first, else async fetch (handled by caller typically)
         if (this.data && this.data[key] !== undefined) return this.data[key];

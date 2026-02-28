@@ -7,14 +7,13 @@ const GROK_UPLOAD_ENDPOINT = `${GROK_BASE_URL}/rest/app-chat/upload-file`;
 const FILTERED_TAGS = ['xaiartifact', 'xai:tool_usage_card', 'grok:render'];
 
 const MODEL_CONFIG = {
-    'grok-4-fast': {
-        grokModel: ['grok-4-mini-thinking-tahoe', 'MODEL_MODE_GROK_4_MINI_THINKING']
+    'grok-4.1-fast': {
+        grokModel: ['grok-4-1-thinking-1129', 'MODEL_MODE_FAST'],
+        isReasoning: false
     },
-    'grok-4': {
-        grokModel: ['grok-4', 'MODEL_MODE_FAST']
-    },
-    'grok-4.1-thinking': {
-        grokModel: ['grok-4-1-thinking-1129', 'MODEL_MODE_AUTO']
+    'grok-4.20-beta': {
+        grokModel: ['grok-420', 'MODEL_MODE_GROK_420'],
+        isReasoning: false
     }
 };
 
@@ -90,14 +89,16 @@ function resolveModel(modelName) {
         return {
             model: config.grokModel[0],
             mode: config.grokModel[1],
-            isVideoModel: config.isVideoModel === true
+            isVideoModel: config.isVideoModel === true,
+            isReasoning: config.isReasoning === true
         };
     }
 
     return {
         model: modelName || 'grok-4',
         mode: 'MODEL_MODE_FAST',
-        isVideoModel: false
+        isVideoModel: false,
+        isReasoning: false
     };
 }
 
@@ -125,7 +126,7 @@ function buildConversationText(systemInstruction, history, prompt) {
     return lines.join('\n');
 }
 
-function buildPayload(message, model, mode, fileIds, isVideoModel) {
+function buildPayload(message, model, mode, fileIds, isVideoModel, isReasoning) {
     const payload = {
         temporary: true,
         modelName: model,
@@ -142,7 +143,7 @@ function buildPayload(message, model, mode, fileIds, isVideoModel) {
         toolOverrides: {},
         enableSideBySide: true,
         sendFinalMetadata: true,
-        isReasoning: false,
+        isReasoning: isReasoning === true,
         webpageUrls: [],
         disableTextFollowUps: true,
         responseMetadata: { requestModelDetails: { modelId: model } },
@@ -322,7 +323,7 @@ async function readStream(reader, onUpdate) {
 }
 
 export async function sendGrokMessage(prompt, systemInstruction, history, modelName, files, signal, onUpdate) {
-    const { model, mode, isVideoModel } = resolveModel(modelName);
+    const { model, mode, isVideoModel, isReasoning } = resolveModel(modelName);
     const message = buildConversationText(systemInstruction, history, prompt);
 
     let fileIds = [];
@@ -331,7 +332,7 @@ export async function sendGrokMessage(prompt, systemInstruction, history, modelN
         fileIds = uploads.map(u => u.fileId).filter(Boolean);
     }
 
-    const payload = buildPayload(message, model, mode, fileIds, isVideoModel);
+    const payload = buildPayload(message, model, mode, fileIds, isVideoModel, isReasoning);
 
     const response = await fetch(GROK_CHAT_ENDPOINT, {
         method: 'POST',

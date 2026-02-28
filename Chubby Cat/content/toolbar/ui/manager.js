@@ -255,9 +255,8 @@
                 }
             } else if (provider === 'grok') {
                 opts = [
-                    { val: 'grok-4', txt: 'Grok 4' },
-                    { val: 'grok-4.1-thinking', txt: 'Grok 4.1 Thinking' },
-                    { val: 'grok-4-fast', txt: 'Grok 4 Fast' }
+                    { val: 'grok-4.1-fast', txt: 'Grok 4.1 Fast' },
+                    { val: 'grok-4.20-beta', txt: 'Grok 4.20 Beta' }
                 ];
             } else if (provider === 'openai') {
                 const configs = Array.isArray(settings.openaiConfigs) ? settings.openaiConfigs : [];

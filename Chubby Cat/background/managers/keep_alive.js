@@ -4,7 +4,7 @@
 const ALARM_NAME = 'gemini_cookie_rotate';
 const ROTATE_URL = "https://accounts.google.com/RotateCookies";
 // Matches Python implementation (540s = 9 minutes)
-const INTERVAL_MINUTES = 9; 
+const INTERVAL_MINUTES = 9;
 
 export class KeepAliveManager {
     constructor() {
@@ -49,7 +49,7 @@ export class KeepAliveManager {
 
         try {
             // console.debug("[Chubby Cat] Keep-Alive: Rotating cookies...");
-            
+
             // This endpoint refreshes __Secure-1PSIDTS
             // Browser automatically handles the Cookie header in request and Set-Cookie in response
             // due to host permissions.
@@ -73,7 +73,7 @@ export class KeepAliveManager {
             }
         } catch (e) {
             this.consecutiveErrors++;
-            console.error("[Chubby Cat] Keep-Alive: Network error", e);
+            console.warn("[Chubby Cat] Keep-Alive: Network error", e.message);
         } finally {
             this.isRotating = false;
         }
@@ -88,7 +88,7 @@ export class KeepAliveManager {
             console.log("[Chubby Cat] Session expired. Clearing local context.");
             await chrome.storage.local.remove(['geminiContext']);
         }
-        
+
         // If 429 Too Many Requests, do nothing, just wait for next interval.
     }
 }

@@ -11,10 +11,18 @@ export class FrameManager {
         // --- Optimization: Instant Load (Sync) ---
         // Use localStorage for Theme/Lang to avoid waiting for async chrome.storage
         const cachedTheme = localStorage.getItem('geminiTheme') || 'system';
-        const cachedLang = localStorage.getItem('geminiLanguage') || 'system';
+
+        // Language migration: force Chinese if no explicit preference was set
+        let storedLang = localStorage.getItem('geminiLanguage');
+        if (!storedLang || storedLang === 'system') {
+            storedLang = 'zh';
+            localStorage.setItem('geminiLanguage', 'zh');
+        }
+        const cachedLang = storedLang;
 
         // Set src immediately to start loading HTML
         this.iframe.src = `../sandbox/index.html?theme=${cachedTheme}&lang=${cachedLang}`;
+
     }
 
     reveal() {
@@ -31,7 +39,7 @@ export class FrameManager {
     getWindow() {
         return this.iframe.contentWindow;
     }
-    
+
     isWindow(sourceWindow) {
         return this.iframe.contentWindow && sourceWindow === this.iframe.contentWindow;
     }

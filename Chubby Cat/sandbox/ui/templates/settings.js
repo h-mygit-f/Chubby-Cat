@@ -14,9 +14,9 @@ export const SettingsTemplate = `
     <div id="settings-modal" class="settings-modal">
         <div class="settings-content">
             <div class="settings-header">
-                <h3 data-i18n="settingsTitle">Settings</h3>
+                <h3 data-i18n="settingsTitle">设置</h3>
                 <div class="settings-header-actions">
-                    <button id="toggle-fullscreen" class="icon-btn small" data-i18n-title="toggleFullscreen" title="Toggle Fullscreen">
+                    <button id="toggle-fullscreen" class="icon-btn small" data-i18n-title="toggleFullscreen" title="切换全屏">
                         <svg id="fullscreen-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="15 3 21 3 21 9"></polyline>
                             <polyline points="9 21 3 21 3 15"></polyline>
@@ -30,7 +30,7 @@ export const SettingsTemplate = `
                             <line x1="3" y1="21" x2="10" y2="14"></line>
                         </svg>
                     </button>
-                    <button id="close-settings" class="icon-btn small" data-i18n-title="close" title="Close">✕</button>
+                    <button id="close-settings" class="icon-btn small" data-i18n-title="close" title="关闭">✕</button>
                 </div>
             </div>
             <div class="settings-layout">
@@ -109,8 +109,8 @@ export const SettingsTemplate = `
                     <!-- Model Panel -->
                     <div class="settings-panel active" data-panel="model">
                         <div class="settings-panel-header">
-                            <h4 data-i18n="modelConfigTitle">Model Configuration</h4>
-                            <p class="settings-panel-desc" data-i18n="modelConfigDesc">Configure model providers and API keys</p>
+                            <h4 data-i18n="modelConfigTitle">模型配置</h4>
+                            <p class="settings-panel-desc" data-i18n="modelConfigDesc">配置模型提供商和 API 密钥</p>
                         </div>
                         <div class="settings-panel-content">
                             ${ModelSettingsTemplate}
@@ -120,8 +120,8 @@ export const SettingsTemplate = `
                     <!-- Document Translation Panel -->
                     <div class="settings-panel" data-panel="document">
                         <div class="settings-panel-header">
-                            <h4 data-i18n="docTranslationTitle">Document Translation</h4>
-                            <p class="settings-panel-desc" data-i18n="docTranslationDesc">OCR settings and document preprocessing for custom API models</p>
+                            <h4 data-i18n="docTranslationTitle">文档翻译</h4>
+                            <p class="settings-panel-desc" data-i18n="docTranslationDesc">自定义 API 模型的 OCR 设置和文档预处理</p>
                         </div>
                         <div class="settings-panel-content">
                             ${DocumentTranslationSettingsTemplate}
@@ -131,8 +131,8 @@ export const SettingsTemplate = `
                     <!-- MCP Panel -->
                     <div class="settings-panel" data-panel="mcp">
                         <div class="settings-panel-header">
-                            <h4 data-i18n="mcpConfigTitle">MCP Configuration</h4>
-                            <p class="settings-panel-desc" data-i18n="mcpConfigDesc">Manage external MCP tool servers</p>
+                            <h4 data-i18n="mcpConfigTitle">MCP 配置</h4>
+                            <p class="settings-panel-desc" data-i18n="mcpConfigDesc">管理外部 MCP 工具服务器</p>
                         </div>
                         <div class="settings-panel-content">
                             ${McpSettingsTemplate}
@@ -142,8 +142,8 @@ export const SettingsTemplate = `
                     <!-- General Panel -->
                     <div class="settings-panel" data-panel="general">
                         <div class="settings-panel-header">
-                            <h4 data-i18n="generalConfigTitle">General Settings</h4>
-                            <p class="settings-panel-desc" data-i18n="generalConfigDesc">General options, appearance and shortcuts</p>
+                            <h4 data-i18n="generalConfigTitle">常规设置</h4>
+                            <p class="settings-panel-desc" data-i18n="generalConfigDesc">通用选项、外观与快捷键</p>
                         </div>
                         <div class="settings-panel-content">
                             ${GeneralSettingsTemplate}
@@ -155,8 +155,8 @@ export const SettingsTemplate = `
                     <!-- Data Panel -->
                     <div class="settings-panel" data-panel="data">
                         <div class="settings-panel-header">
-                            <h4 data-i18n="dataConfigTitle">Data Management</h4>
-                            <p class="settings-panel-desc" data-i18n="dataConfigDesc">Import, export and manage your data</p>
+                            <h4 data-i18n="dataConfigTitle">数据管理</h4>
+                            <p class="settings-panel-desc" data-i18n="dataConfigDesc">导入、导出和管理您的数据</p>
                         </div>
                         <div class="settings-panel-content">
                             ${DataManagementSettingsTemplate}
@@ -166,8 +166,8 @@ export const SettingsTemplate = `
                     <!-- Floating Tool Panel -->
                     <div class="settings-panel" data-panel="floating-tool">
                         <div class="settings-panel-header">
-                            <h4 data-i18n="floatingToolConfigTitle">Floating Tool</h4>
-                            <p class="settings-panel-desc" data-i18n="floatingToolConfigDesc">Floating sidebar icon controls</p>
+                            <h4 data-i18n="floatingToolConfigTitle">浮动工具</h4>
+                            <p class="settings-panel-desc" data-i18n="floatingToolConfigDesc">浮动侧边栏图标控制</p>
                         </div>
                         <div class="settings-panel-content">
                             ${FloatingToolSettingsTemplate}
@@ -177,8 +177,8 @@ export const SettingsTemplate = `
                     <!-- About Panel -->
                     <div class="settings-panel" data-panel="about">
                         <div class="settings-panel-header">
-                            <h4 data-i18n="aboutConfigTitle">About</h4>
-                            <p class="settings-panel-desc" data-i18n="aboutConfigDesc">Version info, logs and support</p>
+                            <h4 data-i18n="aboutConfigTitle">关于</h4>
+                            <p class="settings-panel-desc" data-i18n="aboutConfigDesc">版本信息、日志与支持</p>
                         </div>
                         <div class="settings-panel-content">
                             ${AboutSettingsTemplate}
@@ -187,8 +187,8 @@ export const SettingsTemplate = `
 
                     <!-- Panel Footer (Save/Reset) -->
                     <div class="settings-panel-footer">
-                        <button id="reset-shortcuts" class="btn-secondary" data-i18n="resetDefault">Reset Default</button>
-                        <button id="save-shortcuts" class="btn-primary" data-i18n="saveChanges">Save Changes</button>
+                        <button id="reset-shortcuts" class="btn-secondary" data-i18n="resetDefault">恢复默认</button>
+                        <button id="save-shortcuts" class="btn-primary" data-i18n="saveChanges">保存更改</button>
                     </div>
                 </div>
             </div>
@@ -200,14 +200,14 @@ export const SettingsTemplate = `
         <div class="confirm-content">
             <div class="confirm-header">
                 <span class="confirm-icon">⚠️</span>
-                <h4 data-i18n="unsavedChangesTitle">Unsaved Changes</h4>
+                <h4 data-i18n="unsavedChangesTitle">未保存的更改</h4>
             </div>
             <div class="confirm-body">
-                <p data-i18n="unsavedChangesMessage">You have unsaved changes. What would you like to do?</p>
+                <p data-i18n="unsavedChangesMessage">您有未保存的更改，请选择操作。</p>
             </div>
             <div class="confirm-actions">
-                <button id="confirm-discard" class="btn-secondary" data-i18n="discardChanges">Discard</button>
-                <button id="confirm-save" class="btn-primary" data-i18n="saveChanges">Save Changes</button>
+                <button id="confirm-discard" class="btn-secondary" data-i18n="discardChanges">放弃更改</button>
+                <button id="confirm-save" class="btn-primary" data-i18n="saveChanges">保存更改</button>
             </div>
         </div>
     </div>

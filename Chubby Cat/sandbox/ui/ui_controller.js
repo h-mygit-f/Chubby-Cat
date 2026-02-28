@@ -85,9 +85,8 @@ export class UIController {
 
         // 2. Grok Web Models
         const grokModels = [
-            { val: 'grok-4', txt: 'Grok 4', provider: 'grok' },
-            { val: 'grok-4.1-thinking', txt: 'Grok 4.1 Thinking', provider: 'grok' },
-            { val: 'grok-4-fast', txt: 'Grok 4 Fast', provider: 'grok' }
+            { val: 'grok-4.1-fast', txt: 'Grok 4.1 Fast', provider: 'grok' },
+            { val: 'grok-4.20-beta', txt: 'Grok 4.20 Beta', provider: 'grok' }
         ];
 
         // 3. Official API Models (from configured list or fallback defaults)

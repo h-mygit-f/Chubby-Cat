@@ -278,6 +278,26 @@ export const translations = {
         // Summary Prompt
         "summaryPromptTitle": "Page Summary Prompt",
         "summaryPromptDesc": "Customize the prompt used when clicking the sidebar icon to summarize pages.",
+
+        // Settings panel titles & descriptions
+        "modelConfigTitle": "Model Configuration",
+        "modelConfigDesc": "Configure model providers and API keys",
+        "mcpConfigTitle": "MCP Configuration",
+        "mcpConfigDesc": "Manage external MCP tool servers",
+        "generalConfigTitle": "General Settings",
+        "generalConfigDesc": "General options, appearance and shortcuts",
+        "dataConfigTitle": "Data Management",
+        "dataConfigDesc": "Import, export and manage your data",
+        "aboutConfigTitle": "About",
+        "aboutConfigDesc": "Version info, logs and support",
+
+        // Confirm dialog
+        "unsavedChangesTitle": "Unsaved Changes",
+        "unsavedChangesMessage": "You have unsaved changes. What would you like to do?",
+        "discardChanges": "Discard",
+
+        // Fullscreen toggle
+        "toggleFullscreen": "Toggle Fullscreen",
     },
     zh: {
         "mcpTools": "外部 MCP 工具",
@@ -555,6 +575,26 @@ export const translations = {
         // Summary Prompt
         "summaryPromptTitle": "网页总结 Prompt",
         "summaryPromptDesc": "自定义点击侧边图标时使用的网页总结提示词。",
+
+        // Settings panel titles & descriptions (缺失的设置面板标题和描述)
+        "modelConfigTitle": "模型配置",
+        "modelConfigDesc": "配置模型提供商和 API 密钥",
+        "mcpConfigTitle": "MCP 配置",
+        "mcpConfigDesc": "管理外部 MCP 工具服务器",
+        "generalConfigTitle": "常规设置",
+        "generalConfigDesc": "通用选项、外观与快捷键",
+        "dataConfigTitle": "数据管理",
+        "dataConfigDesc": "导入、导出和管理您的数据",
+        "aboutConfigTitle": "关于",
+        "aboutConfigDesc": "版本信息、日志与支持",
+
+        // Confirm dialog
+        "unsavedChangesTitle": "未保存的更改",
+        "unsavedChangesMessage": "您有未保存的更改，请选择操作。",
+        "discardChanges": "放弃更改",
+
+        // Toggle fullscreen tooltip
+        "toggleFullscreen": "切换全屏",
     }
 };
 
@@ -565,7 +605,7 @@ export function resolveLanguage(pref) {
     return pref;
 }
 
-let savedPreference = 'system';
+let savedPreference = 'zh';
 let currentLang = resolveLanguage(savedPreference);
 
 // Apply initial lang attribute for CSS/DOM consistency
