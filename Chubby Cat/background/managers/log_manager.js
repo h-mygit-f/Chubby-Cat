@@ -94,8 +94,18 @@ export function setupConsoleInterception(logManager) {
     };
 
     ['log', 'info', 'warn', 'error', 'debug'].forEach(level => {
+        const fallbackFn = Function.prototype.bind.call(console.log, console);
+        const passthrough = (typeof originalConsole[level] === 'function')
+            ? Function.prototype.bind.call(originalConsole[level], console)
+            : fallbackFn;
+
         console[level] = (...args) => {
-            originalConsole[level](...args); // Keep original behavior in DevTools
+            // Keep original behavior in DevTools, but never let logger crash app flow.
+            try {
+                passthrough(...args);
+            } catch (_) {
+                // swallow intentionally
+            }
             
             // Map console level to LogManager level
             let mgrLevel = 'INFO';
@@ -104,12 +114,16 @@ export function setupConsoleInterception(logManager) {
             if (level === 'debug') mgrLevel = 'DEBUG';
 
             // Filter out overly verbose logs if needed, but for now capture everything
-            logManager.add({ 
-                level: mgrLevel, 
-                context: 'System', 
-                message: formatConsoleArgs(args),
-                timestamp: Date.now()
-            });
+            try {
+                logManager.add({ 
+                    level: mgrLevel, 
+                    context: 'System', 
+                    message: formatConsoleArgs(args),
+                    timestamp: Date.now()
+                });
+            } catch (_) {
+                // swallow intentionally
+            }
         };
     });
 }
