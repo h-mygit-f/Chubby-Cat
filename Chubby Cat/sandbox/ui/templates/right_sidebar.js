@@ -4,19 +4,6 @@ export const RightSidebarTemplate = `
     <div id="right-sidebar" class="right-sidebar">
         <!-- Content Area with Tool Buttons -->
         <div class="right-sidebar-content" id="right-sidebar-content">
-            <!-- Browser Control Button -->
-            <button id="browser-control-btn" class="right-sidebar-tool-btn" data-tooltip="浏览器控制" data-i18n-tooltip="browserControl">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M12 2v3"/>
-                    <path d="M12 19v3"/>
-                    <path d="M2 12h3"/>
-                    <path d="M19 12h3"/>
-                </svg>
-                <span class="tool-label">控制🌍</span>
-            </button>
-
             <!-- Screenshot/Snip Button -->
             <button id="snip-btn" class="right-sidebar-tool-btn context-aware" data-tooltip="截图" data-i18n-tooltip="snip">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

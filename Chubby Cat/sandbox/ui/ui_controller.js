@@ -4,7 +4,6 @@ import { ChatController } from './chat.js';
 import { SidebarController } from './sidebar.js';
 import { SettingsController } from './settings.js';
 import { ViewerController } from './viewer.js';
-import { TabSelectorController } from './tab_selector.js';
 import { ActiveTabController } from './active_tab.js';
 import { saveConnectionSettingsToStorage } from '../../lib/messaging.js';
 
@@ -27,8 +26,6 @@ export class UIController {
 
         this.viewer = new ViewerController();
 
-        this.tabSelector = new TabSelectorController();
-
         // Active Tab Controller for multi-tab context import
         this.activeTab = null; // Will be initialized after app is ready
 
@@ -37,7 +34,6 @@ export class UIController {
         this.historyDiv = this.chat.historyDiv;
         this.sendBtn = this.chat.sendBtn;
         this.modelSelect = elements.modelSelect;
-        this.tabSwitcherBtn = document.getElementById('tab-switcher-btn');
 
         // Custom dropdown elements
         this.modelDropdown = document.getElementById('model-dropdown');
@@ -607,18 +603,6 @@ export class UIController {
     updateShortcuts(payload) { this.settings.updateShortcuts(payload); }
     updateTheme(theme) { this.settings.updateTheme(theme); }
     updateLanguage(lang) { this.settings.updateLanguage(lang); }
-
-    // Tab Selector
-    openTabSelector(tabs, onSelect, lockedTabId) {
-        this.tabSelector.open(tabs, onSelect, lockedTabId);
-    }
-
-    toggleTabSwitcher(show) {
-        if (this.tabSwitcherBtn) {
-            this.tabSwitcherBtn.style.display = show ? 'flex' : 'none';
-        }
-    }
-
     // Active Tab Controller
     initActiveTabController(callbacks) {
         this.activeTab = new ActiveTabController(callbacks);

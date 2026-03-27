@@ -4,8 +4,7 @@
 (function () {
     const DEFAULT_SHORTCUTS = {
         quickAsk: "Ctrl+G",
-        openPanel: "Alt+S",
-        browserControl: "Ctrl+B"
+        openPanel: "Alt+S"
     };
 
     class ShortcutManager {
@@ -52,14 +51,6 @@
                 if (this.toolbarController) {
                     this.toolbarController.showGlobalInput();
                 }
-                return;
-            }
-
-            if (this.match(e, this.appShortcuts.browserControl)) {
-                e.preventDefault();
-                e.stopPropagation();
-                // Toggle side panel / browser control
-                chrome.runtime.sendMessage({ action: "TOGGLE_SIDE_PANEL_CONTROL" });
                 return;
             }
         }

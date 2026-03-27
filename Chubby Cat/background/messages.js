@@ -7,14 +7,13 @@ import { UIMessageHandler } from './handlers/ui.js';
  * Sets up the global runtime message listener.
  * @param {SessionManager} sessionManager
  * @param {ImageHandler} imageHandler 
- * @param {BrowserControlManager} controlManager
  * @param {McpRemoteManager} mcpManager
  * @param {LogManager} logManager
  */
-export function setupMessageListener(sessionManager, imageHandler, controlManager, mcpManager, logManager) {
+export function setupMessageListener(sessionManager, imageHandler, mcpManager, logManager) {
     
-    const sessionHandler = new SessionMessageHandler(sessionManager, imageHandler, controlManager, mcpManager);
-    const uiHandler = new UIMessageHandler(imageHandler, controlManager, mcpManager);
+    const sessionHandler = new SessionMessageHandler(sessionManager, imageHandler, mcpManager);
+    const uiHandler = new UIMessageHandler(imageHandler, mcpManager);
 
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         
@@ -29,7 +28,7 @@ export function setupMessageListener(sessionManager, imageHandler, controlManage
             return true;
         }
 
-        // Delegate to Session Handler (Prompt, Context, Quick Ask, Browser Control)
+        // Delegate to Session Handler (Prompt, Context, Quick Ask)
         if (sessionHandler.handle(request, sender, sendResponse)) {
             return true;
         }

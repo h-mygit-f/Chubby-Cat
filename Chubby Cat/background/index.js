@@ -2,7 +2,6 @@
 // background/index.js
 import { SessionManager } from './managers/session_manager.js';
 import { ImageManager } from './managers/image_manager.js';
-import { BrowserControlManager } from './managers/control_manager.js';
 import { McpRemoteManager } from './managers/mcp_remote_manager.js';
 import { LogManager, setupConsoleInterception } from './managers/log_manager.js';
 import { setupContextMenus } from './menus.js';
@@ -23,7 +22,6 @@ console.info("[Chubby Cat] Background Service Worker Started");
 // Initialize Managers
 const sessionManager = new SessionManager();
 const imageManager = new ImageManager();
-const controlManager = new BrowserControlManager();
 const mcpManager = new McpRemoteManager({
     clientName: 'chubby-cat',
     clientVersion: chrome.runtime.getManifest().version
@@ -31,7 +29,7 @@ const mcpManager = new McpRemoteManager({
 
 // Initialize Modules
 setupContextMenus(imageManager);
-setupMessageListener(sessionManager, imageManager, controlManager, mcpManager, logManager);
+setupMessageListener(sessionManager, imageManager, mcpManager, logManager);
 
 // Initialize Advanced Keep-Alive (Cookie Rotation)
 keepAliveManager.init();

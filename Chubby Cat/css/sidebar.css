@@ -384,37 +384,6 @@ body.layout-wide .sidebar-overlay {
     color: var(--text-primary);
 }
 
-/* Browser Control Button - Blue/Cyan theme */
-#browser-control-btn {
-    color: #0ea5e9;
-}
-
-#browser-control-btn:hover {
-    background: rgba(14, 165, 233, 0.15);
-    color: #0284c7;
-}
-
-#browser-control-btn.active {
-    background: rgba(14, 165, 233, 0.2);
-    color: #0284c7;
-    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.3);
-}
-
-[data-theme="dark"] #browser-control-btn {
-    color: #38bdf8;
-}
-
-[data-theme="dark"] #browser-control-btn:hover {
-    background: rgba(56, 189, 248, 0.2);
-    color: #7dd3fc;
-}
-
-[data-theme="dark"] #browser-control-btn.active {
-    background: rgba(56, 189, 248, 0.25);
-    color: #7dd3fc;
-    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.4);
-}
-
 /* OCR Button - Amber/Orange theme */
 #ocr-btn {
     color: #f59e0b;

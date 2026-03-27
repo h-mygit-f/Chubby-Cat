@@ -3,8 +3,7 @@
 
 export const DEFAULT_SHORTCUTS = {
     quickAsk: "Ctrl+G",
-    openPanel: "Alt+S",
-    browserControl: "Ctrl+B"
+    openPanel: "Alt+S"
 };
 
 export const DEFAULT_QUICK_PHRASES = [

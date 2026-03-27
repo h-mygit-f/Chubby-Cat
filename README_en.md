@@ -84,7 +84,6 @@ Support for a wide range of AI backends to suit different performance and cost n
 
 ### 🛠️ Advanced Automation & Extensibility
 
-- **Browser Control (Agent Mode)**: Empower AI to navigate, click, fill forms, and interact with web elements using the Chrome Debugger API, enabling end-to-end automation tasks.
 - **MCP Protocol Integration**: Full support for the **Model Context Protocol**, allowing the extension to connect to external tools, local files, and various data sources, significantly expanding AI capabilities (formally integrated in v1.4.0).
 - **Prompt Enhancement**: Built-in "Prompt Optimization" feature that significantly improves AI response quality and relevance through deep analysis and structured adjustments.
 - **Quick Phrases**: Preset commonly used prompt templates for one-click invocation, improving efficiency for repetitive tasks (introduced in v1.1.0).

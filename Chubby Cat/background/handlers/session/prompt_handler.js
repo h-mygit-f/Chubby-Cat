@@ -9,11 +9,10 @@ import { ToolExecutor } from './prompt/tool_executor.js';
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 export class PromptHandler {
-    constructor(sessionManager, controlManager, mcpManager) {
+    constructor(sessionManager, mcpManager) {
         this.sessionManager = sessionManager;
-        this.controlManager = controlManager;
-        this.builder = new PromptBuilder(controlManager, mcpManager);
-        this.toolExecutor = new ToolExecutor(controlManager, mcpManager);
+        this.builder = new PromptBuilder(mcpManager);
+        this.toolExecutor = new ToolExecutor(mcpManager);
         this.isCancelled = false;
     }
 
@@ -37,30 +36,6 @@ export class PromptHandler {
 
             try {
                 console.log('[Chubby Cat] Starting prompt processing');
-                // AUTO-LOCK: If browser control enabled and no tab locked, lock to active tab
-                if (request.enableBrowserControl && this.controlManager) {
-                    const currentLock = this.controlManager.getTargetTabId();
-                    if (!currentLock) {
-                        const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-                        if (tabs.length > 0) {
-                            const tab = tabs[0];
-                            this.controlManager.setTargetTab(tab.id);
-
-                            // Notify UI to update the Tab Switcher icon so user knows which tab is locked
-                            chrome.runtime.sendMessage({
-                                action: "TAB_LOCKED",
-                                tab: {
-                                    id: tab.id,
-                                    title: tab.title,
-                                    favIconUrl: tab.favIconUrl,
-                                    url: tab.url,
-                                    active: tab.active
-                                }
-                            }).catch(() => { });
-                        }
-                    }
-                }
-
                 // 1. Build Initial Prompt (with Preamble/Context separated)
                 const buildResult = await this.builder.build(request);
                 const systemInstruction = buildResult.systemInstruction;
@@ -133,7 +108,7 @@ export class PromptHandler {
 
                     // 4. Process Tool Execution (if any)
                     let toolResult = null;
-                    if (request.enableBrowserControl || request.enableMcpTools) {
+                    if (request.enableMcpTools) {
                         toolResult = await this.toolExecutor.executeIfPresent(result.text, request, onUpdate);
                     }
 
@@ -146,41 +121,6 @@ export class PromptHandler {
                         currentFiles = toolResult.files || []; // Send new files if any, or clear previous files
 
                         let outputForModel = toolResult.output;
-
-                        // --- AUTO-SNAPSHOT INJECTION ---
-                        // Automatically inject the Accessibility Tree if the tool implies a state change.
-                        // We skip purely observational tools to save processing/tokens if they don't change state.
-                        const skipSnapshotTools = [
-                            'take_snapshot',
-                            'take_screenshot',
-                            'get_logs',
-                            'list_network_requests',
-                            'get_network_request',
-                            'performance_start_trace',
-                            'performance_stop_trace',
-                            'list_pages'
-                        ];
-
-                        if (toolResult.source === 'browser_control' && request.enableBrowserControl && this.controlManager && !skipSnapshotTools.includes(toolResult.toolName)) {
-                            try {
-                                // Inject current URL and Accessibility Tree
-                                const targetTabId = this.controlManager.getTargetTabId();
-                                let urlInfo = "";
-                                if (targetTabId) {
-                                    try {
-                                        const tab = await chrome.tabs.get(targetTabId);
-                                        urlInfo = `[Current URL]: ${tab.url}\n`;
-                                    } catch (e) { }
-                                }
-
-                                const snapshot = await this.controlManager.getSnapshot();
-                                if (snapshot && typeof snapshot === 'string' && !snapshot.startsWith('Error')) {
-                                    outputForModel += `\n\n${urlInfo}[Updated Page Accessibility Tree]:\n\`\`\`text\n${snapshot}\n\`\`\`\n`;
-                                }
-                            } catch (e) {
-                                console.warn("Auto-snapshot injection failed:", e);
-                            }
-                        }
 
                         // Format observation for the model
                         currentPromptText = `[Tool Output from ${toolResult.toolName}]:\n\`\`\`\n${outputForModel}\n\`\`\`\n\n(Proceed with the next step or confirm completion)`;

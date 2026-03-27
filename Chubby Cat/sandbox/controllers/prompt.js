@@ -194,7 +194,6 @@ export class PromptController {
             model: selectedModel,
             includePageContext: this.app.pageContextActive,
             includeMultiTabContext: this.app.multiTabContextActive, // Separate flag for multi-tab
-            enableBrowserControl: this.app.browserControlActive, // Pass browser control state
             enableMcpTools: enableMcpTools,
             // Multi-select MCP servers array
             mcpServers: activeMcpServers,
@@ -398,7 +397,6 @@ export class PromptController {
                 model: selectedModel,
                 includePageContext: this.app.pageContextActive,
                 includeMultiTabContext: this.app.multiTabContextActive, // Separate flag for multi-tab
-                enableBrowserControl: this.app.browserControlActive,
                 enableMcpTools: enableMcpTools,
                 mcpServers: activeMcpServers,
                 mcpTransport: activeMcpServers.length > 0 ? (activeMcpServers[0].transport || "sse") : "sse",

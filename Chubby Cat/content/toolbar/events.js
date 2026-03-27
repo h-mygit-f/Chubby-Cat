@@ -99,16 +99,6 @@
             if (buttons.replace) {
                 this._add(buttons.replace, 'click', (e) => this.controller.actions.replaceResult(e));
             }
-
-            // --- Browser Control (UI Toggle) ---
-            const browserControlBtn = askWindow ? askWindow.querySelector('#browser-control-btn') : null;
-            if (browserControlBtn) {
-                this._add(browserControlBtn, 'click', (e) => {
-                    e.preventDefault(); e.stopPropagation();
-                    browserControlBtn.classList.toggle('active');
-                });
-            }
-
             // --- Input ---
             this._add(askInput, 'keydown', (e) => {
                 if (e.key === 'Enter' && !e.isComposing) {

@@ -135,7 +135,7 @@ export async function appendAiMessage(sessionId, result) {
 
 /**
  * Appends a User message (or Tool Output) to an existing session.
- * Used for the automated browser control loop.
+ * Used for automated tool-calling loops.
  * @param {string} sessionId 
  * @param {string} text 
  * @param {Array} images - Optional array of base64 image strings

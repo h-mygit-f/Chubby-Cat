@@ -3,9 +3,8 @@
 import { getActiveTabContent } from './session/utils.js';
 
 export class UIMessageHandler {
-    constructor(imageHandler, controlManager, mcpManager) {
+    constructor(imageHandler, mcpManager) {
         this.imageHandler = imageHandler;
-        this.controlManager = controlManager;
         this.mcpManager = mcpManager;
     }
 
@@ -124,13 +123,6 @@ export class UIMessageHandler {
                     sendResponse({ status: "opened" });
                 });
 
-            return true;
-        }
-
-        if (request.action === "TOGGLE_SIDE_PANEL_CONTROL") {
-            this._handleToggleSidePanelControl(request, sender).finally(() => {
-                sendResponse({ status: "processed" });
-            });
             return true;
         }
 
@@ -462,58 +454,6 @@ export class UIMessageHandler {
             return true;
         }
 
-        // --- TAB MANAGEMENT ---
-
-        if (request.action === "GET_OPEN_TABS") {
-            (async () => {
-                const tabs = await chrome.tabs.query({ currentWindow: true });
-                const safeTabs = tabs.map(t => ({
-                    id: t.id,
-                    title: t.title,
-                    url: t.url,
-                    favIconUrl: t.favIconUrl,
-                    active: t.active
-                }));
-
-                // Get the currently locked tab ID to inform UI state
-                const lockedTabId = this.controlManager ? this.controlManager.getTargetTabId() : null;
-
-                chrome.runtime.sendMessage({
-                    action: "OPEN_TABS_RESULT",
-                    tabs: safeTabs,
-                    lockedTabId: lockedTabId
-                }).catch(() => { });
-                sendResponse({ status: "completed" });
-            })();
-            return true;
-        }
-
-        if (request.action === "SWITCH_TAB") {
-            // tabId can be null to unlock
-            if (this.controlManager) {
-                this.controlManager.setTargetTab(request.tabId || null);
-            }
-            // Only switch visual tab if a specific ID is provided AND switchVisual is not explicitly false
-            if (request.tabId && request.switchVisual !== false) {
-                chrome.tabs.update(request.tabId, { active: true }).catch(err => console.warn(err));
-            }
-            sendResponse({ status: "switched" });
-            return true;
-        }
-
-        // --- BROWSER CONTROL TOGGLE ---
-        if (request.action === "TOGGLE_BROWSER_CONTROL") {
-            if (this.controlManager) {
-                if (request.enabled) {
-                    this.controlManager.enableControl();
-                } else {
-                    this.controlManager.disableControl();
-                }
-            }
-            sendResponse({ status: "processed" });
-            return true;
-        }
-
         return false;
     }
 
@@ -543,11 +483,6 @@ export class UIMessageHandler {
                     chrome.runtime.sendMessage({
                         action: "SWITCH_SESSION",
                         sessionId: request.sessionId
-                    }).catch(() => { });
-                }
-                if (request.mode === 'browser_control') {
-                    chrome.runtime.sendMessage({
-                        action: "ACTIVATE_BROWSER_CONTROL"
                     }).catch(() => { });
                 }
             }, 500);
@@ -608,42 +543,6 @@ export class UIMessageHandler {
                 action: 'SIDEBAR_ICON_LOADING',
                 loading: false
             }).catch(() => { });
-        }
-    }
-
-    async _handleToggleSidePanelControl(request, sender) {
-        if (!sender.tab) return;
-
-        const tabId = sender.tab.id;
-        const currentLock = this.controlManager ? this.controlManager.getTargetTabId() : null;
-
-        // Is Browser Control active for this tab?
-        const isControlActive = (currentLock === tabId);
-
-        if (isControlActive) {
-            // --- TOGGLE OFF ---
-
-            // 1. Disable Control (Detach debugger)
-            if (this.controlManager) {
-                await this.controlManager.disableControl();
-            }
-
-            // 2. Close Side Panel (Workaround: disable then enable)
-            try {
-                // This effectively closes the side panel for this tab
-                await chrome.sidePanel.setOptions({ tabId, enabled: false });
-
-                // Re-enable it quickly so it can be opened again later
-                setTimeout(() => {
-                    chrome.sidePanel.setOptions({ tabId, enabled: true, path: 'sidepanel/index.html' });
-                }, 250);
-            } catch (e) {
-                console.error("Failed to toggle side panel close:", e);
-            }
-
-        } else {
-            // --- TOGGLE ON ---
-            await this._handleOpenSidePanel({ ...request, mode: 'browser_control' }, sender);
         }
     }
 

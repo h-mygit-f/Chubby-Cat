@@ -16,7 +16,6 @@ export class AppController {
         this.isGenerating = false;
         this.pageContextActive = false;
         this.multiTabContextActive = false; // Separate state for multi-tab import
-        this.browserControlActive = false;
 
         // Sidebar Restore Behavior: 'auto', 'restore', 'new'
         this.sidebarRestoreBehavior = 'auto';
@@ -106,36 +105,6 @@ export class AppController {
         });
     }
 
-    toggleBrowserControl(forceState = null) {
-        // If forceState is provided, match it. Otherwise toggle.
-        if (forceState !== null) {
-            if (this.browserControlActive === forceState) return;
-            this.browserControlActive = forceState;
-        } else {
-            this.browserControlActive = !this.browserControlActive;
-        }
-
-        const btn = document.getElementById('browser-control-btn');
-        if (btn) {
-            btn.classList.toggle('active', this.browserControlActive);
-        }
-
-        // Show/Hide the tab switcher in header
-        this.ui.toggleTabSwitcher(this.browserControlActive);
-
-        // Signal background to start/stop debugger session immediately
-        sendToBackground({
-            action: "TOGGLE_BROWSER_CONTROL",
-            enabled: this.browserControlActive
-        });
-
-        if (this.browserControlActive) {
-            // Disable page context if browser control is on (optional preference, 
-            // but usually commands don't need full page context context)
-            // For now, keeping them independent.
-        }
-    }
-
     /**
      * Sync MCP button/panel state with current settings (called on init/restore)
      * Delegates to McpServersController if available
@@ -144,15 +113,6 @@ export class AppController {
         if (this.mcpServersController && typeof this.mcpServersController.syncFromSettings === 'function') {
             this.mcpServersController.syncFromSettings();
         }
-    }
-
-    handleTabSwitcher() {
-        sendToBackground({ action: "GET_OPEN_TABS" });
-    }
-
-    handleTabSelected(tabId, shouldSwitch = true) {
-        // tabId can be null (to unlock) or an integer
-        sendToBackground({ action: "SWITCH_TAB", tabId: tabId, switchVisual: shouldSwitch });
     }
 
     // --- Delegation to Sub-Controllers ---
@@ -258,23 +218,6 @@ export class AppController {
         if (action === 'BACKGROUND_MESSAGE') {
             if (payload.action === 'SWITCH_SESSION') {
                 this.switchToSession(payload.sessionId);
-                return;
-            }
-            if (payload.action === 'ACTIVATE_BROWSER_CONTROL') {
-                this.toggleBrowserControl(true);
-                if (this.ui.inputFn) this.ui.inputFn.focus();
-                return;
-            }
-            // Tab list response
-            if (payload.action === 'OPEN_TABS_RESULT') {
-                this.ui.openTabSelector(payload.tabs, (tabId, shouldSwitch) => this.handleTabSelected(tabId, shouldSwitch), payload.lockedTabId);
-                return;
-            }
-            // Tab Locked Notification (Auto-lock update)
-            if (payload.action === 'TAB_LOCKED') {
-                if (this.ui && this.ui.tabSelector) {
-                    this.ui.tabSelector.updateTrigger(payload.tab);
-                }
                 return;
             }
             // Page Context Check Result

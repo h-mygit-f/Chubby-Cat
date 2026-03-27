@@ -13,12 +13,6 @@ export const ShortcutsSettingsTemplate = `
         <label data-i18n="openSidePanel">打开侧面板</label>
         <input type="text" id="shortcut-open-panel" class="shortcut-input" readonly value="Alt+S">
     </div>
-
-    <div class="shortcut-row">
-        <label data-i18n="shortcutBrowserControl">打开浏览器控制</label>
-        <input type="text" id="shortcut-browser-control" class="shortcut-input" readonly value="Ctrl+B">
-    </div>
-
     <div class="shortcut-row">
         <label data-i18n="shortcutFocusInput">聚焦输入框</label>
         <input type="text" class="shortcut-input" readonly value="Ctrl+P">

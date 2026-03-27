@@ -10,7 +10,6 @@ export const translations = {
         "chatHistory": "Chat History",
         "newChat": "New Chat",
         "pageContext": "Page",
-        "browserControl": "Browser Control",
         "quote": "Quote",
         "ocr": "OCR",
         "snip": "Snip",
@@ -131,7 +130,6 @@ export const translations = {
         "openExtension": "Open Extension",
         "shortcutFocusInput": "Focus Input",
         "shortcutSwitchModel": "Switch Model (in Input)",
-        "shortcutBrowserControl": "Open Browser Control",
         "resetDefault": "Reset Default",
         "saveChanges": "Save Changes",
         "system": "System",
@@ -181,7 +179,6 @@ export const translations = {
         "toggleHistory": "Chat History",
         "newChatTooltip": "New Chat",
         "pageContextTooltip": "Toggle chat with page content",
-        "browserControlTooltip": "Allow model to control the browser",
         "quoteTooltip": "Quote selected text from page",
         "ocrTooltip": "Capture area and extract text",
         "screenshotTranslateTooltip": "Capture area and translate text",
@@ -206,11 +203,7 @@ export const translations = {
         "providerSwitchError": "Failed to switch provider",
         "noApiKeyConfigured": "No API key configured for this provider",
 
-        "selectTab": "Select Active Tab",
-        "selectTabTooltip": "Select a tab to control",
         "noTabsFound": "No open tabs found.",
-        "lockTab": "Lock Tab",
-        "unlockTab": "Unlock Tab (Auto-follow Active)",
 
         // Active Tab Display
         "activeTab": "Current Tab",
@@ -328,7 +321,6 @@ export const translations = {
         "chatHistory": "历史记录",
         "newChat": "新对话",
         "pageContext": "网页",
-        "browserControl": "浏览器控制",
         "quote": "引用",
         "ocr": "OCR",
         "snip": "截图",
@@ -428,7 +420,6 @@ export const translations = {
         "openExtension": "打开扩展",
         "shortcutFocusInput": "聚焦输入框",
         "shortcutSwitchModel": "切换模型 (输入框内)",
-        "shortcutBrowserControl": "打开浏览器控制",
         "resetDefault": "恢复默认",
         "saveChanges": "保存更改",
         "system": "系统",
@@ -478,7 +469,6 @@ export const translations = {
         "toggleHistory": "历史记录",
         "newChatTooltip": "新对话",
         "pageContextTooltip": "切换网页上下文对话",
-        "browserControlTooltip": "允许模型控制浏览器",
         "quoteTooltip": "引用网页选中内容",
         "ocrTooltip": "区域截图 (OCR文字提取)",
         "screenshotTranslateTooltip": "截取区域并翻译文字",
@@ -503,11 +493,7 @@ export const translations = {
         "providerSwitchError": "切换来源失败",
         "noApiKeyConfigured": "该来源未配置 API 密钥",
 
-        "selectTab": "选择活动标签页",
-        "selectTabTooltip": "选择要控制的标签页",
         "noTabsFound": "未找到打开的标签页。",
-        "lockTab": "锁定标签页",
-        "unlockTab": "解锁 (自动跟随活动标签页)",
 
         // Active Tab Display
         "activeTab": "当前标签页",
